@@ -1,5 +1,6 @@
 package win.ambatu.work
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -18,7 +19,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
@@ -62,7 +62,17 @@ class AboutActivity : ComponentActivity() {
                         studentIdArray,
                         studyInfoArray,
                         githubUsernameArray,
-                        profileImageArray!!
+                        profileImageArray!!,
+                        onShareAppButtonClick = {
+                            startActivity(Intent.createChooser(
+                                Intent(Intent.ACTION_SEND).apply {
+                                    putExtra(Intent.EXTRA_SUBJECT, "Download Insider Preview of our App")
+                                    putExtra(Intent.EXTRA_TEXT, "https://github.com/ambawin/ambatuwork-android")
+                                    type = "text/plain"
+                                },
+                                "Share this app"
+                            ))
+                        }
                     )
                 }
             }
@@ -77,7 +87,8 @@ fun AboutScreen(
     studentIdArray: Array<out String>,
     studyInfoArray: Array<out String>,
     githubUsernameArray: Array<out String>,
-    profileImageArray: IntArray
+    profileImageArray: IntArray,
+    onShareAppButtonClick: () -> Unit
 ) {
     LazyColumn (
         modifier = Modifier
@@ -136,7 +147,7 @@ fun AboutScreen(
 
         item {
             OutlinedButton(
-                onClick = {},
+                onClick = onShareAppButtonClick,
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text("Share This App")
@@ -185,7 +196,7 @@ fun DeveloperCard(developer: Developer) {
                 )
 
                 Text(
-                    text = "${developer.studentId}",
+                    text = developer.studentId,
                     style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.Medium
                 )

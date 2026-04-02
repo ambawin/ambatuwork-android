@@ -1,5 +1,6 @@
 package win.ambatu.work
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -29,6 +30,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.core.net.toUri
 import win.ambatu.work.intent.MainIntents
 import win.ambatu.work.model.DeveloperModel.developers
 import win.ambatu.work.ui.theme.AmbatuWorkTheme
@@ -60,6 +62,14 @@ class MainActivity : ComponentActivity() {
                                 githubUsernameArray,
                                 profileImageArray
                             ))
+                        },
+                        onOurWebsiteButtonClick = {
+                            startActivity(Intent(Intent.ACTION_VIEW,
+                                "https://work.ambatu.win".toUri()))
+                        },
+                        onGithubButtonClick = {
+                            startActivity(Intent(Intent.ACTION_VIEW,
+                                "https://github.com/ambawin/ambatuwork-android".toUri()))
                         }
                     )
                 }
@@ -70,7 +80,9 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun MainScreen(
-    onAboutButtonClick: () -> Unit
+    onAboutButtonClick: () -> Unit,
+    onOurWebsiteButtonClick: () -> Unit,
+    onGithubButtonClick: () -> Unit
 ) {
     Box(
         modifier = Modifier
@@ -136,14 +148,14 @@ fun MainScreen(
             }
 
             OutlinedButton(
-                onClick = {},
+                onClick = onOurWebsiteButtonClick,
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text("Our Website")
             }
 
             OutlinedButton(
-                onClick = {},
+                onClick = onGithubButtonClick,
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text("Github Repository")

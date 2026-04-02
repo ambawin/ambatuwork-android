@@ -24,21 +24,21 @@ object DeveloperModel {
             studentId = "L0124063",
             studyInfo = "Informatika 2024",
             githubUsername = "Irfunzz",
-            profileImage = R.drawable.profile_dapa
+            profileImage = R.drawable.profile_irpan
         ),
         Developer(
             name = "Naufal Ahmad Fakhriza",
             studentId = "L0124068",
             studyInfo = "Informatika 2024",
             githubUsername = "sinopalll",
-            profileImage = R.drawable.profile_dapa
+            profileImage = R.drawable.profile_nopal
         ),
         Developer(
             name = "Syaikhasril Maulana Firdaus",
             studentId = "L0124077",
             studyInfo = "Informatika 2024",
             githubUsername = "Syaasr",
-            profileImage = R.drawable.profile_dapa
+            profileImage = R.drawable.profile_asril
         )
     )
 

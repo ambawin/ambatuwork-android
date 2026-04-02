@@ -3,8 +3,6 @@ package win.ambatu.work.intent
 import android.content.Context
 import android.content.Intent
 import win.ambatu.work.AboutActivity
-import win.ambatu.work.model.DeveloperModel.Developer
-import win.ambatu.work.model.DeveloperModel.developers
 
 object MainIntents {
     const val EXTRA_NAME = "EXTRA_NAME"

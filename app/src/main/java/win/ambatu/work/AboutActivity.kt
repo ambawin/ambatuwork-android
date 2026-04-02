@@ -6,7 +6,9 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -21,7 +23,11 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.Card
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
@@ -31,10 +37,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.core.net.toUri
 import win.ambatu.work.intent.MainIntents
 import win.ambatu.work.model.DeveloperModel.Developer
 import win.ambatu.work.ui.theme.AmbatuWorkTheme
@@ -63,6 +71,9 @@ class AboutActivity : ComponentActivity() {
                         studyInfoArray,
                         githubUsernameArray,
                         profileImageArray!!,
+                        onBackButtonClick = {
+                            finish()
+                        },
                         onShareAppButtonClick = {
                             startActivity(Intent.createChooser(
                                 Intent(Intent.ACTION_SEND).apply {
@@ -88,6 +99,7 @@ fun AboutScreen(
     studyInfoArray: Array<out String>,
     githubUsernameArray: Array<out String>,
     profileImageArray: IntArray,
+    onBackButtonClick: () -> Unit,
     onShareAppButtonClick: () -> Unit
 ) {
     LazyColumn (
@@ -100,18 +112,33 @@ fun AboutScreen(
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         item {
-            Text(
-                text = "About AmbatuWork",
-                style = MaterialTheme.typography.headlineMedium,
-                fontWeight = FontWeight.Bold,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.fillMaxWidth()
-            )
+            Box(
+                modifier = Modifier.fillMaxWidth(),
+                contentAlignment = Alignment.Center
+            ) {
+                IconButton(
+                    onClick = onBackButtonClick,
+                    modifier = Modifier.align(Alignment.CenterStart)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.ArrowBack,
+                        contentDescription = "Back"
+                    )
+                }
+
+                Text(
+                    text = "About AmbatuWork",
+                    style = MaterialTheme.typography.headlineMedium,
+                    fontWeight = FontWeight.Bold,
+                    textAlign = TextAlign.Center,
+                    color = MaterialTheme.colorScheme.primary
+                )
+            }
         }
 
         item {
             Text(
-                text = "AmbatuWork adalah app kolaborasi yang menjamin meningkatkan rasa semangat, motivasi, dan dorongan antar anggota tim untuk menyelesaikan pekerjaan.",
+                text = "AmbatuWork is a collaboration app that helps teams stay aligned, motivated, and focused on getting work done.",
                 style = MaterialTheme.typography.bodyLarge,
                 textAlign = TextAlign.Center,
                 modifier = Modifier.fillMaxWidth()
@@ -125,7 +152,8 @@ fun AboutScreen(
                 style = MaterialTheme.typography.headlineMedium,
                 fontWeight = FontWeight.SemiBold,
                 textAlign = TextAlign.Center,
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                color = MaterialTheme.colorScheme.primary
             )
         }
 
@@ -141,7 +169,8 @@ fun AboutScreen(
                 style = MaterialTheme.typography.headlineMedium,
                 fontWeight = FontWeight.SemiBold,
                 textAlign = TextAlign.Center,
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                color = MaterialTheme.colorScheme.primary
             )
         }
 
@@ -158,8 +187,18 @@ fun AboutScreen(
 
 @Composable
 fun DeveloperCard(developer: Developer) {
+    val context = LocalContext.current
+
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable {
+                val intent = Intent(
+                    Intent.ACTION_VIEW,
+                    "https://github.com/${developer.githubUsername}".toUri()
+                )
+                context.startActivity(intent)
+            },
         shape = RoundedCornerShape(16.dp)
     ) {
         Row(
@@ -168,7 +207,6 @@ fun DeveloperCard(developer: Developer) {
                 .padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-
             Image(
                 painter = painterResource(id = developer.profileImage),
                 contentDescription = "${developer.githubUsername} profile pic",

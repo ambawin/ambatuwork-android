@@ -102,7 +102,8 @@ fun MainScreen(
                 text = "AmbatuWork",
                 style = MaterialTheme.typography.headlineLarge,
                 fontWeight = FontWeight.Bold,
-                textAlign = TextAlign.Center
+                textAlign = TextAlign.Center,
+                color = MaterialTheme.colorScheme.primary
             )
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -120,8 +121,7 @@ fun MainScreen(
                 contentDescription = "App banner",
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(180.dp),
-                contentScale = ContentScale.Crop
+                    .height(180.dp)
             )
 
             Spacer(modifier = Modifier.height(20.dp))

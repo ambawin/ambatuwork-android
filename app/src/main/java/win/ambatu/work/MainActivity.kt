@@ -1,6 +1,5 @@
 package win.ambatu.work
 
-import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -30,11 +29,20 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import win.ambatu.work.intent.MainIntents
+import win.ambatu.work.model.DeveloperModel.developers
 import win.ambatu.work.ui.theme.AmbatuWorkTheme
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        val nameArray = developers.map { it.name }.toTypedArray()
+        val studentIdArray = developers.map { it.studentId }.toTypedArray()
+        val studyInfoArray = developers.map { it.studyInfo }.toTypedArray()
+        val githubUsernameArray = developers.map { it.githubUsername }.toTypedArray()
+        val profileImageArray = developers.map { it.profileImage }.toIntArray()
+
         enableEdgeToEdge()
         setContent {
             AmbatuWorkTheme() {
@@ -44,10 +52,14 @@ class MainActivity : ComponentActivity() {
                 ) {
                     MainScreen(
                         onAboutButtonClick = {
-                            val intent = Intent(this, AboutActivity::class.java).apply {
-
-                            }
-                            startActivity(intent)
+                            startActivity(MainIntents.toAbout(
+                                this,
+                                nameArray,
+                                studentIdArray,
+                                studyInfoArray,
+                                githubUsernameArray,
+                                profileImageArray
+                            ))
                         }
                     )
                 }
@@ -127,14 +139,14 @@ fun MainScreen(
                 onClick = {},
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text("Visit our GitHub Repo")
+                Text("Our Website")
             }
 
             OutlinedButton(
                 onClick = {},
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text("Share this App")
+                Text("Github Repository")
             }
         }
     }

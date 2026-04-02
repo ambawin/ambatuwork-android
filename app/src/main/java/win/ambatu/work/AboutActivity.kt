@@ -35,16 +35,21 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import win.ambatu.work.model.DeveloperModel
-import win.ambatu.work.model.LinkModel
-import win.ambatu.work.model.developerModels
-import win.ambatu.work.model.linkModels
+import win.ambatu.work.intent.MainIntents
+import win.ambatu.work.model.DeveloperModel.Developer
 import win.ambatu.work.ui.theme.AmbatuWorkTheme
 
 
 class AboutActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        val nameArray = intent.getStringArrayExtra(MainIntents.EXTRA_NAME).orEmpty()
+        val studentIdArray = intent.getStringArrayExtra(MainIntents.EXTRA_STUDENT_ID).orEmpty()
+        val studyInfoArray = intent.getStringArrayExtra(MainIntents.EXTRA_STUDY_INFO).orEmpty()
+        val githubUsernameArray = intent.getStringArrayExtra(MainIntents.EXTRA_GITHUB_USERNAME).orEmpty()
+        val profileImageArray = intent.getIntArrayExtra(MainIntents.EXTRA_PROFILE_IMAGE)
+
         enableEdgeToEdge()
         setContent {
             AmbatuWorkTheme() {
@@ -52,7 +57,13 @@ class AboutActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    AboutScreen()
+                    AboutScreen(
+                        nameArray,
+                        studentIdArray,
+                        studyInfoArray,
+                        githubUsernameArray,
+                        profileImageArray!!
+                    )
                 }
             }
         }
@@ -61,7 +72,13 @@ class AboutActivity : ComponentActivity() {
 
 
 @Composable
-fun AboutScreen() {
+fun AboutScreen(
+    nameArray: Array<out String>,
+    studentIdArray: Array<out String>,
+    studyInfoArray: Array<out String>,
+    githubUsernameArray: Array<out String>,
+    profileImageArray: IntArray
+) {
     LazyColumn (
         modifier = Modifier
             .fillMaxSize()
@@ -101,14 +118,15 @@ fun AboutScreen() {
             )
         }
 
-        items(developerModels) { dev ->
-            DeveloperCard(developerModel = dev)
+        items(count = minOf(nameArray.size, studentIdArray.size, studyInfoArray.size, githubUsernameArray.size, profileImageArray.size)) { index ->
+            DeveloperCard(
+                Developer(nameArray[index], studentIdArray[index], studyInfoArray[index], githubUsernameArray[index], profileImageArray[index])
+            )
         }
 
         item {
-            Spacer(modifier = Modifier.height(8.dp))
             Text(
-                text = "Links",
+                text = "Support Us",
                 style = MaterialTheme.typography.headlineMedium,
                 fontWeight = FontWeight.SemiBold,
                 textAlign = TextAlign.Center,
@@ -116,14 +134,19 @@ fun AboutScreen() {
             )
         }
 
-        items(linkModels) { link ->
-            LinkCard(linkModel = link)
+        item {
+            OutlinedButton(
+                onClick = {},
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("Share This App")
+            }
         }
     }
 }
 
 @Composable
-fun DeveloperCard(developerModel: DeveloperModel) {
+fun DeveloperCard(developer: Developer) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp)
@@ -136,8 +159,8 @@ fun DeveloperCard(developerModel: DeveloperModel) {
         ) {
 
             Image(
-                painter = painterResource(id = developerModel.profileImage),
-                contentDescription = "${developerModel.githubUsername} profile pic",
+                painter = painterResource(id = developer.profileImage),
+                contentDescription = "${developer.githubUsername} profile pic",
                 modifier = Modifier
                     .clip(CircleShape)
                     .size(64.dp),
@@ -150,49 +173,28 @@ fun DeveloperCard(developerModel: DeveloperModel) {
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text(
-                    text = developerModel.name,
+                    text = developer.name,
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold
                 )
 
-                Spacer(modifier = Modifier.height(4.dp))
-
                 Text(
-                    text = developerModel.studyInfo,
-                    style = MaterialTheme.typography.bodyMedium
+                    text = developer.studyInfo,
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.SemiBold
                 )
 
                 Text(
-                    text = "NIM: ${developerModel.studentId}",
-                    style = MaterialTheme.typography.bodyMedium
+                    text = "${developer.studentId}",
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.Medium
                 )
 
                 Text(
-                    text = "github.com/${developerModel.githubUsername}",
+                    text = "github.com/${developer.githubUsername}",
                     style = MaterialTheme.typography.bodyMedium
                 )
             }
-        }
-    }
-}
-
-@Composable
-fun LinkCard(linkModel: LinkModel) {
-    Column (
-        modifier = Modifier.fillMaxWidth(),
-    ) {
-        OutlinedButton(
-            onClick = {},
-            modifier = Modifier
-                .fillMaxWidth(),
-        ) {
-            Text(
-                modifier = Modifier.fillMaxWidth(),
-                text = linkModel.text,
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold,
-                textAlign = TextAlign.Center
-            )
         }
     }
 }

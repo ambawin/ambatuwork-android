@@ -21,11 +21,13 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -41,6 +43,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
 import win.ambatu.work.intent.MainIntents
@@ -58,6 +61,16 @@ class AboutActivity : ComponentActivity() {
         val githubUsernameArray = intent.getStringArrayExtra(MainIntents.EXTRA_GITHUB_USERNAME).orEmpty()
         val profileImageArray = intent.getIntArrayExtra(MainIntents.EXTRA_PROFILE_IMAGE)
 
+        val developers = nameArray.indices.map { index ->
+            Developer(
+                name = nameArray[index],
+                studentId = studentIdArray[index],
+                studyInfo = studyInfoArray[index],
+                githubUsername = githubUsernameArray[index],
+                profileImage = profileImageArray!![index]
+            )
+        }
+
         enableEdgeToEdge()
         setContent {
             AmbatuWorkTheme() {
@@ -66,11 +79,7 @@ class AboutActivity : ComponentActivity() {
                     color = MaterialTheme.colorScheme.background
                 ) {
                     AboutScreen(
-                        nameArray,
-                        studentIdArray,
-                        studyInfoArray,
-                        githubUsernameArray,
-                        profileImageArray!!,
+                        developers = developers,
                         onBackButtonClick = {
                             finish()
                         },
@@ -94,11 +103,7 @@ class AboutActivity : ComponentActivity() {
 
 @Composable
 fun AboutScreen(
-    nameArray: Array<out String>,
-    studentIdArray: Array<out String>,
-    studyInfoArray: Array<out String>,
-    githubUsernameArray: Array<out String>,
-    profileImageArray: IntArray,
+    developers: List<Developer>,
     onBackButtonClick: () -> Unit,
     onShareAppButtonClick: () -> Unit
 ) {
@@ -157,10 +162,8 @@ fun AboutScreen(
             )
         }
 
-        items(count = minOf(nameArray.size, studentIdArray.size, studyInfoArray.size, githubUsernameArray.size, profileImageArray.size)) { index ->
-            DeveloperCard(
-                Developer(nameArray[index], studentIdArray[index], studyInfoArray[index], githubUsernameArray[index], profileImageArray[index])
-            )
+        items(developers) { developer ->
+            DeveloperCard(developer)
         }
 
         item {
@@ -199,7 +202,10 @@ fun DeveloperCard(developer: Developer) {
                 )
                 context.startActivity(intent)
             },
-        shape = RoundedCornerShape(16.dp)
+        shape = RoundedCornerShape(16.dp),
+        elevation = CardDefaults.cardElevation(
+            defaultElevation = 6.dp
+        )
     ) {
         Row(
             modifier = Modifier
@@ -219,7 +225,8 @@ fun DeveloperCard(developer: Developer) {
             Spacer(modifier = Modifier.width(16.dp))
 
             Column(
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
                 Text(
                     text = developer.name,
@@ -242,6 +249,7 @@ fun DeveloperCard(developer: Developer) {
                 Text(
                     text = "github.com/${developer.githubUsername}",
                     style = MaterialTheme.typography.bodyMedium
+
                 )
             }
         }

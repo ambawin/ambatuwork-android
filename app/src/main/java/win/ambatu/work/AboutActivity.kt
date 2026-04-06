@@ -87,7 +87,7 @@ class AboutActivity : ComponentActivity() {
                             startActivity(Intent.createChooser(
                                 Intent(Intent.ACTION_SEND).apply {
                                     putExtra(Intent.EXTRA_SUBJECT, "Download Insider Preview of our App")
-                                    putExtra(Intent.EXTRA_TEXT, "https://github.com/ambawin/ambatuwork-android")
+                                    putExtra(Intent.EXTRA_TEXT, "Check out AmbatuWork App!\n\nhttps://github.com/ambawin/ambatuwork-android")
                                     type = "text/plain"
                                 },
                                 "Share this app"
@@ -202,10 +202,7 @@ fun DeveloperCard(developer: Developer) {
                 )
                 context.startActivity(intent)
             },
-        shape = RoundedCornerShape(16.dp),
-        elevation = CardDefaults.cardElevation(
-            defaultElevation = 6.dp
-        )
+        shape = RoundedCornerShape(16.dp)
     ) {
         Row(
             modifier = Modifier
@@ -249,7 +246,6 @@ fun DeveloperCard(developer: Developer) {
                 Text(
                     text = "github.com/${developer.githubUsername}",
                     style = MaterialTheme.typography.bodyMedium
-
                 )
             }
         }

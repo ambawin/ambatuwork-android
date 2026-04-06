@@ -1,15 +1,19 @@
 package win.ambatu.work.model
 
+import android.os.Parcelable
 import win.ambatu.work.R
+import kotlinx.parcelize.Parcelize
 
 object DeveloperModel {
+
+    @Parcelize
     data class Developer(
         val name: String,
         val studentId: String,
         val studyInfo: String,
         val githubUsername: String,
         val profileImage: Int
-    )
+    ) : Parcelable
 
     val developers = listOf(
         Developer(

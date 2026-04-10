@@ -1,5 +1,7 @@
 # AmbatuWork Android App
 
+App for student collaboration platform
+
 ## Project Members
 
 | No | NAMA | NIM | Link Profile GitHub |

@@ -30,18 +30,12 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
 import win.ambatu.work.intent.MainIntents
-import win.ambatu.work.model.DeveloperModel.developers
+import win.ambatu.work.model.developers
 import win.ambatu.work.ui.theme.AmbatuWorkTheme
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-        val nameArray = developers.map { it.name }.toTypedArray()
-        val studentIdArray = developers.map { it.studentId }.toTypedArray()
-        val studyInfoArray = developers.map { it.studyInfo }.toTypedArray()
-        val githubUsernameArray = developers.map { it.githubUsername }.toTypedArray()
-        val profileImageArray = developers.map { it.profileImage }.toIntArray()
 
         enableEdgeToEdge()
         setContent {
@@ -54,11 +48,7 @@ class MainActivity : ComponentActivity() {
                         onAboutButtonClick = {
                             startActivity(MainIntents.toAbout(
                                 this,
-                                nameArray,
-                                studentIdArray,
-                                studyInfoArray,
-                                githubUsernameArray,
-                                profileImageArray
+                                developers
                             ))
                         },
                         onOurWebsiteButtonClick = {
@@ -115,7 +105,7 @@ fun MainScreen(
             Spacer(modifier = Modifier.height(20.dp))
 
             Image(
-                painter = painterResource(id = R.drawable.placeholder_banner),
+                painter = painterResource(id = R.drawable.icon_ambatu),
                 contentDescription = "App banner",
                 modifier = Modifier
                     .fillMaxWidth()
@@ -149,14 +139,14 @@ fun MainScreen(
                 onClick = onOurWebsiteButtonClick,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text("Our Website")
+                Text("Website")
             }
 
             OutlinedButton(
                 onClick = onGithubButtonClick,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text("Github Repository")
+                Text("Github")
             }
         }
     }

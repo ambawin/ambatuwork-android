@@ -45,10 +45,12 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
 import win.ambatu.work.intent.MainIntents
 import win.ambatu.work.model.Developer
+import win.ambatu.work.model.developers
 import win.ambatu.work.ui.theme.AmbatuWorkTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -266,6 +268,53 @@ fun DeveloperCard(developer: Developer) {
                     style = MaterialTheme.typography.bodyMedium
                 )
             }
+        }
+    }
+}
+
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Preview(showBackground = true, showSystemUi = true)
+@Composable
+fun AboutScreenPreview() {
+    AmbatuWorkTheme() {
+        Scaffold(
+            modifier = Modifier
+                .fillMaxWidth(),
+            topBar = {
+                TopAppBar(
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = MaterialTheme.colorScheme.background,
+                        titleContentColor = MaterialTheme.colorScheme.primary,
+                    ),
+                    title = {
+                        Text(
+                            "About",
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    },
+                    navigationIcon = {
+                        IconButton(
+                            onClick = {
+                            }
+                        ) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = "Back to Home",
+                                tint = MaterialTheme.colorScheme.primary
+                            )
+                        }
+                    },
+                )
+            }
+
+        ) { innerPadding ->
+            AboutScreen(
+                innerPadding = innerPadding,
+                developers = developers,
+                onShareAppButtonClick = {}
+            )
         }
     }
 }

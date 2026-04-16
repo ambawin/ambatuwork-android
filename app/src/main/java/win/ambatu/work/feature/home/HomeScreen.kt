@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Card
@@ -37,15 +38,30 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import win.ambatu.work.R
 import win.ambatu.work.ui.theme.AmbatuWorkTheme
+import java.time.LocalTime
 
 @Composable
-fun HomeScreen() {
-    Content()
+fun HomeScreen(
+    onProfileIconClick: () -> Unit = {}
+) {
+    val hour = LocalTime.now().hour
+
+    val greeting = when (hour) {
+        in 0..11 -> "Good Morning"
+        in 12..16 -> "Good Afternoon"
+        else -> "Good Evening"
+    }
+
+    Content(
+        greetingText = greeting,
+        onProfileIconClick = onProfileIconClick
+    )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun Content(
+    greetingText: String = "Good Morning",
     onProfileIconClick: () -> Unit = {}
 ) {
     Scaffold(
@@ -97,7 +113,7 @@ private fun Content(
 
                 ) {
                     Text(
-                        text = "Good Morning,",
+                        text = "${greetingText},",
                         style = MaterialTheme.typography.titleLarge,
                         color = MaterialTheme.colorScheme.secondary
                     )
@@ -179,21 +195,13 @@ private fun Content(
             }
 
             // Lists
-            items(3) {
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceVariant
-                    )
-                ) {
-                    Text(
-                        text = "Filled",
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp),
-                        textAlign = TextAlign.Center
-                    )
-                }
+            items(10) {
+                FocusCard(
+                    focusText = "Backend",
+                    focusDue = "Due Today",
+                    focusTeam = "Amba",
+                    point = 67
+                )
                 Spacer(
                     modifier = Modifier.size(8.dp)
                 )
@@ -265,6 +273,67 @@ private fun PointsCard(
                 fontSize = 14.sp,
                 fontWeight = FontWeight.SemiBold
             )
+        }
+    }
+}
+
+@Composable
+private fun FocusCard(
+    focusText: String,
+    focusDue: String,
+    focusTeam: String,
+    point: Int = 0
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant
+        )
+    ) {
+        Row(
+            modifier = Modifier
+                .padding(16.dp)
+                .fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Start
+        ) {
+            Image(
+                painter = painterResource(id = R.drawable.profile_placeholder),
+                contentDescription = "Focus Image",
+                modifier = Modifier
+                    .clip(CircleShape)
+                    .size(32.dp),
+                contentScale = ContentScale.Crop
+            )
+
+            Spacer(modifier = Modifier.width(16.dp))
+
+            Column(
+                modifier = Modifier.weight(1f)
+            ) {
+                Text(
+                    text = focusText,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Text(
+                    text = "$focusDue - $focusTeam",
+                    color = MaterialTheme.colorScheme.secondary,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+
+            Column(
+                horizontalAlignment = Alignment.End
+            ) {
+                Text(
+                    text = "+ ${point}",
+                    style = MaterialTheme.typography.headlineMedium,
+                    fontWeight = FontWeight.Bold
+                )
+                Text(text = "Pts")
+            }
         }
     }
 }

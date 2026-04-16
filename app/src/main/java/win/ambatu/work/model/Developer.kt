@@ -11,7 +11,8 @@ data class Developer(
     val studyInfo: String,
     val githubUsername: String,
     val profileImage: Int
-) : Parcelable
+) : Parcelable {
+}
 
 val developers = listOf(
     Developer(

@@ -1,23 +1,22 @@
 package win.ambatu.work
 
-import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import win.ambatu.work.feature.home.HomeScreen
+import win.ambatu.work.feature.profile.ProfileScreen
 import win.ambatu.work.ui.theme.AmbatuWorkTheme
 
-class MainActivity : ComponentActivity() {
+class ProfileActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         enableEdgeToEdge()
         setContent {
-            AmbatuWorkTheme() {
-                HomeScreen(
-                    onProfileIconClick = {
-                        startActivity(Intent(this, ProfileActivity::class.java))
+            AmbatuWorkTheme {
+                ProfileScreen(
+                    onNavigationBackClick = {
+                        finish()
                     }
                 )
             }

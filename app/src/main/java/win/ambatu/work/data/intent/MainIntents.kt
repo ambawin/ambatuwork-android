@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.Intent
 import win.ambatu.work.AboutActivity
 import win.ambatu.work.ProfileActivity
+import win.ambatu.work.TodaysFocusActivity
 import win.ambatu.work.data.model.Developer
 import win.ambatu.work.data.model.User
 
@@ -37,5 +38,14 @@ object MainIntents {
             putExtra(EXTRA_USER_EMAIL, user.email)
             putExtra(EXTRA_USER_PICTURE, user.picture)
         }
+    }
+
+    fun toTodaysFocus(
+        context: Context
+    ): Intent {
+        return Intent(
+            context,
+            TodaysFocusActivity::class.java
+        )
     }
 }

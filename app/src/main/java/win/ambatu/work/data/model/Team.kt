@@ -12,23 +12,3 @@ data class Team(
     val picture: Int
 ) : Parcelable
 
-val teamList = listOf(
-    Team(
-        id = 1,
-        name = "PAB",
-        topic = "Mobile App",
-        picture = R.drawable.profile_placeholder
-    ),
-    Team(
-        id = 2,
-        name = "Pemweb",
-        topic = "Web Development",
-        picture = R.drawable.profile_placeholder
-    ),
-    Team(
-        id = 3,
-        name = "RPL",
-        topic = "Software Engineering",
-        picture = R.drawable.profile_placeholder
-    ),
-)

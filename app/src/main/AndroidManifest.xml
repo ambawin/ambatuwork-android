@@ -24,6 +24,8 @@
         </activity>
         <activity android:name=".AboutActivity" />
         <activity android:name=".ProfileActivity" />
+        <activity android:name=".TodaysFocusActivity" />
+        <activity android:name=".ActiveTeamsActivity" />
     </application>
 
 </manifest>

@@ -14,7 +14,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.shape.CircleShape
@@ -42,15 +41,15 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import win.ambatu.work.R
+import win.ambatu.work.controller.TaskController
+import win.ambatu.work.controller.TeamController
 import win.ambatu.work.data.model.PendingAction
-import win.ambatu.work.data.model.Task
 import win.ambatu.work.data.model.Team
 import win.ambatu.work.data.model.User
 import win.ambatu.work.data.model.getPendingActionsByUserId
 import win.ambatu.work.data.model.pendingActionList
 import win.ambatu.work.data.model.placeholderUser
-import win.ambatu.work.data.model.taskList
-import win.ambatu.work.data.model.teamList
+import win.ambatu.work.feature.team.TaskFocusCard
 import win.ambatu.work.ui.theme.AmbatuWorkTheme
 import java.time.LocalDate
 import java.time.LocalTime
@@ -60,7 +59,9 @@ import java.util.Locale
 @Composable
 fun HomeScreen(
     user: User,
-    onProfileIconClick: () -> Unit = {}
+    onProfileIconClick: () -> Unit,
+    onTodaysFocusViewAllClick: () -> Unit,
+    onActiveTeamsViewAllClick: () -> Unit
 ) {
     val hour = LocalTime.now().hour
 
@@ -73,7 +74,9 @@ fun HomeScreen(
     Content(
         user = user,
         greetingText = greeting,
-        onProfileIconClick = onProfileIconClick
+        onProfileIconClick = onProfileIconClick,
+        onTodaysFocusViewAllClick = onTodaysFocusViewAllClick,
+        onActiveTeamsViewAllClick = onActiveTeamsViewAllClick
     )
 }
 
@@ -83,8 +86,8 @@ private fun Content(
     user: User = placeholderUser,
     greetingText: String = "Good Morning",
     onProfileIconClick: () -> Unit = {},
-    todaysFocusViewAllClick: () -> Unit = {},
-    activeTeamsViewAllClick: () -> Unit = {}
+    onTodaysFocusViewAllClick: () -> Unit = {},
+    onActiveTeamsViewAllClick: () -> Unit = {}
 ) {
     Scaffold(
         topBar = {
@@ -127,8 +130,14 @@ private fun Content(
         LazyColumn(
             modifier = Modifier
                 .padding(innerPadding)
-                .padding(top = 24.dp),
         ) {
+
+            item {
+                Spacer(
+                    modifier = Modifier.size(24.dp)
+                )
+            }
+
             item {
                 ContentPadding {
                     Column {
@@ -209,7 +218,7 @@ private fun Content(
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.tertiary,
                             modifier = Modifier.clickable {
-                                todaysFocusViewAllClick()
+                                onTodaysFocusViewAllClick()
                             }
                         )
                     }
@@ -223,13 +232,14 @@ private fun Content(
             }
 
             // Lists
-            items(taskList.size.coerceAtMost(3)) {
+            val topTasks = TaskController.getAll().take(3)
+            items(topTasks.size) { index ->
                 ContentPadding {
                     Column(
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         TaskFocusCard(
-                            task = taskList[it]
+                            task = topTasks[index]
                         )
                         Spacer(
                             modifier = Modifier.size(8.dp)
@@ -310,7 +320,7 @@ private fun Content(
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.tertiary,
                             modifier = Modifier.clickable {
-                                activeTeamsViewAllClick()
+                                onActiveTeamsViewAllClick()
                             }
                         )
                     }
@@ -331,7 +341,7 @@ private fun Content(
                     items(3) {
                         TeamCard(
                             modifier = Modifier.fillParentMaxWidth(0.82f),
-                            team = teamList[it]
+                            team = TeamController.getAll()[it]
                         )
                     }
                 }
@@ -347,7 +357,7 @@ private fun Content(
 }
 
 @Composable
-private fun ContentPadding(
+fun ContentPadding(
     modifier: Modifier = Modifier,
     content: @Composable () -> Unit
 ) {
@@ -394,78 +404,6 @@ private fun PointsCard(
                 fontSize = 14.sp,
                 fontWeight = FontWeight.SemiBold
             )
-        }
-    }
-}
-
-@Composable
-private fun TaskFocusCard(
-    task: Task,
-    onActionButtonClick: () -> Unit = {}
-) {
-    val team = teamList.associateBy { it.id } [task.teamId]
-
-    val today = LocalDate.now()
-    val dueDate = task.due.toLocalDate()
-
-    val due = when {
-        dueDate.isBefore(today) -> "Missing"
-        dueDate == today -> "Today"
-        dueDate == today.plusDays(1) -> "Tomorrow"
-        else -> task.due.format(DateTimeFormatter.ofPattern("MMM d", Locale.ENGLISH))
-    }
-
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant
-        ),
-        onClick = onActionButtonClick
-    ) {
-        Row(
-            modifier = Modifier
-                .padding(16.dp)
-                .fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.Start
-        ) {
-            Image(
-                painter = painterResource(id = R.drawable.profile_placeholder),
-                contentDescription = "Focus Image",
-                modifier = Modifier
-                    .clip(CircleShape)
-                    .size(32.dp),
-                contentScale = ContentScale.Crop
-            )
-
-            Spacer(modifier = Modifier.width(16.dp))
-
-            Column(
-                modifier = Modifier.weight(1f)
-            ) {
-                Text(
-                    text = task.title,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.fillMaxWidth()
-                )
-                Text(
-                    text = "$due - ${team?.name}",
-                    color = MaterialTheme.colorScheme.secondary,
-                    modifier = Modifier.fillMaxWidth()
-                )
-            }
-
-            Column(
-                horizontalAlignment = Alignment.End
-            ) {
-                Text(
-                    text = "+ ${task.point}",
-                    style = MaterialTheme.typography.headlineMedium,
-                    fontWeight = FontWeight.Bold
-                )
-                Text(text = "Pts")
-            }
         }
     }
 }

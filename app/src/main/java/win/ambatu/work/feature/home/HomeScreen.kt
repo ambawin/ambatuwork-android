@@ -49,6 +49,7 @@ import win.ambatu.work.data.model.PendingAction
 import win.ambatu.work.data.model.Team
 import win.ambatu.work.data.model.User
 import win.ambatu.work.feature.team.TaskFocusCard
+import win.ambatu.work.feature.team.TeamCard
 import win.ambatu.work.ui.theme.AmbatuWorkTheme
 import win.ambatu.work.util.DateUtils
 import java.time.LocalTime
@@ -452,43 +453,6 @@ private fun PendingActionCard(
             ) {
                 Text(pendingAction.submitText)
             }
-        }
-    }
-}
-
-@Composable
-private fun TeamCard(
-    modifier: Modifier,
-    team: Team,
-    onActionButtonClick: () -> Unit = {}
-) {
-    Card(
-        modifier = modifier
-            .height(150.dp),
-        shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant
-        ),
-        onClick = onActionButtonClick
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(16.dp),
-            verticalArrangement = Arrangement.SpaceBetween,
-        ) {
-            Text(
-                text = team.name,
-                style = MaterialTheme.typography.headlineSmall,
-                color = MaterialTheme.colorScheme.tertiary,
-                fontWeight = FontWeight.SemiBold
-            )
-
-            Text(
-                text = team.topic,
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.secondary
-            )
         }
     }
 }

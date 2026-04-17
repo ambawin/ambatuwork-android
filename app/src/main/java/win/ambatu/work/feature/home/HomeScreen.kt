@@ -1,9 +1,11 @@
 package win.ambatu.work.feature.home
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -14,13 +16,17 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
@@ -32,16 +38,28 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import win.ambatu.work.R
+import win.ambatu.work.data.model.PendingAction
+import win.ambatu.work.data.model.Task
+import win.ambatu.work.data.model.Team
+import win.ambatu.work.data.model.User
+import win.ambatu.work.data.model.getPendingActionsByUserId
+import win.ambatu.work.data.model.pendingActionList
+import win.ambatu.work.data.model.placeholderUser
+import win.ambatu.work.data.model.taskList
+import win.ambatu.work.data.model.teamList
 import win.ambatu.work.ui.theme.AmbatuWorkTheme
+import java.time.LocalDate
 import java.time.LocalTime
+import java.time.format.DateTimeFormatter
+import java.util.Locale
 
 @Composable
 fun HomeScreen(
+    user: User,
     onProfileIconClick: () -> Unit = {}
 ) {
     val hour = LocalTime.now().hour
@@ -53,6 +71,7 @@ fun HomeScreen(
     }
 
     Content(
+        user = user,
         greetingText = greeting,
         onProfileIconClick = onProfileIconClick
     )
@@ -61,8 +80,11 @@ fun HomeScreen(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun Content(
+    user: User = placeholderUser,
     greetingText: String = "Good Morning",
-    onProfileIconClick: () -> Unit = {}
+    onProfileIconClick: () -> Unit = {},
+    todaysFocusViewAllClick: () -> Unit = {},
+    activeTeamsViewAllClick: () -> Unit = {}
 ) {
     Scaffold(
         topBar = {
@@ -105,24 +127,23 @@ private fun Content(
         LazyColumn(
             modifier = Modifier
                 .padding(innerPadding)
-                .padding(horizontal = 24.dp)
-                .padding(top = 24.dp)
+                .padding(top = 24.dp),
         ) {
             item {
-                Column(
-
-                ) {
-                    Text(
-                        text = "${greetingText},",
-                        style = MaterialTheme.typography.titleLarge,
-                        color = MaterialTheme.colorScheme.secondary
-                    )
-                    Text(
-                        text = "Perrell Brown",
-                        style = MaterialTheme.typography.headlineLarge,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.tertiary
-                    )
+                ContentPadding {
+                    Column {
+                        Text(
+                            text = "${greetingText},",
+                            style = MaterialTheme.typography.titleLarge,
+                            color = MaterialTheme.colorScheme.secondary
+                        )
+                        Text(
+                            text = user.name,
+                            style = MaterialTheme.typography.headlineLarge,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.tertiary
+                        )
+                    }
                 }
             }
 
@@ -134,28 +155,30 @@ private fun Content(
 
             // Ranking Cards
             item {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(IntrinsicSize.Min),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    PointsCard(
+                ContentPadding {
+                    Row(
                         modifier = Modifier
-                            .weight(1f)
-                            .fillMaxHeight(),
-                        text = "Points Earned",
-                        number = 6767,
-                    )
+                            .fillMaxWidth()
+                            .height(IntrinsicSize.Min),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        PointsCard(
+                            modifier = Modifier
+                                .weight(1f)
+                                .fillMaxHeight(),
+                            text = "Points Earned",
+                            number = user.points,
+                        )
 
-                    PointsCard(
-                        modifier = Modifier
-                            .weight(1f)
-                            .fillMaxHeight(),
-                        text = "Rank in AmbatuWork",
-                        number = 1,
-                        prefix = "#"
-                    )
+                        PointsCard(
+                            modifier = Modifier
+                                .weight(1f)
+                                .fillMaxHeight(),
+                            text = "Rank in AmbatuWork",
+                            number = user.rank,
+                            prefix = "#"
+                        )
+                    }
                 }
             }
 
@@ -168,23 +191,28 @@ private fun Content(
             // Today's Focus
             item {
                 // Title
-                Row(
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text(
-                        text = "Today's Focus",
-                        style = MaterialTheme.typography.headlineSmall,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.primary
-                    )
-                    Text(
-                        text = "View All",
-                        style = MaterialTheme.typography.labelLarge,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.tertiary
-                    )
+                ContentPadding {
+                    Row(
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text(
+                            text = "Today's Focus",
+                            style = MaterialTheme.typography.headlineSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                        Text(
+                            text = "View All",
+                            style = MaterialTheme.typography.labelLarge,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.tertiary,
+                            modifier = Modifier.clickable {
+                                todaysFocusViewAllClick()
+                            }
+                        )
+                    }
                 }
             }
 
@@ -195,38 +223,43 @@ private fun Content(
             }
 
             // Lists
-            items(10) {
-                FocusCard(
-                    focusText = "Backend",
-                    focusDue = "Due Today",
-                    focusTeam = "Amba",
-                    point = 67
-                )
-                Spacer(
-                    modifier = Modifier.size(8.dp)
-                )
+            items(taskList.size.coerceAtMost(3)) {
+                ContentPadding {
+                    Column(
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        TaskFocusCard(
+                            task = taskList[it]
+                        )
+                        Spacer(
+                            modifier = Modifier.size(8.dp)
+                        )
+                    }
+                }
             }
 
             item {
                 Spacer(
-                    modifier = Modifier.size(8.dp)
+                    modifier = Modifier.size(24.dp)
                 )
             }
 
-            // Today's Focus
+            // Pending Actions
             item {
                 // Title
-                Row(
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text(
-                        text = "Pending Actions",
-                        style = MaterialTheme.typography.headlineSmall,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.primary
-                    )
+                ContentPadding {
+                    Row(
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text(
+                            text = "Pending Actions",
+                            style = MaterialTheme.typography.headlineSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                    }
                 }
             }
 
@@ -235,7 +268,95 @@ private fun Content(
                     modifier = Modifier.size(8.dp)
                 )
             }
+
+            item {
+                LazyRow(
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    contentPadding = PaddingValues(horizontal = 16.dp)
+                ) {
+                    items(getPendingActionsByUserId(user.id).size) {
+                        PendingActionCard(
+                            modifier = Modifier.fillParentMaxWidth(0.82f),
+                            pendingAction = pendingActionList[it]
+                        )
+                    }
+                }
+            }
+
+            item {
+                Spacer(
+                    modifier = Modifier.size(24.dp)
+                )
+            }
+
+            // Active Teams
+            item {
+                // Title
+                ContentPadding {
+                    Row(
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text(
+                            text = "Active Teams",
+                            style = MaterialTheme.typography.headlineSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                        Text(
+                            text = "View All",
+                            style = MaterialTheme.typography.labelLarge,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.tertiary,
+                            modifier = Modifier.clickable {
+                                activeTeamsViewAllClick()
+                            }
+                        )
+                    }
+                }
+            }
+
+            item {
+                Spacer(
+                    modifier = Modifier.size(8.dp)
+                )
+            }
+
+            item {
+                LazyRow(
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    contentPadding = PaddingValues(horizontal = 16.dp)
+                ) {
+                    items(3) {
+                        TeamCard(
+                            modifier = Modifier.fillParentMaxWidth(0.82f),
+                            team = teamList[it]
+                        )
+                    }
+                }
+            }
+
+            item {
+                Spacer(
+                    modifier = Modifier.size(128.dp)
+                )
+            }
         }
+    }
+}
+
+@Composable
+private fun ContentPadding(
+    modifier: Modifier = Modifier,
+    content: @Composable () -> Unit
+) {
+    Surface(
+        modifier = modifier
+            .padding(horizontal = 24.dp),
+        color = Color.Transparent
+    ) {
+        content()
     }
 }
 
@@ -278,17 +399,28 @@ private fun PointsCard(
 }
 
 @Composable
-private fun FocusCard(
-    focusText: String,
-    focusDue: String,
-    focusTeam: String,
-    point: Int = 0
+private fun TaskFocusCard(
+    task: Task,
+    onActionButtonClick: () -> Unit = {}
 ) {
+    val team = teamList.associateBy { it.id } [task.teamId]
+
+    val today = LocalDate.now()
+    val dueDate = task.due.toLocalDate()
+
+    val due = when {
+        dueDate.isBefore(today) -> "Missing"
+        dueDate == today -> "Today"
+        dueDate == today.plusDays(1) -> "Tomorrow"
+        else -> task.due.format(DateTimeFormatter.ofPattern("MMM d", Locale.ENGLISH))
+    }
+
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceVariant
-        )
+        ),
+        onClick = onActionButtonClick
     ) {
         Row(
             modifier = Modifier
@@ -312,13 +444,13 @@ private fun FocusCard(
                 modifier = Modifier.weight(1f)
             ) {
                 Text(
-                    text = focusText,
+                    text = task.title,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.fillMaxWidth()
                 )
                 Text(
-                    text = "$focusDue - $focusTeam",
+                    text = "$due - ${team?.name}",
                     color = MaterialTheme.colorScheme.secondary,
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -328,12 +460,108 @@ private fun FocusCard(
                 horizontalAlignment = Alignment.End
             ) {
                 Text(
-                    text = "+ ${point}",
+                    text = "+ ${task.point}",
                     style = MaterialTheme.typography.headlineMedium,
                     fontWeight = FontWeight.Bold
                 )
                 Text(text = "Pts")
             }
+        }
+    }
+}
+
+@Composable
+private fun PendingActionCard(
+    modifier: Modifier,
+    pendingAction: PendingAction
+) {
+
+    val today = LocalDate.now()
+    val dueDate = pendingAction.due.toLocalDate()
+
+    val due = when {
+        dueDate.isBefore(today) -> "Missing"
+        dueDate == today -> "Today"
+        dueDate == today.plusDays(1) -> "Tomorrow"
+        else -> pendingAction.due.format(DateTimeFormatter.ofPattern("MMM d", Locale.ENGLISH))
+    }
+
+    Card(
+        modifier = modifier
+            .height(180.dp),
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant
+        )
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp),
+            verticalArrangement = Arrangement.SpaceBetween,
+        ) {
+            Text(
+                text = pendingAction.title,
+                style = MaterialTheme.typography.headlineSmall,
+                color = MaterialTheme.colorScheme.tertiary,
+                fontWeight = FontWeight.SemiBold
+            )
+
+            Text(
+                text = due,
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.error
+            )
+
+            Text(
+                text = pendingAction.description,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.secondary
+            )
+
+            Button (
+                onClick = pendingAction.onClick,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(pendingAction.submitText)
+            }
+        }
+    }
+}
+
+@Composable
+private fun TeamCard(
+    modifier: Modifier,
+    team: Team,
+    onActionButtonClick: () -> Unit = {}
+) {
+    Card(
+        modifier = modifier
+            .height(150.dp),
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant
+        ),
+        onClick = onActionButtonClick
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp),
+            verticalArrangement = Arrangement.SpaceBetween,
+        ) {
+            Text(
+                text = team.name,
+                style = MaterialTheme.typography.headlineSmall,
+                color = MaterialTheme.colorScheme.tertiary,
+                fontWeight = FontWeight.SemiBold
+            )
+
+            Text(
+                text = team.topic,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.secondary
+            )
         }
     }
 }

@@ -13,10 +13,3 @@ data class User(
     val points: Int = 0,
     val rank: Int = 0
 ) : Parcelable
-
-val placeholderUser = User(
-    id = 1,
-    name = "Perrel Brown",
-    email = "dreamy@gmail.com",
-    picture = R.drawable.profile_placeholder
-)

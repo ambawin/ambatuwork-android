@@ -30,8 +30,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import win.ambatu.work.R
+import win.ambatu.work.controller.UserController
 import win.ambatu.work.data.model.User
-import win.ambatu.work.data.model.placeholderUser
 import win.ambatu.work.ui.theme.AmbatuWorkTheme
 
 @Composable
@@ -48,7 +48,7 @@ fun ProfileScreen(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun Content(
-    user: User = placeholderUser,
+    user: User = UserController.getPlaceholderUser(),
     onNavigationBackClick: () -> Unit = {},
     onProfileIconClick: () -> Unit = {}
 ) {

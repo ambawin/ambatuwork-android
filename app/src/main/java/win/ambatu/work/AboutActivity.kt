@@ -48,9 +48,9 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
+import win.ambatu.work.controller.DeveloperController
 import win.ambatu.work.data.intent.MainIntents
 import win.ambatu.work.data.model.Developer
-import win.ambatu.work.data.model.developers
 import win.ambatu.work.ui.theme.AmbatuWorkTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -312,7 +312,7 @@ fun AboutScreenPreview() {
         ) { innerPadding ->
             AboutScreen(
                 innerPadding = innerPadding,
-                developers = developers,
+                developers = DeveloperController.getAll(),
                 onShareAppButtonClick = {}
             )
         }

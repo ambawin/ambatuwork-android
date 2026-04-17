@@ -41,20 +41,17 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import win.ambatu.work.R
+import win.ambatu.work.controller.PendingActionController
 import win.ambatu.work.controller.TaskController
 import win.ambatu.work.controller.TeamController
+import win.ambatu.work.controller.UserController
 import win.ambatu.work.data.model.PendingAction
 import win.ambatu.work.data.model.Team
 import win.ambatu.work.data.model.User
-import win.ambatu.work.data.model.getPendingActionsByUserId
-import win.ambatu.work.data.model.pendingActionList
-import win.ambatu.work.data.model.placeholderUser
 import win.ambatu.work.feature.team.TaskFocusCard
 import win.ambatu.work.ui.theme.AmbatuWorkTheme
-import java.time.LocalDate
+import win.ambatu.work.util.DateUtils
 import java.time.LocalTime
-import java.time.format.DateTimeFormatter
-import java.util.Locale
 
 @Composable
 fun HomeScreen(
@@ -83,7 +80,7 @@ fun HomeScreen(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun Content(
-    user: User = placeholderUser,
+    user: User = UserController.getPlaceholderUser(),
     greetingText: String = "Good Morning",
     onProfileIconClick: () -> Unit = {},
     onTodaysFocusViewAllClick: () -> Unit = {},
@@ -280,14 +277,15 @@ private fun Content(
             }
 
             item {
+                val pendingActions = PendingActionController.getByUserId(user.id)
                 LazyRow(
                     horizontalArrangement = Arrangement.spacedBy(12.dp),
                     contentPadding = PaddingValues(horizontal = 16.dp)
                 ) {
-                    items(getPendingActionsByUserId(user.id).size) {
+                    items(pendingActions.size) {
                         PendingActionCard(
                             modifier = Modifier.fillParentMaxWidth(0.82f),
-                            pendingAction = pendingActionList[it]
+                            pendingAction = pendingActions[it]
                         )
                     }
                 }
@@ -413,16 +411,7 @@ private fun PendingActionCard(
     modifier: Modifier,
     pendingAction: PendingAction
 ) {
-
-    val today = LocalDate.now()
-    val dueDate = pendingAction.due.toLocalDate()
-
-    val due = when {
-        dueDate.isBefore(today) -> "Missing"
-        dueDate == today -> "Today"
-        dueDate == today.plusDays(1) -> "Tomorrow"
-        else -> pendingAction.due.format(DateTimeFormatter.ofPattern("MMM d", Locale.ENGLISH))
-    }
+    val due = DateUtils.formatDueDate(pendingAction.due)
 
     Card(
         modifier = modifier

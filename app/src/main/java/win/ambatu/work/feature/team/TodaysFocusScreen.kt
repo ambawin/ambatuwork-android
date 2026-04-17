@@ -38,9 +38,8 @@ import win.ambatu.work.controller.TaskController
 import win.ambatu.work.data.model.Task
 import win.ambatu.work.feature.home.ContentPadding
 import win.ambatu.work.ui.theme.AmbatuWorkTheme
+import win.ambatu.work.util.DateUtils
 import java.time.LocalDate
-import java.time.format.DateTimeFormatter
-import java.util.Locale
 
 @Composable
 fun TodaysFocusScreen(
@@ -117,16 +116,7 @@ fun TaskFocusCard(
     onActionButtonClick: () -> Unit = {}
 ) {
     val team = TaskController.getTeamFromTaskId(task.teamId)
-
-    val today = LocalDate.now()
-    val dueDate = task.due.toLocalDate()
-
-    val due = when {
-        dueDate.isBefore(today) -> "Missing"
-        dueDate == today -> "Today"
-        dueDate == today.plusDays(1) -> "Tomorrow"
-        else -> task.due.format(DateTimeFormatter.ofPattern("MMM d", Locale.ENGLISH))
-    }
+    val due = DateUtils.formatDueDate(task.due)
 
     Card(
         modifier = Modifier.fillMaxWidth(),

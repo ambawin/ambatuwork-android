@@ -12,7 +12,7 @@ object TaskController {
             title = "Laprak 1 Latar Belakang",
             detail = "Isi paragraf dasar teori juga",
             point = 25,
-            due = LocalDateTime.of(2026, 4, 24, 23, 59)
+            due = LocalDateTime.of(2026, 4, 2, 23, 59)
         ),
         Task(
             id = 2,

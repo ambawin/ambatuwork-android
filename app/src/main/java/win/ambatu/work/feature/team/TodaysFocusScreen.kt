@@ -52,7 +52,7 @@ fun TodaysFocusScreen(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun Content(
+private fun Content(
     onNavigationBackClick: () -> Unit = {}
 ) {
     Scaffold(

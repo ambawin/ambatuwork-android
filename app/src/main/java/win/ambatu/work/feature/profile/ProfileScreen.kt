@@ -4,14 +4,19 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.Subject
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -37,11 +42,13 @@ import win.ambatu.work.ui.theme.AmbatuWorkTheme
 @Composable
 fun ProfileScreen(
     user: User,
-    onNavigationBackClick: () -> Unit = {}
+    onNavigationBackClick: () -> Unit,
+    onAboutClick: () -> Unit
 ) {
     Content(
         user = user,
-        onNavigationBackClick = onNavigationBackClick
+        onNavigationBackClick = onNavigationBackClick,
+        onAboutClick = onAboutClick
     )
 }
 
@@ -50,7 +57,8 @@ fun ProfileScreen(
 private fun Content(
     user: User = UserController.getPlaceholderUser(),
     onNavigationBackClick: () -> Unit = {},
-    onProfileIconClick: () -> Unit = {}
+    onProfileIconClick: () -> Unit = {},
+    onAboutClick: () -> Unit = {}
 ) {
     Scaffold(
         topBar = {
@@ -89,14 +97,21 @@ private fun Content(
             modifier = Modifier
                 .padding(innerPadding)
                 .padding(horizontal = 24.dp)
-                .padding(top = 24.dp)
-                .fillMaxSize()
+                .fillMaxSize(),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
+
+            item {
+                Spacer(
+                    modifier = Modifier.size(24.dp)
+                )
+            }
+
             item {
                 Column(
                     modifier = Modifier
                         .fillMaxWidth(),
-                    verticalArrangement = Arrangement.spacedBy(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
                     Image(
@@ -120,6 +135,48 @@ private fun Content(
                     )
                 }
 
+            }
+
+            item {
+                Spacer(
+                    modifier = Modifier.size(32.dp)
+                )
+            }
+
+            item {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                ) {
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth(),
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.surfaceVariant
+                        ),
+                        shape = RoundedCornerShape(20.dp),
+                        onClick = onAboutClick
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .padding(8.dp)
+                                .padding(horizontal = 16.dp)
+                                .padding(vertical = 12.dp)
+                                .fillMaxSize(),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.Subject,
+                                contentDescription = "About icon",
+                                tint = MaterialTheme.colorScheme.primary
+                            )
+                            Text(
+                                "About this App"
+                            )
+                        }
+                    }
+                }
             }
         }
     }

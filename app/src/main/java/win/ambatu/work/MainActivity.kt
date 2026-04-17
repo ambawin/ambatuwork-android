@@ -35,7 +35,13 @@ class MainActivity : ComponentActivity() {
                             )
                         )
                     },
-                    onActiveTeamsViewAllClick = {}
+                    onActiveTeamsViewAllClick = {
+                        startActivity(
+                            MainIntents.toActiveTeams(
+                                this
+                            )
+                        )
+                    }
                 )
             }
         }

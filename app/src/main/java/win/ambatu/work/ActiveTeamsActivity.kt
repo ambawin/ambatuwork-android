@@ -4,6 +4,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import win.ambatu.work.feature.team.ActiveTeamsScreen
 import win.ambatu.work.ui.theme.AmbatuWorkTheme
 
 class ActiveTeamsActivity : ComponentActivity() {
@@ -13,7 +14,11 @@ class ActiveTeamsActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             AmbatuWorkTheme {
-
+                ActiveTeamsScreen(
+                    onNavigationBackClick = {
+                        finish()
+                    }
+                )
             }
         }
     }

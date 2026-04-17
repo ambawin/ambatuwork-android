@@ -3,6 +3,7 @@ package win.ambatu.work.data.intent
 import android.content.Context
 import android.content.Intent
 import win.ambatu.work.AboutActivity
+import win.ambatu.work.ActiveTeamsActivity
 import win.ambatu.work.ProfileActivity
 import win.ambatu.work.TodaysFocusActivity
 import win.ambatu.work.data.model.Developer
@@ -46,6 +47,15 @@ object MainIntents {
         return Intent(
             context,
             TodaysFocusActivity::class.java
+        )
+    }
+
+    fun toActiveTeams(
+        context: Context
+    ): Intent {
+        return Intent(
+            context,
+            ActiveTeamsActivity::class.java
         )
     }
 }

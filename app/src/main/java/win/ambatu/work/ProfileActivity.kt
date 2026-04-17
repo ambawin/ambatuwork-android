@@ -4,6 +4,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import win.ambatu.work.controller.DeveloperController
 import win.ambatu.work.data.intent.MainIntents
 import win.ambatu.work.data.model.User
 import win.ambatu.work.feature.profile.ProfileScreen
@@ -27,6 +28,9 @@ class ProfileActivity : ComponentActivity() {
                     user = user,
                     onNavigationBackClick = {
                         finish()
+                    },
+                    onAboutClick = {
+                        startActivity(MainIntents.toAbout(this, DeveloperController.getAll()))
                     }
                 )
             }

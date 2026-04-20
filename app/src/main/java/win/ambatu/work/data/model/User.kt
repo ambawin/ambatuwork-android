@@ -9,7 +9,7 @@ data class User(
     val id: Int,
     val name: String,
     val email: String,
-    val picture: Int,
+    val picture: String?,
     val points: Int = 0,
     val rank: Int = 0
 ) : Parcelable

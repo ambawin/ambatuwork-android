@@ -1,6 +1,7 @@
 package win.ambatu.work.feature.profile
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -14,7 +15,9 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.automirrored.filled.Subject
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -34,6 +37,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import coil3.compose.AsyncImage
 import win.ambatu.work.R
 import win.ambatu.work.controller.UserController
 import win.ambatu.work.data.model.User
@@ -43,12 +47,15 @@ import win.ambatu.work.ui.theme.AmbatuWorkTheme
 fun ProfileScreen(
     user: User,
     onNavigationBackClick: () -> Unit,
-    onAboutClick: () -> Unit
+    onProfileIconClick: () -> Unit,
+    onAboutClick: () -> Unit,
+    onLogoutClick: () -> Unit
 ) {
     Content(
         user = user,
         onNavigationBackClick = onNavigationBackClick,
-        onAboutClick = onAboutClick
+        onAboutClick = onAboutClick,
+        onLogoutClick = onLogoutClick
     )
 }
 
@@ -58,7 +65,8 @@ private fun Content(
     user: User = UserController.getPlaceholderUser(),
     onNavigationBackClick: () -> Unit = {},
     onProfileIconClick: () -> Unit = {},
-    onAboutClick: () -> Unit = {}
+    onAboutClick: () -> Unit = {},
+    onLogoutClick: () -> Unit = {},
 ) {
     Scaffold(
         topBar = {
@@ -114,13 +122,19 @@ private fun Content(
                     verticalArrangement = Arrangement.spacedBy(8.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
-                    Image(
-                        painter = painterResource(id = R.drawable.profile_placeholder),
+
+                    AsyncImage(
+                        model = user.picture,
+                        placeholder = painterResource(id = R.drawable.profile_placeholder),
+                        error = painterResource(id = R.drawable.profile_placeholder),
                         contentDescription = "User profile picture",
                         modifier = Modifier
                             .clip(CircleShape)
-                            .size(128.dp),
-                        contentScale = ContentScale.Crop
+                            .size(128.dp)
+                            .clickable {
+                                onProfileIconClick()
+                            },
+                        contentScale = ContentScale.Crop,
                     )
                     Text(
                         text = user.name,
@@ -173,6 +187,38 @@ private fun Content(
                             )
                             Text(
                                 "About this App"
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.size(8.dp))
+
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth(),
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.errorContainer
+                        ),
+                        shape = RoundedCornerShape(20.dp),
+                        onClick = onLogoutClick
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .padding(8.dp)
+                                .padding(horizontal = 16.dp)
+                                .padding(vertical = 12.dp)
+                                .fillMaxSize(),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.Logout,
+                                contentDescription = "Logout icon",
+                                tint = MaterialTheme.colorScheme.error
+                            )
+                            Text(
+                                "Logout",
+                                color = MaterialTheme.colorScheme.error
                             )
                         }
                     }

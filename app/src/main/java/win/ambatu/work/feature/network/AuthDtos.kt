@@ -13,11 +13,17 @@ data class GoogleAuthRequest(
 
 @JsonClass(generateAdapter = true)
 data class UserDto(
-    val id: Long,
-    val name: String,
-    val email: String,
+    val id: Long? = null,
+    val name: String? = null,
+    val email: String? = null,
     @Json(name = "avatar_url")
-    val avatarUrl: String?
+    val avatarUrl: String? = null
+)
+
+@JsonClass(generateAdapter = true)
+data class UserResponse(
+    val data: UserDto? = null,
+    val user: UserDto? = null
 )
 
 @JsonClass(generateAdapter = true)

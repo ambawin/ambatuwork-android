@@ -12,6 +12,7 @@ import kotlinx.coroutines.launch
 import win.ambatu.work.BuildConfig
 
 data class LoginUiState(
+    val isCheckingSession: Boolean = true,
     val isLoading: Boolean = false,
     val error: String? = null,
     val isLoggedIn: Boolean = false,
@@ -33,27 +34,54 @@ class LoginViewModel(
 
     private fun checkSession() {
         val token = sessionManager.getToken()
-        if (token != null) {
-            viewModelScope.launch {
-                _uiState.value = LoginUiState(isLoading = true)
-                try {
-                    val userDto = authRepository.getMe("Bearer $token")
-                    _uiState.value = LoginUiState(
-                        isLoggedIn = true,
-                        user = userDto
-                    )
-                } catch (e: Exception) {
-                    Log.e("Auth", "Failed to fetch user with saved token", e)
+        if (token == null) {
+            _uiState.value = LoginUiState(isCheckingSession = false, isLoggedIn = false)
+            return
+        }
+
+        viewModelScope.launch {
+            try {
+                val userDto = authRepository.getMe("Bearer $token")
+                _uiState.value = LoginUiState(
+                    isCheckingSession = false,
+                    isLoggedIn = true,
+                    user = userDto
+                )
+            } catch (e: retrofit2.HttpException) {
+                if (e.code() == 401) {
                     sessionManager.clearToken()
-                    _uiState.value = LoginUiState(isLoggedIn = false)
                 }
+                _uiState.value = LoginUiState(
+                    isCheckingSession = false,
+                    isLoggedIn = false,
+                    error = if (e.code() == 401) null else "Server error: ${e.code()}"
+                )
+            } catch (e: java.io.IOException) {
+                Log.e("Auth", "Network error connecting to ${BuildConfig.BASE_URL}", e)
+                _uiState.value = LoginUiState(
+                    isCheckingSession = false,
+                    isLoggedIn = false,
+                    error = "Network error: ${e.message}. Check your connection and BASE_URL."
+                )
+            } catch (e: Exception) {
+                Log.e("Auth", "Unexpected error", e)
+                _uiState.value = LoginUiState(
+                    isCheckingSession = false,
+                    isLoggedIn = false,
+                    error = "Unexpected error: ${e.message}"
+                )
             }
         }
     }
 
+    fun logout() {
+        sessionManager.clearToken()
+        _uiState.value = LoginUiState(isCheckingSession = false, isLoggedIn = false)
+    }
+
     fun signInWithGoogle() {
         viewModelScope.launch {
-            _uiState.value = LoginUiState(isLoading = true)
+            _uiState.value = _uiState.value.copy(isLoading = true, isCheckingSession = false, error = null)
 
             try {
                 val googleIdToken = googleSignInManager.getGoogleIdToken()
@@ -67,13 +95,13 @@ class LoginViewModel(
 
                 sessionManager.saveToken(response.token)
 
-                _uiState.value = LoginUiState(
+                _uiState.value = _uiState.value.copy(
                     isLoading = false,
                     isLoggedIn = true,
                     user = response.user
                 )
             } catch (e: Exception) {
-                _uiState.value = LoginUiState(
+                _uiState.value = _uiState.value.copy(
                     isLoading = false,
                     error = e.message ?: "Sign in failed"
                 )

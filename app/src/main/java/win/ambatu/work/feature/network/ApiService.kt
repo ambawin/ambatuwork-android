@@ -14,5 +14,5 @@ interface ApiService {
     @GET("api/v1/auth/me")
     suspend fun getMe(
         @Header("Authorization") authorization: String
-    ): UserDto
+    ): UserResponse
 }

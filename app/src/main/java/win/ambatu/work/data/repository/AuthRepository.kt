@@ -17,6 +17,7 @@ class AuthRepository(
     }
 
     suspend fun getMe(token: String): win.ambatu.work.feature.network.UserDto {
-        return apiService.getMe(token)
+        val response = apiService.getMe(token)
+        return response.data ?: response.user ?: throw Exception("User data not found in response")
     }
 }

@@ -6,6 +6,11 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.collectAsState
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 import win.ambatu.work.controller.UserController
 import win.ambatu.work.data.intent.MainIntents
 import win.ambatu.work.data.repository.AuthRepository
@@ -35,12 +40,17 @@ class MainActivity : ComponentActivity() {
         setContent {
             AmbatuWorkTheme {
                 val uiState = loginViewModel.uiState.collectAsState().value
-                if (uiState.isLoggedIn) {
+
+                if (uiState.isCheckingSession) {
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        CircularProgressIndicator()
+                    }
+                } else if (uiState.isLoggedIn) {
                     val user = uiState.user?.let { dto ->
                         win.ambatu.work.data.model.User(
-                            id = dto.id.toInt(),
-                            name = dto.name,
-                            email = dto.email,
+                            id = dto.id?.toInt() ?: 0,
+                            name = dto.name ?: "",
+                            email = dto.email ?: "",
                             picture = dto.avatarUrl,
                             points = 0,
                             rank = 0

@@ -34,8 +34,7 @@ android {
             ?: project.findProperty("GOOGLE_WEB_CLIENT_ID")?.toString() 
             ?: ""
         val baseUrl = localProperties.getProperty("BASE_URL") 
-            ?: project.findProperty("BASE_URL")?.toString() 
-            ?: "https://localhost/"
+            ?: project.findProperty("BASE_URL")?.toString()
 
         buildConfigField("String", "GOOGLE_WEB_CLIENT_ID", "\"$googleWebClientId\"")
         buildConfigField("String", "BASE_URL", "\"$baseUrl\"")

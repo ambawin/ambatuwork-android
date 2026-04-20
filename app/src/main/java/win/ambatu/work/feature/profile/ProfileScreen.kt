@@ -15,6 +15,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.automirrored.filled.Subject
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -47,12 +48,14 @@ fun ProfileScreen(
     user: User,
     onNavigationBackClick: () -> Unit,
     onProfileIconClick: () -> Unit,
-    onAboutClick: () -> Unit
+    onAboutClick: () -> Unit,
+    onLogoutClick: () -> Unit
 ) {
     Content(
         user = user,
         onNavigationBackClick = onNavigationBackClick,
-        onAboutClick = onAboutClick
+        onAboutClick = onAboutClick,
+        onLogoutClick = onLogoutClick
     )
 }
 
@@ -63,6 +66,7 @@ private fun Content(
     onNavigationBackClick: () -> Unit = {},
     onProfileIconClick: () -> Unit = {},
     onAboutClick: () -> Unit = {},
+    onLogoutClick: () -> Unit = {},
 ) {
     Scaffold(
         topBar = {
@@ -183,6 +187,38 @@ private fun Content(
                             )
                             Text(
                                 "About this App"
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.size(8.dp))
+
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth(),
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.errorContainer
+                        ),
+                        shape = RoundedCornerShape(20.dp),
+                        onClick = onLogoutClick
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .padding(8.dp)
+                                .padding(horizontal = 16.dp)
+                                .padding(vertical = 12.dp)
+                                .fillMaxSize(),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.Logout,
+                                contentDescription = "Logout icon",
+                                tint = MaterialTheme.colorScheme.error
+                            )
+                            Text(
+                                "Logout",
+                                color = MaterialTheme.colorScheme.error
                             )
                         }
                     }

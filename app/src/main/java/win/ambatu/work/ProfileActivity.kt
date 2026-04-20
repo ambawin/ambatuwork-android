@@ -18,7 +18,7 @@ class ProfileActivity : ComponentActivity() {
             id = intent.getIntExtra(MainIntents.EXTRA_USER_ID, 1),
             name = intent.getStringExtra(MainIntents.EXTRA_USER_NAME) ?: "",
             email = intent.getStringExtra(MainIntents.EXTRA_USER_EMAIL) ?: "",
-            picture = intent.getIntExtra(MainIntents.EXTRA_USER_PICTURE, R.drawable.profile_placeholder)
+            picture = intent.getStringExtra(MainIntents.EXTRA_USER_PICTURE)
         )
 
         enableEdgeToEdge()

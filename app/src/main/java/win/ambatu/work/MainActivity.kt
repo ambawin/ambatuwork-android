@@ -41,7 +41,7 @@ class MainActivity : ComponentActivity() {
                             id = dto.id.toInt(),
                             name = dto.name,
                             email = dto.email,
-                            picture = win.ambatu.work.R.drawable.profile_placeholder,
+                            picture = dto.avatarUrl,
                             points = 0,
                             rank = 0
                         )

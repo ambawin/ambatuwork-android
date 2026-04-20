@@ -40,6 +40,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil3.compose.AsyncImage
 import win.ambatu.work.R
 import win.ambatu.work.controller.PendingActionController
 import win.ambatu.work.controller.TaskController
@@ -112,8 +113,10 @@ private fun Content(
                     IconButton(
                         onClick = onProfileIconClick
                     ) {
-                        Image(
-                            painter = painterResource(id = R.drawable.profile_placeholder),
+                        AsyncImage(
+                            model = user.picture,
+                            placeholder = painterResource(id = R.drawable.profile_placeholder),
+                            error = painterResource(id = R.drawable.profile_placeholder),
                             contentDescription = "User profile picture",
                             modifier = Modifier
                                 .clip(CircleShape)

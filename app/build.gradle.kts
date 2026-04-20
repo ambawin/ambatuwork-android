@@ -100,4 +100,7 @@ dependencies {
     implementation("com.squareup.moshi:moshi-kotlin:1.15.2")
     ksp("com.squareup.moshi:moshi-kotlin-codegen:1.15.2")
     implementation("org.jetbrains.kotlin:kotlin-reflect")
+
+    implementation("io.coil-kt.coil3:coil-compose:3.1.0")
+    implementation("io.coil-kt.coil3:coil-network-okhttp:3.1.0")
 }

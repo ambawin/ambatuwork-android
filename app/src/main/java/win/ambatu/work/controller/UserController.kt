@@ -9,7 +9,7 @@ object UserController {
             id = 1,
             name = "Perrel Brown",
             email = "dreamy@gmail.com",
-            picture = R.drawable.profile_placeholder,
+            picture = null,
             points = 2450,
             rank = 12
         ),
@@ -17,7 +17,7 @@ object UserController {
             id = 2,
             name = "Amba Singh",
             email = "amba@gmail.com",
-            picture = R.drawable.profile_placeholder,
+            picture = null,
             points = 1200,
             rank = 45
         )

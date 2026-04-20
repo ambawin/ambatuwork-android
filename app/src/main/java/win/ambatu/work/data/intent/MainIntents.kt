@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.Intent
 import win.ambatu.work.AboutActivity
 import win.ambatu.work.ActiveTeamsActivity
+import win.ambatu.work.LoginActivity
 import win.ambatu.work.ProfileActivity
 import win.ambatu.work.TodaysFocusActivity
 import win.ambatu.work.data.model.Developer
@@ -56,6 +57,15 @@ object MainIntents {
         return Intent(
             context,
             ActiveTeamsActivity::class.java
+        )
+    }
+
+    fun toLogin(
+        context: Context
+    ) : Intent {
+        return Intent(
+            context,
+            LoginActivity::class.java
         )
     }
 }

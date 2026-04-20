@@ -29,6 +29,9 @@ class ProfileActivity : ComponentActivity() {
                     onNavigationBackClick = {
                         finish()
                     },
+                    onProfileIconClick = {
+                        startActivity(MainIntents.toLogin(this))
+                    },
                     onAboutClick = {
                         startActivity(MainIntents.toAbout(this, DeveloperController.getAll()))
                     }

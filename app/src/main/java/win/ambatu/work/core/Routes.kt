@@ -15,13 +15,4 @@ sealed interface Routes : NavKey {
 
     @Serializable
     data class Profile(val user: User) : Routes
-
-    @Serializable
-    data object TodaysFocus : Routes
-
-    @Serializable
-    data object ActiveTeams : Routes
-
-    @Serializable
-    data class About(val developers: List<Developer>) : Routes
 }

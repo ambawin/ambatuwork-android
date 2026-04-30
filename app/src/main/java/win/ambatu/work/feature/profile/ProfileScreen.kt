@@ -1,6 +1,5 @@
 package win.ambatu.work.feature.profile
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -16,8 +15,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Logout
-import androidx.compose.material.icons.automirrored.filled.Subject
-import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -47,14 +44,11 @@ import win.ambatu.work.ui.theme.AmbatuWorkTheme
 fun ProfileScreen(
     user: User,
     onNavigationBackClick: () -> Unit,
-    onProfileIconClick: () -> Unit,
-    onAboutClick: () -> Unit,
     onLogoutClick: () -> Unit
 ) {
     Content(
         user = user,
         onNavigationBackClick = onNavigationBackClick,
-        onAboutClick = onAboutClick,
         onLogoutClick = onLogoutClick
     )
 }
@@ -64,8 +58,6 @@ fun ProfileScreen(
 private fun Content(
     user: User = UserController.getPlaceholderUser(),
     onNavigationBackClick: () -> Unit = {},
-    onProfileIconClick: () -> Unit = {},
-    onAboutClick: () -> Unit = {},
     onLogoutClick: () -> Unit = {},
 ) {
     Scaffold(
@@ -130,10 +122,7 @@ private fun Content(
                         contentDescription = "User profile picture",
                         modifier = Modifier
                             .clip(CircleShape)
-                            .size(128.dp)
-                            .clickable {
-                                onProfileIconClick()
-                            },
+                            .size(128.dp),
                         contentScale = ContentScale.Crop,
                     )
                     Text(
@@ -162,37 +151,6 @@ private fun Content(
                     modifier = Modifier
                         .fillMaxWidth()
                 ) {
-                    Card(
-                        modifier = Modifier
-                            .fillMaxWidth(),
-                        colors = CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.surfaceVariant
-                        ),
-                        shape = RoundedCornerShape(20.dp),
-                        onClick = onAboutClick
-                    ) {
-                        Row(
-                            modifier = Modifier
-                                .padding(8.dp)
-                                .padding(horizontal = 16.dp)
-                                .padding(vertical = 12.dp)
-                                .fillMaxSize(),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Filled.Subject,
-                                contentDescription = "About icon",
-                                tint = MaterialTheme.colorScheme.primary
-                            )
-                            Text(
-                                "About this App"
-                            )
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.size(8.dp))
-
                     Card(
                         modifier = Modifier
                             .fillMaxWidth(),

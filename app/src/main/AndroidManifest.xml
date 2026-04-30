@@ -24,11 +24,6 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".AboutActivity" />
-        <activity android:name=".ProfileActivity" />
-        <activity android:name=".TodaysFocusActivity" />
-        <activity android:name=".ActiveTeamsActivity" />
-        <activity android:name=".LoginActivity" />
     </application>
 
 </manifest>

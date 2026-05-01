@@ -52,15 +52,17 @@ fun ComposeApp() {
     val uiState by loginViewModel.uiState.collectAsState()
     val backStack = rememberNavBackStack(Routes.Login as NavKey)
 
-    LaunchedEffect(uiState.isLoggedIn) {
+    LaunchedEffect(uiState.isLoggedIn, uiState.isCheckingSession) {
+        if (uiState.isCheckingSession) return@LaunchedEffect
+
         if (uiState.isLoggedIn) {
-            if (backStack.last() is Routes.Login) {
-                backStack.clear()
-                backStack.add(Routes.Home)
+            if (backStack.any { it is Routes.Login }) {
+                backStack.replaceAll(Routes.Home)
             }
-        } else if (!uiState.isCheckingSession && !uiState.isLoggedIn) {
-            backStack.clear()
-            backStack.add(Routes.Login)
+        } else {
+            if (backStack.none { it is Routes.Login }) {
+                backStack.replaceAll(Routes.Login)
+            }
         }
     }
 
@@ -71,7 +73,7 @@ fun ComposeApp() {
                     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                         CircularProgressIndicator()
                     }
-                } else {
+                } else if (backStack.isNotEmpty()) {
                     NavDisplay(
                         backStack = backStack,
                         entryDecorators = listOf(
@@ -97,7 +99,7 @@ fun ComposeApp() {
                                 HomeScreen(
                                     user = user,
                                     onProfileIconClick = {
-                                        backStack.add(Routes.Profile(user))
+                                        backStack.pushUnique(Routes.Profile(user))
                                     }
                                 )
                             }
@@ -105,7 +107,7 @@ fun ComposeApp() {
                                 ProfileScreen(
                                     user = route.user,
                                     onNavigationBackClick = {
-                                        backStack.removeAt(backStack.size - 1)
+                                        backStack.popSafe()
                                     },
                                     onLogoutClick = {
                                         loginViewModel.logout()

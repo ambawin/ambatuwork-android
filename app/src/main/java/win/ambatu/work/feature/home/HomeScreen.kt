@@ -81,7 +81,7 @@ private fun Content(
     user: User = UserController.getPlaceholderUser(),
     uiState: HomeUiState = HomeUiState(),
     onProfileIconClick: () -> Unit = {},
-    onCreateProject: (String, String, Int) -> Unit = { _, _, _ -> },
+    onCreateProject: (String, String, String, Int) -> Unit = { _, _, _, _ -> },
     onAcceptInvitation: (String) -> Unit = {}
 ) {
     var showCreateSheet by remember { mutableStateOf(false) }
@@ -202,8 +202,8 @@ private fun Content(
         ) {
             CreateProjectForm(
                 onDismiss = { showCreateSheet = false },
-                onCreate = { name, goal, sprint ->
-                    onCreateProject(name, goal, sprint)
+                onCreate = { name, description, goal, sprint ->
+                    onCreateProject(name, description, goal, sprint)
                     showCreateSheet = false
                 }
             )
@@ -274,9 +274,10 @@ fun ProjectItem(project: ProjectDto) {
 @Composable
 fun CreateProjectForm(
     onDismiss: () -> Unit,
-    onCreate: (String, String, Int) -> Unit
+    onCreate: (String, String, String, Int) -> Unit
 ) {
     var name by remember { mutableStateOf("") }
+    var description by remember { mutableStateOf("") }
     var goal by remember { mutableStateOf("") }
     var sprintLength by remember { mutableStateOf("14") }
 
@@ -295,6 +296,13 @@ fun CreateProjectForm(
             modifier = Modifier.fillMaxWidth()
         )
         OutlinedTextField(
+            value = description,
+            onValueChange = { description = it },
+            label = { Text("Description") },
+            modifier = Modifier.fillMaxWidth(),
+            minLines = 2
+        )
+        OutlinedTextField(
             value = goal,
             onValueChange = { goal = it },
             label = { Text("Product Goal") },
@@ -311,7 +319,7 @@ fun CreateProjectForm(
         )
         Button(
             onClick = {
-                onCreate(name, goal, sprintLength.toIntOrNull() ?: 14)
+                onCreate(name, description, goal, sprintLength.toIntOrNull() ?: 14)
             },
             modifier = Modifier.fillMaxWidth(),
             enabled = name.isNotBlank() && goal.isNotBlank()

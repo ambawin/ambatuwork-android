@@ -45,14 +45,14 @@ class HomeViewModel(
         }
     }
 
-    fun createProject(name: String, productGoal: String, defaultSprintLength: Int) {
+    fun createProject(name: String, description: String, productGoal: String, defaultSprintLength: Int) {
         val token = sessionManager.getToken() ?: return
         viewModelScope.launch {
             _uiState.update { it.copy(isCreatingProject = true, error = null) }
             try {
                 val request = CreateProjectRequest(
                     name = name,
-                    description = "", // Or pass from UI
+                    description = description,
                     productGoal = productGoal,
                     defaultSprintLengthDays = defaultSprintLength
                 )

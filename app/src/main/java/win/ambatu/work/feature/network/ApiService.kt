@@ -74,6 +74,6 @@ interface ApiService {
     @POST("api/v1/invitations/{token}/accept")
     suspend fun acceptInvitation(
         @Header("Authorization") authorization: String,
-        @Path("token") token: String
+        @Path("token", encoded = true) token: String
     ): AcceptInvitationResponse
 }

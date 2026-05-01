@@ -27,11 +27,13 @@ import androidx.navigation3.ui.NavDisplay
 import win.ambatu.work.controller.UserController
 import win.ambatu.work.data.model.User
 import win.ambatu.work.data.repository.AuthRepository
+import win.ambatu.work.data.repository.ProjectRepository
 import win.ambatu.work.data.storage.SessionManager
 import win.ambatu.work.feature.auth.GoogleSignInManager
 import win.ambatu.work.feature.auth.LoginScreen
 import win.ambatu.work.feature.auth.LoginViewModel
 import win.ambatu.work.feature.home.HomeScreen
+import win.ambatu.work.feature.home.HomeViewModel
 import win.ambatu.work.feature.network.NetworkModule
 import win.ambatu.work.feature.profile.ProfileScreen
 import win.ambatu.work.ui.theme.AmbatuWorkTheme
@@ -42,6 +44,7 @@ fun ComposeApp() {
     val activity = context as Activity
     val sessionManager = remember { SessionManager(context) }
     val authRepository = remember { AuthRepository(NetworkModule.apiService) }
+    val projectRepository = remember { ProjectRepository(NetworkModule.apiService) }
     val googleSignInManager = remember { GoogleSignInManager(activity) }
 
     val loginViewModel: LoginViewModel = viewModel {
@@ -101,8 +104,13 @@ fun ComposeApp() {
                                     )
                                 } ?: UserController.getPlaceholderUser()
 
+                                val homeViewModel: HomeViewModel = viewModel {
+                                    HomeViewModel(projectRepository, sessionManager)
+                                }
+
                                 HomeScreen(
                                     user = user,
+                                    viewModel = homeViewModel,
                                     onProfileIconClick = {
                                         backStack.pushUnique(Routes.Profile(user))
                                     }

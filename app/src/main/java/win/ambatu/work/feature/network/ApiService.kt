@@ -28,20 +28,20 @@ interface ApiService {
     suspend fun createProject(
         @Header("Authorization") authorization: String,
         @Body request: CreateProjectRequest
-    ): ProjectDto
+    ): ProjectResponse
 
     @GET("api/v1/projects/{projectId}")
     suspend fun getProject(
         @Header("Authorization") authorization: String,
         @Path("projectId") projectId: Long
-    ): ProjectDto
+    ): ProjectResponse
 
     @PATCH("api/v1/projects/{projectId}")
     suspend fun updateProject(
         @Header("Authorization") authorization: String,
         @Path("projectId") projectId: Long,
         @Body request: UpdateProjectRequest
-    ): ProjectDto
+    ): ProjectResponse
 
     @GET("api/v1/projects/{projectId}/members")
     suspend fun getProjectMembers(
@@ -55,7 +55,7 @@ interface ApiService {
         @Path("projectId") projectId: Long,
         @Path("userId") userId: Long,
         @Body request: UpdateMemberRoleRequest
-    ): ProjectMemberDto
+    ): ProjectMemberResponse
 
     @DELETE("api/v1/projects/{projectId}/members/{userId}")
     suspend fun removeProjectMember(

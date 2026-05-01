@@ -12,15 +12,15 @@ class ProjectRepository(
     }
 
     suspend fun createProject(token: String, request: CreateProjectRequest): ProjectDto {
-        return apiService.createProject(getAuthHeader(token), request)
+        return apiService.createProject(getAuthHeader(token), request).data
     }
 
     suspend fun getProject(token: String, projectId: Long): ProjectDto {
-        return apiService.getProject(getAuthHeader(token), projectId)
+        return apiService.getProject(getAuthHeader(token), projectId).data
     }
 
     suspend fun updateProject(token: String, projectId: Long, request: UpdateProjectRequest): ProjectDto {
-        return apiService.updateProject(getAuthHeader(token), projectId, request)
+        return apiService.updateProject(getAuthHeader(token), projectId, request).data
     }
 
     suspend fun getProjectMembers(token: String, projectId: Long): List<ProjectMemberDto> {
@@ -38,7 +38,7 @@ class ProjectRepository(
             projectId,
             userId,
             UpdateMemberRoleRequest(role)
-        )
+        ).data
     }
 
     suspend fun removeProjectMember(token: String, projectId: Long, userId: Long): String {

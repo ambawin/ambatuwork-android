@@ -33,6 +33,11 @@ data class ProjectListResponse(
 )
 
 @JsonClass(generateAdapter = true)
+data class ProjectResponse(
+    val data: ProjectDto
+)
+
+@JsonClass(generateAdapter = true)
 data class CreateProjectRequest(
     val name: String,
     val description: String?,
@@ -67,6 +72,11 @@ data class ProjectMemberDto(
     @Json(name = "joined_at")
     val joinedAt: String?,
     val user: UserDto
+)
+
+@JsonClass(generateAdapter = true)
+data class ProjectMemberResponse(
+    val data: ProjectMemberDto
 )
 
 @JsonClass(generateAdapter = true)

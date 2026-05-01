@@ -1,6 +1,9 @@
 package win.ambatu.work.core
 
 import android.app.Activity
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.CircularProgressIndicator
@@ -76,6 +79,8 @@ fun ComposeApp() {
                 } else if (backStack.isNotEmpty()) {
                     NavDisplay(
                         backStack = backStack,
+                        transitionSpec = { EnterTransition.None togetherWith ExitTransition.None },
+                        popTransitionSpec = { EnterTransition.None togetherWith ExitTransition.None },
                         entryDecorators = listOf(
                             rememberSaveableStateHolderNavEntryDecorator(),
                             rememberViewModelStoreNavEntryDecorator()

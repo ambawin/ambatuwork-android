@@ -6,6 +6,7 @@ import androidx.credentials.CredentialManager
 import androidx.credentials.CustomCredential
 import androidx.credentials.GetCredentialRequest
 import android.util.Base64
+import android.util.Log
 import com.google.android.libraries.identity.googleid.GetSignInWithGoogleOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import win.ambatu.work.BuildConfig
@@ -35,7 +36,12 @@ class GoogleSignInManager(
         if (credential is CustomCredential &&
             credential.type == GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL
         ) {
-            return GoogleIdTokenCredential.createFrom(credential.data).idToken
+            val googleIdTokenCredential = GoogleIdTokenCredential.createFrom(credential.data)
+            val idToken = googleIdTokenCredential.idToken
+
+            Log.d("AUTH_DEBUG", "Google ID Token: $idToken")
+
+            return idToken
         }
 
         error("Unexpected credential type: ${credential.type}")

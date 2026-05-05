@@ -17,9 +17,7 @@ data class HomeUiState(
     val isLoading: Boolean = false,
     val error: String? = null,
     val isCreatingProject: Boolean = false,
-    val isAcceptingInvitation: Boolean = false,
-    val isInvitingUser: Boolean = false,
-    val invitationToken: String? = null
+    val isInvitingUser: Boolean = false
 )
 
 class HomeViewModel(
@@ -67,34 +65,16 @@ class HomeViewModel(
         }
     }
 
-    fun acceptInvitation(invitationToken: String) {
-        val token = sessionManager.getToken() ?: return
-        viewModelScope.launch {
-            _uiState.update { it.copy(isAcceptingInvitation = true, error = null) }
-            try {
-                projectRepository.acceptInvitation(token, invitationToken)
-                loadProjects() // Refresh list
-                _uiState.update { it.copy(isAcceptingInvitation = false) }
-            } catch (e: Exception) {
-                _uiState.update { it.copy(isAcceptingInvitation = false, error = e.message) }
-            }
-        }
-    }
-
     fun inviteUser(projectId: Long, email: String) {
         val token = sessionManager.getToken() ?: return
         viewModelScope.launch {
-            _uiState.update { it.copy(isInvitingUser = true, error = null, invitationToken = null) }
+            _uiState.update { it.copy(isInvitingUser = true, error = null) }
             try {
-                val response = projectRepository.createInvitation(token, projectId, email, "member")
-                _uiState.update { it.copy(isInvitingUser = false, invitationToken = response.token) }
+                projectRepository.createInvitation(token, projectId, email, "member")
+                _uiState.update { it.copy(isInvitingUser = false) }
             } catch (e: Exception) {
                 _uiState.update { it.copy(isInvitingUser = false, error = e.message) }
             }
         }
-    }
-
-    fun clearInvitationToken() {
-        _uiState.update { it.copy(invitationToken = null) }
     }
 }

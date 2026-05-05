@@ -18,12 +18,9 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Group
 import androidx.compose.material.icons.filled.GroupAdd
-import androidx.compose.material.icons.filled.Mail
 import androidx.compose.material.icons.filled.PostAdd
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
@@ -74,6 +71,7 @@ import win.ambatu.work.ui.theme.AmbatuWorkTheme
 fun HomeScreen(
     user: User,
     viewModel: HomeViewModel,
+    onProjectClick: (Long) -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
@@ -81,9 +79,8 @@ fun HomeScreen(
         user = user,
         uiState = uiState,
         onCreateProject = viewModel::createProject,
-        onAcceptInvitation = viewModel::acceptInvitation,
         onInviteUser = viewModel::inviteUser,
-        onClearInvitationToken = viewModel::clearInvitationToken
+        onProjectClick = onProjectClick
     )
 }
 
@@ -93,16 +90,13 @@ private fun Content(
     user: User = UserController.getPlaceholderUser(),
     uiState: HomeUiState = HomeUiState(),
     onCreateProject: (String, String, String, Int) -> Unit = { _, _, _, _ -> },
-    onAcceptInvitation: (String) -> Unit = {},
     onInviteUser: (Long, String) -> Unit = { _, _ -> },
-    onClearInvitationToken: () -> Unit = {}
+    onProjectClick: (Long) -> Unit = {}
 ) {
     var showActionSheet by remember { mutableStateOf(false) }
     var showCreateSheet by remember { mutableStateOf(false) }
     var showInviteSheet by remember { mutableStateOf(false) }
-    var showAcceptDialog by remember { mutableStateOf(false) }
     val sheetState = rememberModalBottomSheetState()
-    val clipboardManager = LocalClipboardManager.current
 
     Scaffold(
         topBar = {
@@ -123,15 +117,6 @@ private fun Content(
                         Text(
                             text = "AmbatuWork",
                             fontWeight = FontWeight.Bold
-                        )
-                    }
-                },
-                actions = {
-                    IconButton(onClick = { showAcceptDialog = true }) {
-                        Icon(
-                            imageVector = Icons.Default.Mail,
-                            contentDescription = "Accept Invitation",
-                            tint = MaterialTheme.colorScheme.primary
                         )
                     }
                 }
@@ -179,7 +164,10 @@ private fun Content(
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     items(uiState.projects) { project ->
-                        ProjectItem(project = project)
+                        ProjectItem(
+                            project = project,
+                            onClick = { onProjectClick(project.id) }
+                        )
                     }
                 }
             }
@@ -256,65 +244,17 @@ private fun Content(
             )
         }
     }
-
-    if (uiState.invitationToken != null) {
-        AlertDialog(
-            onDismissRequest = onClearInvitationToken,
-            title = { Text("Invitation Created") },
-            text = {
-                Column {
-                    Text("The user has been invited. You can copy the token below to send it manually if needed:")
-                    Spacer(modifier = Modifier.height(16.dp))
-                    Card(
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = androidx.compose.material3.CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.surfaceVariant
-                        )
-                    ) {
-                        Row(
-                            modifier = Modifier
-                                .padding(12.dp)
-                                .fillMaxWidth(),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            Text(
-                                text = uiState.invitationToken,
-                                style = MaterialTheme.typography.bodySmall,
-                                modifier = Modifier.weight(1f)
-                            )
-                            IconButton(onClick = {
-                                clipboardManager.setText(AnnotatedString(uiState.invitationToken))
-                            }) {
-                                Icon(Icons.Default.ContentCopy, contentDescription = "Copy")
-                            }
-                        }
-                    }
-                }
-            },
-            confirmButton = {
-                Button(onClick = onClearInvitationToken) {
-                    Text("Close")
-                }
-            }
-        )
-    }
-
-    if (showAcceptDialog) {
-        AcceptInvitationDialog(
-            onDismiss = { showAcceptDialog = false },
-            onConfirm = { token ->
-                onAcceptInvitation(token)
-                showAcceptDialog = false
-            }
-        )
-    }
 }
 
 @Composable
-fun ProjectItem(project: ProjectDto) {
+fun ProjectItem(
+    project: ProjectDto,
+    onClick: () -> Unit = {}
+) {
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick),
         shape = RoundedCornerShape(12.dp)
     ) {
         Column(
@@ -494,43 +434,6 @@ fun InviteUserForm(
             Text("Invite")
         }
     }
-}
-
-@Composable
-fun AcceptInvitationDialog(
-    onDismiss: () -> Unit,
-    onConfirm: (String) -> Unit
-) {
-    var token by remember { mutableStateOf("") }
-
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text("Accept Invitation") },
-        text = {
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text("Enter the invitation token you received.")
-                OutlinedTextField(
-                    value = token,
-                    onValueChange = { token = it },
-                    label = { Text("Token") },
-                    modifier = Modifier.fillMaxWidth()
-                )
-            }
-        },
-        confirmButton = {
-            TextButton(
-                onClick = { onConfirm(token) },
-                enabled = token.isNotBlank()
-            ) {
-                Text("Confirm")
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text("Cancel")
-            }
-        }
-    )
 }
 
 @Composable

@@ -14,5 +14,11 @@ sealed interface Routes : NavKey {
     data object Home : Routes
 
     @Serializable
+    data object Invitations : Routes
+
+    @Serializable
     data class Profile(val user: User) : Routes
+
+    @Serializable
+    data class ProjectDetail(val projectId: Long) : Routes
 }

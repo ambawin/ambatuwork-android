@@ -94,6 +94,7 @@ data class ProjectInvitationDto(
     val id: Long,
     @Json(name = "project_id")
     val projectId: Long,
+    val project: InvitationProjectDto? = null,
     val email: String,
     val role: String,
     val status: String,
@@ -104,6 +105,19 @@ data class ProjectInvitationDto(
     @Json(name = "created_at")
     val createdAt: String?,
     val token: String? = null
+)
+
+@JsonClass(generateAdapter = true)
+data class InvitationProjectDto(
+    val id: Long,
+    val name: String,
+    val description: String?,
+    val owner: UserDto? = null
+)
+
+@JsonClass(generateAdapter = true)
+data class InvitationListResponse(
+    val data: List<ProjectInvitationDto>
 )
 
 @JsonClass(generateAdapter = true)

@@ -71,6 +71,11 @@ interface ApiService {
         @Body request: CreateInvitationRequest
     ): InvitationResponse
 
+    @GET("api/v1/invitations")
+    suspend fun getInvitations(
+        @Header("Authorization") authorization: String
+    ): InvitationListResponse
+
     @POST("api/v1/invitations/{token}/accept")
     suspend fun acceptInvitation(
         @Header("Authorization") authorization: String,

@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Mail
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
@@ -50,6 +51,10 @@ import win.ambatu.work.feature.auth.LoginScreen
 import win.ambatu.work.feature.auth.LoginViewModel
 import win.ambatu.work.feature.home.HomeScreen
 import win.ambatu.work.feature.home.HomeViewModel
+import win.ambatu.work.feature.project.ProjectDetailScreen
+import win.ambatu.work.feature.project.ProjectDetailViewModel
+import win.ambatu.work.feature.invitation.InvitationScreen
+import win.ambatu.work.feature.invitation.InvitationViewModel
 import win.ambatu.work.feature.network.NetworkModule
 import win.ambatu.work.feature.profile.ProfileScreen
 import win.ambatu.work.ui.theme.AmbatuWorkTheme
@@ -112,6 +117,12 @@ fun ComposeApp() {
                                 label = { Text("Home") }
                             )
                             NavigationBarItem(
+                                selected = backStack.lastOrNull() is Routes.Invitations,
+                                onClick = { backStack.replaceAll(Routes.Invitations) },
+                                icon = { Icon(Icons.Default.Mail, contentDescription = null) },
+                                label = { Text("Invitations") }
+                            )
+                            NavigationBarItem(
                                 selected = backStack.lastOrNull() is Routes.Profile,
                                 onClick = { backStack.replaceAll(Routes.Profile(user)) },
                                 icon = {
@@ -157,7 +168,34 @@ fun ComposeApp() {
 
                                     HomeScreen(
                                         user = user,
-                                        viewModel = homeViewModel
+                                        viewModel = homeViewModel,
+                                        onProjectClick = { projectId ->
+                                            backStack.add(Routes.ProjectDetail(projectId))
+                                        }
+                                    )
+                                }
+                                entry<Routes.ProjectDetail> { route ->
+                                    val projectDetailViewModel: ProjectDetailViewModel = viewModel {
+                                        ProjectDetailViewModel(
+                                            projectId = route.projectId,
+                                            projectRepository = projectRepository,
+                                            sessionManager = sessionManager
+                                        )
+                                    }
+                                    ProjectDetailScreen(
+                                        viewModel = projectDetailViewModel,
+                                        onBackClick = { backStack.removeAt(backStack.lastIndex) }
+                                    )
+                                }
+                                entry<Routes.Invitations> {
+                                    val invitationViewModel: InvitationViewModel = viewModel {
+                                        InvitationViewModel(projectRepository, sessionManager)
+                                    }
+                                    InvitationScreen(
+                                        viewModel = invitationViewModel,
+                                        onInvitationAccepted = {
+                                            backStack.replaceAll(Routes.Home)
+                                        }
                                     )
                                 }
                                 entry<Routes.Profile> { route ->

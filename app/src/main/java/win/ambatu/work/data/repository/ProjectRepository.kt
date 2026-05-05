@@ -59,6 +59,10 @@ class ProjectRepository(
         return response.data
     }
 
+    suspend fun getInvitations(token: String): List<ProjectInvitationDto> {
+        return apiService.getInvitations(getAuthHeader(token)).data
+    }
+
     suspend fun acceptInvitation(token: String, invitationToken: String): ProjectDto {
         val response = apiService.acceptInvitation(getAuthHeader(token), invitationToken)
         return response.data

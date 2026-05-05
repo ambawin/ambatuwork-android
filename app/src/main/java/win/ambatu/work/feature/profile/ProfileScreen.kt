@@ -43,12 +43,10 @@ import win.ambatu.work.ui.theme.AmbatuWorkTheme
 @Composable
 fun ProfileScreen(
     user: User,
-    onNavigationBackClick: () -> Unit,
     onLogoutClick: () -> Unit
 ) {
     Content(
         user = user,
-        onNavigationBackClick = onNavigationBackClick,
         onLogoutClick = onLogoutClick
     )
 }
@@ -57,7 +55,6 @@ fun ProfileScreen(
 @Composable
 private fun Content(
     user: User = UserController.getPlaceholderUser(),
-    onNavigationBackClick: () -> Unit = {},
     onLogoutClick: () -> Unit = {},
 ) {
     Scaffold(
@@ -74,19 +71,8 @@ private fun Content(
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         Text(
-                            text = "Profile",
+                            text = "AmbatuWork",
                             fontWeight = FontWeight.Bold
-                        )
-                    }
-                },
-                navigationIcon = {
-                    IconButton(
-                        onClick = onNavigationBackClick
-                    ) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back to Home",
-                            tint = MaterialTheme.colorScheme.primary
                         )
                     }
                 },

@@ -6,8 +6,18 @@ import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Home
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
@@ -16,7 +26,11 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
 import androidx.navigation3.runtime.NavKey
@@ -24,6 +38,8 @@ import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
+import coil3.compose.AsyncImage
+import win.ambatu.work.R
 import win.ambatu.work.controller.UserController
 import win.ambatu.work.data.model.User
 import win.ambatu.work.data.repository.AuthRepository
@@ -74,61 +90,87 @@ fun ComposeApp() {
 
     CompositionLocalProvider(LocalBackStack provides backStack) {
         AmbatuWorkTheme {
-            Surface {
-                if (uiState.isCheckingSession) {
-                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        CircularProgressIndicator()
-                    }
-                } else if (backStack.isNotEmpty()) {
-                    NavDisplay(
-                        backStack = backStack,
-                        transitionSpec = { EnterTransition.None togetherWith ExitTransition.None },
-                        popTransitionSpec = { EnterTransition.None togetherWith ExitTransition.None },
-                        entryDecorators = listOf(
-                            rememberSaveableStateHolderNavEntryDecorator(),
-                            rememberViewModelStoreNavEntryDecorator()
-                        ),
-                        entryProvider = entryProvider {
-                            entry<Routes.Login> {
-                                LoginScreen(viewModel = loginViewModel)
-                            }
-                            entry<Routes.Home> {
-                                val user = uiState.user?.let { dto ->
-                                    User(
-                                        id = dto.id?.toInt() ?: 0,
-                                        name = dto.name ?: "",
-                                        email = dto.email ?: "",
-                                        picture = dto.avatarUrl,
-                                        points = 0,
-                                        rank = 0
+            val user = uiState.user?.let { dto ->
+                User(
+                    id = dto.id?.toInt() ?: 0,
+                    name = dto.name ?: "",
+                    email = dto.email ?: "",
+                    picture = dto.avatarUrl,
+                    points = 0,
+                    rank = 0
+                )
+            } ?: UserController.getPlaceholderUser()
+
+            Scaffold(
+                bottomBar = {
+                    if (uiState.isLoggedIn && backStack.none { it is Routes.Login }) {
+                        NavigationBar {
+                            NavigationBarItem(
+                                selected = backStack.lastOrNull() is Routes.Home,
+                                onClick = { backStack.replaceAll(Routes.Home) },
+                                icon = { Icon(Icons.Default.Home, contentDescription = null) },
+                                label = { Text("Home") }
+                            )
+                            NavigationBarItem(
+                                selected = backStack.lastOrNull() is Routes.Profile,
+                                onClick = { backStack.replaceAll(Routes.Profile(user)) },
+                                icon = {
+                                    AsyncImage(
+                                        model = user.picture,
+                                        placeholder = painterResource(id = R.drawable.profile_placeholder),
+                                        error = painterResource(id = R.drawable.profile_placeholder),
+                                        contentDescription = "User profile picture",
+                                        modifier = Modifier
+                                            .size(24.dp)
+                                            .clip(CircleShape),
+                                        contentScale = ContentScale.Crop
                                     )
-                                } ?: UserController.getPlaceholderUser()
-
-                                val homeViewModel: HomeViewModel = viewModel {
-                                    HomeViewModel(projectRepository, sessionManager)
-                                }
-
-                                HomeScreen(
-                                    user = user,
-                                    viewModel = homeViewModel,
-                                    onProfileIconClick = {
-                                        backStack.pushUnique(Routes.Profile(user))
-                                    }
-                                )
-                            }
-                            entry<Routes.Profile> { route ->
-                                ProfileScreen(
-                                    user = route.user,
-                                    onNavigationBackClick = {
-                                        backStack.popSafe()
-                                    },
-                                    onLogoutClick = {
-                                        loginViewModel.logout()
-                                    }
-                                )
-                            }
+                                },
+                                label = { Text("Profile") }
+                            )
                         }
-                    )
+                    }
+                }
+            ) { innerPadding ->
+                Surface(modifier = Modifier.padding(innerPadding)) {
+                    if (uiState.isCheckingSession) {
+                        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                            CircularProgressIndicator()
+                        }
+                    } else if (backStack.isNotEmpty()) {
+                        NavDisplay(
+                            backStack = backStack,
+                            transitionSpec = { EnterTransition.None togetherWith ExitTransition.None },
+                            popTransitionSpec = { EnterTransition.None togetherWith ExitTransition.None },
+                            entryDecorators = listOf(
+                                rememberSaveableStateHolderNavEntryDecorator(),
+                                rememberViewModelStoreNavEntryDecorator()
+                            ),
+                            entryProvider = entryProvider {
+                                entry<Routes.Login> {
+                                    LoginScreen(viewModel = loginViewModel)
+                                }
+                                entry<Routes.Home> {
+                                    val homeViewModel: HomeViewModel = viewModel {
+                                        HomeViewModel(projectRepository, sessionManager)
+                                    }
+
+                                    HomeScreen(
+                                        user = user,
+                                        viewModel = homeViewModel
+                                    )
+                                }
+                                entry<Routes.Profile> { route ->
+                                    ProfileScreen(
+                                        user = route.user,
+                                        onLogoutClick = {
+                                            loginViewModel.logout()
+                                        }
+                                    )
+                                }
+                            }
+                        )
+                    }
                 }
             }
         }

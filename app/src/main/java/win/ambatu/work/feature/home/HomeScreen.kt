@@ -74,14 +74,12 @@ import win.ambatu.work.ui.theme.AmbatuWorkTheme
 fun HomeScreen(
     user: User,
     viewModel: HomeViewModel,
-    onProfileIconClick: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
     Content(
         user = user,
         uiState = uiState,
-        onProfileIconClick = onProfileIconClick,
         onCreateProject = viewModel::createProject,
         onAcceptInvitation = viewModel::acceptInvitation,
         onInviteUser = viewModel::inviteUser,
@@ -94,7 +92,6 @@ fun HomeScreen(
 private fun Content(
     user: User = UserController.getPlaceholderUser(),
     uiState: HomeUiState = HomeUiState(),
-    onProfileIconClick: () -> Unit = {},
     onCreateProject: (String, String, String, Int) -> Unit = { _, _, _, _ -> },
     onAcceptInvitation: (String) -> Unit = {},
     onInviteUser: (Long, String) -> Unit = { _, _ -> },
@@ -126,22 +123,6 @@ private fun Content(
                         Text(
                             text = "AmbatuWork",
                             fontWeight = FontWeight.Bold
-                        )
-                    }
-                },
-                navigationIcon = {
-                    IconButton(
-                        onClick = onProfileIconClick
-                    ) {
-                        AsyncImage(
-                            model = user.picture,
-                            placeholder = painterResource(id = R.drawable.profile_placeholder),
-                            error = painterResource(id = R.drawable.profile_placeholder),
-                            contentDescription = "User profile picture",
-                            modifier = Modifier
-                                .clip(CircleShape)
-                                .size(48.dp),
-                            contentScale = ContentScale.Crop
                         )
                     }
                 },

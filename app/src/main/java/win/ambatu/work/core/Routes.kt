@@ -21,4 +21,7 @@ sealed interface Routes : NavKey {
 
     @Serializable
     data class ProjectDetail(val projectId: Long) : Routes
+
+    @Serializable
+    data object ScrumGuide : Routes
 }

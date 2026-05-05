@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Book
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Mail
 import androidx.compose.material3.CircularProgressIndicator
@@ -55,6 +56,7 @@ import win.ambatu.work.feature.project.ProjectDetailScreen
 import win.ambatu.work.feature.project.ProjectDetailViewModel
 import win.ambatu.work.feature.invitation.InvitationScreen
 import win.ambatu.work.feature.invitation.InvitationViewModel
+import win.ambatu.work.feature.scrum.ScrumGuideScreen
 import win.ambatu.work.feature.network.NetworkModule
 import win.ambatu.work.feature.profile.ProfileScreen
 import win.ambatu.work.ui.theme.AmbatuWorkTheme
@@ -115,6 +117,12 @@ fun ComposeApp() {
                                 onClick = { backStack.replaceAll(Routes.Home) },
                                 icon = { Icon(Icons.Default.Home, contentDescription = null) },
                                 label = { Text("Home") }
+                            )
+                            NavigationBarItem(
+                                selected = backStack.lastOrNull() is Routes.ScrumGuide,
+                                onClick = { backStack.replaceAll(Routes.ScrumGuide) },
+                                icon = { Icon(Icons.Default.Book, contentDescription = null, modifier = Modifier.size(24.dp)) },
+                                label = { Text("SCRUM Guide") }
                             )
                             NavigationBarItem(
                                 selected = backStack.lastOrNull() is Routes.Invitations,
@@ -186,6 +194,9 @@ fun ComposeApp() {
                                         viewModel = projectDetailViewModel,
                                         onBackClick = { backStack.removeAt(backStack.lastIndex) }
                                     )
+                                }
+                                entry<Routes.ScrumGuide> {
+                                    ScrumGuideScreen()
                                 }
                                 entry<Routes.Invitations> {
                                     val invitationViewModel: InvitationViewModel = viewModel {

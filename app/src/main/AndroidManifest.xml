@@ -29,6 +29,11 @@
             android:exported="false"
             android:label="Project Detail"
             android:theme="@style/Theme.AmbatuWork" />
+        <activity
+            android:name=".feature.project.ProjectMemberActivity"
+            android:exported="false"
+            android:label="Project Members"
+            android:theme="@style/Theme.AmbatuWork" />
     </application>
 
 </manifest>

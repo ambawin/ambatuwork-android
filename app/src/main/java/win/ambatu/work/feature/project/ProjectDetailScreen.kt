@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -43,13 +42,13 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import win.ambatu.work.R
-import win.ambatu.work.feature.network.ProjectMemberDto
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProjectDetailScreen(
     viewModel: ProjectDetailViewModel,
-    onBackClick: () -> Unit
+    onBackClick: () -> Unit,
+    onTeamSizeClick: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
@@ -161,22 +160,11 @@ fun ProjectDetailScreen(
                                         modifier = Modifier.weight(1f),
                                         icon = Icons.Default.Groups,
                                         label = "Team Size",
-                                        value = "${project.memberCount ?: 0} Members"
+                                        value = "${project.memberCount ?: 0} Members",
+                                        onClick = onTeamSizeClick
                                     )
                                 }
-
-                                Spacer(modifier = Modifier.height(24.dp))
-
-                                Text(
-                                    text = "Members (${uiState.members.size})",
-                                    style = MaterialTheme.typography.titleLarge,
-                                    fontWeight = FontWeight.Bold
-                                )
                             }
-                        }
-
-                        items(uiState.members) { member ->
-                            MemberItem(member = member)
                         }
                     }
                 }
@@ -190,9 +178,12 @@ fun InfoCard(
     modifier: Modifier = Modifier,
     icon: ImageVector,
     label: String,
-    value: String
+    value: String,
+    onClick: (() -> Unit)? = null
 ) {
     Card(
+        onClick = { onClick?.invoke() },
+        enabled = onClick != null,
         modifier = modifier,
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
@@ -219,51 +210,6 @@ fun InfoCard(
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold
             )
-        }
-    }
-}
-
-@Composable
-fun MemberItem(member: ProjectMemberDto) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(12.dp)
-    ) {
-        Row(
-            modifier = Modifier
-                .padding(12.dp)
-                .fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            AsyncImage(
-                model = member.user.avatarUrl,
-                contentDescription = "Member avatar",
-                modifier = Modifier
-                    .size(48.dp)
-                    .clip(CircleShape),
-                contentScale = ContentScale.Crop,
-                placeholder = painterResource(R.drawable.profile_placeholder),
-                error = painterResource(R.drawable.profile_placeholder)
-            )
-            Spacer(modifier = Modifier.width(16.dp))
-            Column {
-                Text(
-                    text = member.user.name ?: "Unknown User",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold
-                )
-                Text(
-                    text = member.user.email ?: "",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.secondary
-                )
-                Text(
-                    text = member.role.uppercase(),
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.padding(top = 2.dp)
-                )
-            }
         }
     }
 }

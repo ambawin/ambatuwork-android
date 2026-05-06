@@ -13,11 +13,11 @@ import win.ambatu.work.data.storage.SessionManager
 import win.ambatu.work.feature.network.NetworkModule
 import win.ambatu.work.ui.theme.AmbatuWorkTheme
 
-class ProjectDetailActivity : ComponentActivity() {
+class ProjectMemberActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        
+
         val projectId = intent.getLongExtra(EXTRA_PROJECT_ID, -1L)
         if (projectId == -1L) {
             finish()
@@ -29,21 +29,18 @@ class ProjectDetailActivity : ComponentActivity() {
                 val context = this
                 val sessionManager = remember { SessionManager(context) }
                 val projectRepository = remember { ProjectRepository(NetworkModule.apiService) }
-                
-                val projectDetailViewModel: ProjectDetailViewModel = viewModel {
+
+                val viewModel: ProjectDetailViewModel = viewModel {
                     ProjectDetailViewModel(
                         projectId = projectId,
                         projectRepository = projectRepository,
                         sessionManager = sessionManager
                     )
                 }
-                
-                ProjectDetailScreen(
-                    viewModel = projectDetailViewModel,
-                    onBackClick = { finish() },
-                    onTeamSizeClick = {
-                        startActivity(ProjectMemberActivity.createIntent(this, projectId))
-                    }
+
+                ProjectMemberListScreen(
+                    viewModel = viewModel,
+                    onBackClick = { finish() }
                 )
             }
         }
@@ -53,7 +50,7 @@ class ProjectDetailActivity : ComponentActivity() {
         private const val EXTRA_PROJECT_ID = "extra_project_id"
 
         fun createIntent(context: Context, projectId: Long): Intent {
-            return Intent(context, ProjectDetailActivity::class.java).apply {
+            return Intent(context, ProjectMemberActivity::class.java).apply {
                 putExtra(EXTRA_PROJECT_ID, projectId)
             }
         }

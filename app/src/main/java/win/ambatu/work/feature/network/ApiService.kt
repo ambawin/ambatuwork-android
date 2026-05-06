@@ -81,4 +81,10 @@ interface ApiService {
         @Header("Authorization") authorization: String,
         @Path("token", encoded = true) token: String
     ): AcceptInvitationResponse
+
+    @GET("api/v1/projects/{projectId}/backlog-items")
+    suspend fun getProjectBacklogItems(
+        @Header("Authorization") authorization: String,
+        @Path("projectId") projectId: Long
+    ): BacklogItemListResponse
 }

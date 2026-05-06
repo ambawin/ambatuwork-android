@@ -67,4 +67,8 @@ class ProjectRepository(
         val response = apiService.acceptInvitation(getAuthHeader(token), invitationToken)
         return response.data
     }
+
+    suspend fun getProjectBacklogItems(token: String, projectId: Long): List<BacklogItemDto> {
+        return apiService.getProjectBacklogItems(getAuthHeader(token), projectId).data
+    }
 }

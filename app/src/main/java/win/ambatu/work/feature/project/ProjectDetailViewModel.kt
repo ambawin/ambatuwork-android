@@ -9,12 +9,14 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import win.ambatu.work.data.repository.ProjectRepository
 import win.ambatu.work.data.storage.SessionManager
+import win.ambatu.work.feature.network.BacklogItemDto
 import win.ambatu.work.feature.network.ProjectDto
 import win.ambatu.work.feature.network.ProjectMemberDto
 
 data class ProjectDetailUiState(
     val project: ProjectDto? = null,
     val members: List<ProjectMemberDto> = emptyList(),
+    val backlogItems: List<BacklogItemDto> = emptyList(),
     val isLoading: Boolean = false,
     val error: String? = null
 )
@@ -31,6 +33,7 @@ class ProjectDetailViewModel(
     init {
         loadProject()
         loadMembers()
+        loadBacklogItems()
     }
 
     fun loadProject() {
@@ -54,6 +57,18 @@ class ProjectDetailViewModel(
                 _uiState.update { it.copy(members = members) }
             } catch (e: Exception) {
                 // Handle member loading error if needed
+            }
+        }
+    }
+
+    fun loadBacklogItems() {
+        val token = sessionManager.getToken() ?: return
+        viewModelScope.launch {
+            try {
+                val items = projectRepository.getProjectBacklogItems(token, projectId)
+                _uiState.update { it.copy(backlogItems = items) }
+            } catch (e: Exception) {
+                // Handle backlog loading error if needed
             }
         }
     }

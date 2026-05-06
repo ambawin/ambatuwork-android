@@ -127,7 +127,7 @@ fun MemberItem(
                 color = MaterialTheme.colorScheme.secondary
             )
             Text(
-                text = member.role.uppercase(),
+                text = member.role.lowercase().split(" ").joinToString(" ") { it -> it.replaceFirstChar { it.uppercase() } },
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.padding(top = 2.dp)

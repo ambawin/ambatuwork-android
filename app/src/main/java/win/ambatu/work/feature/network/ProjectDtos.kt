@@ -21,6 +21,25 @@ data class ProjectDto(
     val myRole: String?,
     @Json(name = "member_count")
     val memberCount: Int?,
+    @Json(name = "definition_of_done")
+    val definitionOfDone: DefinitionOfDoneDto?,
+    @Json(name = "created_at")
+    val createdAt: String?,
+    @Json(name = "updated_at")
+    val updatedAt: String?
+)
+
+@JsonClass(generateAdapter = true)
+data class DefinitionOfDoneDto(
+    val id: Long,
+    @Json(name = "project_id")
+    val projectId: Long,
+    val title: String,
+    val checklist: List<String>,
+    @Json(name = "is_active")
+    val isActive: Boolean,
+    @Json(name = "created_by_user_id")
+    val createdByUserId: Long,
     @Json(name = "created_at")
     val createdAt: String?,
     @Json(name = "updated_at")

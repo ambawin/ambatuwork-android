@@ -118,16 +118,16 @@ fun ComposeApp() {
                                 label = { Text("Home") }
                             )
                             NavigationBarItem(
-                                selected = backStack.lastOrNull() is Routes.ScrumGuide,
-                                onClick = { backStack.replaceAll(Routes.ScrumGuide) },
-                                icon = { Icon(Icons.Default.Book, contentDescription = null, modifier = Modifier.size(24.dp)) },
-                                label = { Text("SCRUM Guide") }
-                            )
-                            NavigationBarItem(
                                 selected = backStack.lastOrNull() is Routes.Invitations,
                                 onClick = { backStack.replaceAll(Routes.Invitations) },
                                 icon = { Icon(Icons.Default.Mail, contentDescription = null) },
                                 label = { Text("Invitations") }
+                            )
+                            NavigationBarItem(
+                                selected = backStack.lastOrNull() is Routes.ScrumGuide,
+                                onClick = { backStack.replaceAll(Routes.ScrumGuide) },
+                                icon = { Icon(Icons.Default.Book, contentDescription = null, modifier = Modifier.size(24.dp)) },
+                                label = { Text("SCRUM Guide") }
                             )
                             NavigationBarItem(
                                 selected = backStack.lastOrNull() is Routes.Profile,

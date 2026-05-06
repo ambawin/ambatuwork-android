@@ -52,8 +52,7 @@ import win.ambatu.work.feature.auth.LoginScreen
 import win.ambatu.work.feature.auth.LoginViewModel
 import win.ambatu.work.feature.home.HomeScreen
 import win.ambatu.work.feature.home.HomeViewModel
-import win.ambatu.work.feature.project.ProjectDetailScreen
-import win.ambatu.work.feature.project.ProjectDetailViewModel
+import win.ambatu.work.feature.project.ProjectDetailActivity
 import win.ambatu.work.feature.invitation.InvitationScreen
 import win.ambatu.work.feature.invitation.InvitationViewModel
 import win.ambatu.work.feature.scrum.ScrumGuideScreen
@@ -178,21 +177,10 @@ fun ComposeApp() {
                                         user = user,
                                         viewModel = homeViewModel,
                                         onProjectClick = { projectId ->
-                                            backStack.add(Routes.ProjectDetail(projectId))
+                                            context.startActivity(
+                                                ProjectDetailActivity.createIntent(context, projectId)
+                                            )
                                         }
-                                    )
-                                }
-                                entry<Routes.ProjectDetail> { route ->
-                                    val projectDetailViewModel: ProjectDetailViewModel = viewModel {
-                                        ProjectDetailViewModel(
-                                            projectId = route.projectId,
-                                            projectRepository = projectRepository,
-                                            sessionManager = sessionManager
-                                        )
-                                    }
-                                    ProjectDetailScreen(
-                                        viewModel = projectDetailViewModel,
-                                        onBackClick = { backStack.removeAt(backStack.lastIndex) }
                                     )
                                 }
                                 entry<Routes.ScrumGuide> {

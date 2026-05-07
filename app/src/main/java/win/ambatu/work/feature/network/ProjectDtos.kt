@@ -162,6 +162,61 @@ data class ProjectMemberListResponse(
 )
 
 @JsonClass(generateAdapter = true)
+data class SprintDto(
+    val id: Long,
+    @Json(name = "project_id")
+    val projectId: Long,
+    val name: String,
+    @Json(name = "sprint_goal")
+    val sprintGoal: String?,
+    val status: String,
+    @Json(name = "start_date")
+    val startDate: String?,
+    @Json(name = "end_date")
+    val endDate: String?,
+    @Json(name = "created_by_user_id")
+    val createdByUserId: Long,
+    @Json(name = "closed_by_user_id")
+    val closedByUserId: Long?,
+    @Json(name = "closed_at")
+    val closedAt: String?,
+    @Json(name = "item_count")
+    val itemCount: Int?,
+    @Json(name = "created_at")
+    val createdAt: String?,
+    @Json(name = "updated_at")
+    val updatedAt: String?
+)
+
+@JsonClass(generateAdapter = true)
+data class SprintListResponse(
+    val data: List<SprintDto>
+)
+
+@JsonClass(generateAdapter = true)
+data class SprintBoardDto(
+    val sprint: SprintDto,
+    val columns: SprintBoardColumnsDto
+)
+
+@JsonClass(generateAdapter = true)
+data class SprintBoardColumnsDto(
+    @Json(name = "selected")
+    val selected: List<BacklogItemDto> = emptyList(),
+    @Json(name = "in_progress")
+    val inProgress: List<BacklogItemDto> = emptyList(),
+    @Json(name = "in_review")
+    val inReview: List<BacklogItemDto> = emptyList(),
+    @Json(name = "done")
+    val done: List<BacklogItemDto> = emptyList()
+)
+
+@JsonClass(generateAdapter = true)
+data class SprintBoardResponse(
+    val data: SprintBoardDto
+)
+
+@JsonClass(generateAdapter = true)
 data class UpdateMemberRoleRequest(
     val role: String
 )

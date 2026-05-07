@@ -71,6 +71,10 @@ import coil3.compose.AsyncImage
 import win.ambatu.work.R
 import win.ambatu.work.feature.network.BacklogItemDto
 import win.ambatu.work.feature.network.DefinitionOfDoneDto
+import win.ambatu.work.feature.network.SprintDto
+import java.time.ZonedDateTime
+import java.time.format.DateTimeFormatter
+import java.util.Locale
 
 enum class ProjectTab(val title: String, val icon: ImageVector) {
     DASHBOARD("Dashboard", Icons.Default.Dashboard),
@@ -84,7 +88,8 @@ enum class ProjectTab(val title: String, val icon: ImageVector) {
 fun ProjectDetailScreen(
     viewModel: ProjectDetailViewModel,
     onBackClick: () -> Unit,
-    onAddBacklogClick: (projectId: Long) -> Unit
+    onAddBacklogClick: (projectId: Long) -> Unit,
+    onSprintClick: (projectId: Long, sprintId: Long) -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
     var selectedTab by remember { mutableStateOf(ProjectTab.DASHBOARD) }
@@ -175,14 +180,14 @@ fun ProjectDetailScreen(
                             onItemClick = { selectedBacklogItem = it }
                         )
 
-                        ProjectTab.SPRINT -> {
-                            Box(
-                                modifier = Modifier.fillMaxSize(),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Text("Sprint content coming soon")
+                        ProjectTab.SPRINT -> SprintTab(
+                            sprints = uiState.sprints,
+                            onSprintClick = { sprintId ->
+                                uiState.project?.id?.let { projectId ->
+                                    onSprintClick(projectId, sprintId)
+                                }
                             }
-                        }
+                        )
 
                         ProjectTab.SETTINGS -> SettingsTab(
                             members = uiState.members
@@ -324,6 +329,160 @@ fun BacklogTab(
                 )
             }
         }
+    }
+}
+
+@Composable
+fun SprintTab(
+    sprints: List<SprintDto>,
+    onSprintClick: (Long) -> Unit
+) {
+    if (sprints.isEmpty()) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(32.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = "No sprints created yet",
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+    } else {
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            items(
+                count = sprints.size,
+                key = { index -> sprints[index].id }
+            ) { index ->
+                SprintCard(
+                    sprint = sprints[index],
+                    onClick = { onSprintClick(sprints[index].id) }
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun SprintCard(
+    sprint: SprintDto,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Card(
+        onClick = onClick,
+        modifier = modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceContainerLow
+        )
+    ) {
+        Column(
+            modifier = Modifier
+                .padding(16.dp)
+                .fillMaxWidth(),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = sprint.name,
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold
+                    )
+                    sprint.sprintGoal?.let { goal ->
+                        Text(
+                            text = goal,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            maxLines = 2
+                        )
+                    }
+                }
+
+                Badge(
+                    containerColor = when (sprint.status.lowercase()) {
+                        "active" -> MaterialTheme.colorScheme.primary
+                        "planned" -> MaterialTheme.colorScheme.secondaryContainer
+                        "closed" -> MaterialTheme.colorScheme.surfaceVariant
+                        else -> MaterialTheme.colorScheme.surfaceContainerHigh
+                    },
+                    contentColor = when (sprint.status.lowercase()) {
+                        "active" -> MaterialTheme.colorScheme.onPrimary
+                        "planned" -> MaterialTheme.colorScheme.onSecondaryContainer
+                        "closed" -> MaterialTheme.colorScheme.onSurfaceVariant
+                        else -> MaterialTheme.colorScheme.onSurface
+                    }
+                ) {
+                    Text(
+                        text = sprint.status.uppercase(),
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                        style = MaterialTheme.typography.labelSmall
+                    )
+                }
+            }
+
+            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column {
+                    val dateRange = remember(sprint.startDate, sprint.endDate) {
+                        val start = formatDate(sprint.startDate)
+                        val end = formatDate(sprint.endDate)
+                        if (start != null && end != null) "$start - $end" else "Dates not set"
+                    }
+                    Text(
+                        text = "Duration",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.secondary
+                    )
+                    Text(
+                        text = dateRange,
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.Medium
+                    )
+                }
+
+                Column(horizontalAlignment = Alignment.End) {
+                    Text(
+                        text = "Items",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.secondary
+                    )
+                    Text(
+                        text = "${sprint.itemCount ?: 0} Backlog Items",
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
+            }
+        }
+    }
+}
+
+private fun formatDate(dateString: String?): String? {
+    if (dateString == null) return null
+    return try {
+        val parsed = ZonedDateTime.parse(dateString)
+        parsed.format(DateTimeFormatter.ofPattern("MMM dd, yyyy", Locale.getDefault()))
+    } catch (e: Exception) {
+        null
     }
 }
 

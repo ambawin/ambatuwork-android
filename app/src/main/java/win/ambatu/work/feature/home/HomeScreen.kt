@@ -17,7 +17,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Group
 import androidx.compose.material.icons.filled.GroupAdd
 import androidx.compose.material.icons.filled.Mail
@@ -56,6 +55,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import java.util.Calendar
 import win.ambatu.work.controller.UserController
 import win.ambatu.work.data.model.User
 import win.ambatu.work.feature.invitation.InvitationActivity
@@ -105,6 +105,16 @@ private fun Content(
     var showMenu by remember { mutableStateOf(false) }
     val sheetState = rememberModalBottomSheetState()
 
+    val greeting = remember {
+        val calendar = Calendar.getInstance()
+        when (calendar.get(Calendar.HOUR_OF_DAY)) {
+            in 0..11 -> "Good Morning"
+            in 12..16 -> "Good Afternoon"
+            else -> "Good Evening"
+        }
+    }
+    val firstName = user.name.split(" ").firstOrNull() ?: user.name
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -113,15 +123,10 @@ private fun Content(
                     titleContentColor = MaterialTheme.colorScheme.primary,
                 ),
                 title = {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.padding(horizontal = 8.dp)
-                    ) {
-                        Text(
-                            text = "AmbatuWork",
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
+                    Text(
+                        text = "AmbatuWork",
+                        fontWeight = FontWeight.Bold
+                    )
                 },
                 actions = {
                     IconButton(onClick = onInvitationsClick) {
@@ -155,119 +160,142 @@ private fun Content(
             }
         }
     ) { innerPadding ->
-        Box(
+        Column(
             modifier = Modifier
                 .padding(innerPadding)
                 .fillMaxSize()
         ) {
-            if (uiState.isLoading && uiState.projects.isEmpty()) {
-                CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
-            } else if (uiState.projects.isEmpty() && !uiState.isLoading) {
-                Column(
-                    modifier = Modifier
-                        .align(Alignment.Center)
-                        .padding(32.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Text(
-                        text = "No projects found",
-                        style = MaterialTheme.typography.headlineSmall,
-                        fontWeight = FontWeight.Bold
-                    )
-                    Text(
-                        text = "Create one or join via invitation!",
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.secondary
-                    )
-                }
-            } else {
-                LazyColumn(
-                    modifier = Modifier.fillMaxSize(),
-                    contentPadding = androidx.compose.foundation.layout.PaddingValues(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                ) {s
-                    items(uiState.projects) { project ->
-                        ProjectItem(
-                            project = project,
-                            onClick = { onProjectClick(project.id) }
+            Column(
+                modifier = Modifier.padding(16.dp)
+            ) {
+                Text(
+                    text = "$greeting,",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.secondary
+                )
+                Text(
+                    text = firstName,
+                    fontWeight = FontWeight.Bold,
+                    style = MaterialTheme.typography.headlineMedium
+                )
+            }
+
+            Box(
+                modifier = Modifier.fillMaxSize()
+            ) {
+                if (uiState.isLoading && uiState.projects.isEmpty()) {
+                    CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+                } else if (uiState.projects.isEmpty() && !uiState.isLoading) {
+                    Column(
+                        modifier = Modifier
+                            .align(Alignment.Center)
+                            .padding(32.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(
+                            text = "No projects found",
+                            style = MaterialTheme.typography.headlineSmall,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Text(
+                            text = "Create one or join via invitation!",
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.secondary
                         )
                     }
+                } else {
+                    LazyColumn(
+                        modifier = Modifier.fillMaxSize(),
+                        contentPadding = androidx.compose.foundation.layout.PaddingValues(
+                            start = 16.dp,
+                            end = 16.dp,
+                            bottom = 16.dp,
+                            top = 0.dp
+                        ),
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        items(uiState.projects) { project ->
+                            ProjectItem(
+                                project = project,
+                                onClick = { onProjectClick(project.id) }
+                            )
+                        }
+                    }
+                }
+
+                if (uiState.error != null) {
+                    Text(
+                        text = uiState.error,
+                        color = MaterialTheme.colorScheme.error,
+                        modifier = Modifier
+                            .align(Alignment.BottomCenter)
+                            .padding(16.dp)
+                    )
                 }
             }
-
-            if (uiState.error != null) {
-                Text(
-                    text = uiState.error,
-                    color = MaterialTheme.colorScheme.error,
-                    modifier = Modifier
-                        .align(Alignment.BottomCenter)
-                        .padding(16.dp)
-                )
-            }
         }
-    }
 
-    if (showActionSheet) {
-        ModalBottomSheet(
-            onDismissRequest = { showActionSheet = false },
-            sheetState = sheetState
-        ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 32.dp)
+        if (showActionSheet) {
+            ModalBottomSheet(
+                onDismissRequest = { showActionSheet = false },
+                sheetState = sheetState
             ) {
-                ListItem(
-                    headlineContent = { Text("Create New Project") },
-                    leadingContent = { Icon(Icons.Default.PostAdd, null) },
-                    modifier = Modifier.clickable {
-                        showActionSheet = false
-                        showCreateSheet = true
-                    }
-                )
-                ListItem(
-                    headlineContent = { Text("Invite User to Project") },
-                    leadingContent = { Icon(Icons.Default.GroupAdd, null) },
-                    modifier = Modifier.clickable {
-                        showActionSheet = false
-                        showInviteSheet = true
-                    }
-                )
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 32.dp)
+                ) {
+                    ListItem(
+                        headlineContent = { Text("Create New Project") },
+                        leadingContent = { Icon(Icons.Default.PostAdd, null) },
+                        modifier = Modifier.clickable {
+                            showActionSheet = false
+                            showCreateSheet = true
+                        }
+                    )
+                    ListItem(
+                        headlineContent = { Text("Invite User to Project") },
+                        leadingContent = { Icon(Icons.Default.GroupAdd, null) },
+                        modifier = Modifier.clickable {
+                            showActionSheet = false
+                            showInviteSheet = true
+                        }
+                    )
+                }
             }
         }
-    }
 
-    if (showCreateSheet) {
-        ModalBottomSheet(
-            onDismissRequest = { showCreateSheet = false },
-            sheetState = sheetState
-        ) {
-            CreateProjectForm(
-                onDismiss = { showCreateSheet = false },
+        if (showCreateSheet) {
+            ModalBottomSheet(
+                onDismissRequest = { showCreateSheet = false },
+                sheetState = sheetState
+            ) {
+                CreateProjectForm(
                 onCreate = { name, description, goal, sprint ->
                     onCreateProject(name, description, goal, sprint)
                     showCreateSheet = false
                 }
             )
+            }
         }
-    }
 
-    if (showInviteSheet) {
-        ModalBottomSheet(
-            onDismissRequest = { showInviteSheet = false },
-            sheetState = sheetState
-        ) {
-            InviteUserForm(
+        if (showInviteSheet) {
+            ModalBottomSheet(
+                onDismissRequest = { showInviteSheet = false },
+                sheetState = sheetState
+            ) {
+                InviteUserForm(
                 projects = uiState.projects,
-                onDismiss = { showInviteSheet = false },
                 onInvite = { projectId, email ->
                     onInviteUser(projectId, email)
                     showInviteSheet = false
                 }
             )
+            }
         }
     }
 }
+
 
 @Composable
 fun ProjectItem(
@@ -326,7 +354,6 @@ fun ProjectItem(
 
 @Composable
 fun CreateProjectForm(
-    onDismiss: () -> Unit,
     onCreate: (String, String, String, Int) -> Unit
 ) {
     var name by remember { mutableStateOf("") }
@@ -386,7 +413,6 @@ fun CreateProjectForm(
 @Composable
 fun InviteUserForm(
     projects: List<ProjectDto>,
-    onDismiss: () -> Unit,
     onInvite: (Long, String) -> Unit
 ) {
     var expanded by remember { mutableStateOf(false) }

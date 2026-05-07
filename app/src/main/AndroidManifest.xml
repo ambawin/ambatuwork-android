@@ -34,6 +34,11 @@
             android:exported="false"
             android:label="Add Backlog Item"
             android:theme="@style/Theme.AmbatuWork" />
+        <activity
+            android:name=".feature.project.SprintBoardActivity"
+            android:exported="false"
+            android:label="Sprint Board"
+            android:theme="@style/Theme.AmbatuWork" />
 
     </application>
 

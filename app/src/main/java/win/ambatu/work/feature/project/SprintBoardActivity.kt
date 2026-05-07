@@ -6,30 +6,20 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
-import androidx.compose.runtime.remember
-import androidx.lifecycle.viewmodel.compose.viewModel
 import win.ambatu.work.data.repository.ProjectRepository
 import win.ambatu.work.data.storage.SessionManager
 import win.ambatu.work.feature.network.NetworkModule
 import win.ambatu.work.ui.theme.AmbatuWorkTheme
 
-class ProjectDetailActivity : ComponentActivity() {
+class SprintBoardActivity : ComponentActivity() {
     private val projectRepository by lazy { ProjectRepository(NetworkModule.apiService) }
     private val sessionManager by lazy { SessionManager(this) }
     
-    private val viewModel: ProjectDetailViewModel by viewModels {
+    private val viewModel: SprintBoardViewModel by viewModels {
         val projectId = intent.getLongExtra(EXTRA_PROJECT_ID, -1L)
-        ProjectDetailViewModel.Factory(projectId, projectRepository, sessionManager)
-    }
-
-    private val addBacklogLauncher = registerForActivityResult(
-        ActivityResultContracts.StartActivityForResult()
-    ) { result ->
-        if (result.resultCode == RESULT_OK) {
-            viewModel.loadBacklogItems()
-        }
+        val sprintId = intent.getLongExtra(EXTRA_SPRINT_ID, -1L)
+        SprintBoardViewModel.Factory(projectId, sprintId, projectRepository, sessionManager)
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -37,22 +27,17 @@ class ProjectDetailActivity : ComponentActivity() {
         enableEdgeToEdge()
         
         val projectId = intent.getLongExtra(EXTRA_PROJECT_ID, -1L)
-        if (projectId == -1L) {
+        val sprintId = intent.getLongExtra(EXTRA_SPRINT_ID, -1L)
+        if (projectId == -1L || sprintId == -1L) {
             finish()
             return
         }
 
         setContent {
             AmbatuWorkTheme {
-                ProjectDetailScreen(
+                SprintBoardScreen(
                     viewModel = viewModel,
-                    onBackClick = { finish() },
-                    onAddBacklogClick = { id ->
-                        addBacklogLauncher.launch(AddBacklogItemActivity.createIntent(this, id))
-                    },
-                    onSprintClick = { projectId, sprintId ->
-                        startActivity(SprintBoardActivity.createIntent(this, projectId, sprintId))
-                    }
+                    onBackClick = { finish() }
                 )
             }
         }
@@ -60,10 +45,12 @@ class ProjectDetailActivity : ComponentActivity() {
 
     companion object {
         private const val EXTRA_PROJECT_ID = "extra_project_id"
+        private const val EXTRA_SPRINT_ID = "extra_sprint_id"
 
-        fun createIntent(context: Context, projectId: Long): Intent {
-            return Intent(context, ProjectDetailActivity::class.java).apply {
+        fun createIntent(context: Context, projectId: Long, sprintId: Long): Intent {
+            return Intent(context, SprintBoardActivity::class.java).apply {
                 putExtra(EXTRA_PROJECT_ID, projectId)
+                putExtra(EXTRA_SPRINT_ID, sprintId)
             }
         }
     }

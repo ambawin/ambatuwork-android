@@ -88,7 +88,8 @@ enum class ProjectTab(val title: String, val icon: ImageVector) {
 fun ProjectDetailScreen(
     viewModel: ProjectDetailViewModel,
     onBackClick: () -> Unit,
-    onAddBacklogClick: (projectId: Long) -> Unit
+    onAddBacklogClick: (projectId: Long) -> Unit,
+    onSprintClick: (projectId: Long, sprintId: Long) -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
     var selectedTab by remember { mutableStateOf(ProjectTab.DASHBOARD) }
@@ -180,7 +181,12 @@ fun ProjectDetailScreen(
                         )
 
                         ProjectTab.SPRINT -> SprintTab(
-                            sprints = uiState.sprints
+                            sprints = uiState.sprints,
+                            onSprintClick = { sprintId ->
+                                uiState.project?.id?.let { projectId ->
+                                    onSprintClick(projectId, sprintId)
+                                }
+                            }
                         )
 
                         ProjectTab.SETTINGS -> SettingsTab(
@@ -328,7 +334,8 @@ fun BacklogTab(
 
 @Composable
 fun SprintTab(
-    sprints: List<SprintDto>
+    sprints: List<SprintDto>,
+    onSprintClick: (Long) -> Unit
 ) {
     if (sprints.isEmpty()) {
         Box(
@@ -354,7 +361,10 @@ fun SprintTab(
                 count = sprints.size,
                 key = { index -> sprints[index].id }
             ) { index ->
-                SprintCard(sprint = sprints[index])
+                SprintCard(
+                    sprint = sprints[index],
+                    onClick = { onSprintClick(sprints[index].id) }
+                )
             }
         }
     }
@@ -363,9 +373,11 @@ fun SprintTab(
 @Composable
 fun SprintCard(
     sprint: SprintDto,
+    onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Card(
+        onClick = onClick,
         modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(

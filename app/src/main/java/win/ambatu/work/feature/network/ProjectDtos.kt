@@ -194,6 +194,29 @@ data class SprintListResponse(
 )
 
 @JsonClass(generateAdapter = true)
+data class SprintBoardDto(
+    val sprint: SprintDto,
+    val columns: SprintBoardColumnsDto
+)
+
+@JsonClass(generateAdapter = true)
+data class SprintBoardColumnsDto(
+    @Json(name = "selected")
+    val selected: List<BacklogItemDto> = emptyList(),
+    @Json(name = "in_progress")
+    val inProgress: List<BacklogItemDto> = emptyList(),
+    @Json(name = "in_review")
+    val inReview: List<BacklogItemDto> = emptyList(),
+    @Json(name = "done")
+    val done: List<BacklogItemDto> = emptyList()
+)
+
+@JsonClass(generateAdapter = true)
+data class SprintBoardResponse(
+    val data: SprintBoardDto
+)
+
+@JsonClass(generateAdapter = true)
 data class UpdateMemberRoleRequest(
     val role: String
 )

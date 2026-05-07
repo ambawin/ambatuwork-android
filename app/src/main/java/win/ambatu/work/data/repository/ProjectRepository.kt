@@ -87,4 +87,8 @@ class ProjectRepository(
     suspend fun getProjectSprints(token: String, projectId: Long): List<SprintDto> {
         return apiService.getProjectSprints(getAuthHeader(token), projectId).data
     }
+
+    suspend fun getSprintBoard(token: String, projectId: Long, sprintId: Long): SprintBoardDto {
+        return apiService.getSprintBoard(getAuthHeader(token), projectId, sprintId).data
+    }
 }

@@ -69,7 +69,7 @@ private fun Content(
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         Text(
-                            text = "AmbatuWork",
+                            text = "My Account",
                             fontWeight = FontWeight.Bold
                         )
                     }
@@ -84,6 +84,12 @@ private fun Content(
                 .fillMaxSize(),
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
+
+            item {
+                Spacer(
+                    modifier = Modifier.size(24.dp)
+                )
+            }
 
             item {
                 Column(

@@ -17,8 +17,10 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Group
 import androidx.compose.material.icons.filled.GroupAdd
+import androidx.compose.material.icons.filled.Mail
 import androidx.compose.material.icons.filled.PostAdd
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -116,12 +118,15 @@ private fun Content(
                         modifier = Modifier.padding(horizontal = 8.dp)
                     ) {
                         Text(
-                            text = "Home",
+                            text = "AmbatuWork",
                             fontWeight = FontWeight.Bold
                         )
                     }
                 },
                 actions = {
+                    IconButton(onClick = onInvitationsClick) {
+                        Icon(Icons.Default.Mail, contentDescription = "Invitations")
+                    }
                     IconButton(onClick = { showMenu = true }) {
                         Icon(Icons.Default.MoreVert, contentDescription = "More")
                     }
@@ -129,13 +134,6 @@ private fun Content(
                         expanded = showMenu,
                         onDismissRequest = { showMenu = false }
                     ) {
-                        DropdownMenuItem(
-                            text = { Text("Invitations") },
-                            onClick = {
-                                showMenu = false
-                                onInvitationsClick()
-                            }
-                        )
                         DropdownMenuItem(
                             text = { Text("SCRUM Guide") },
                             onClick = {
@@ -187,7 +185,7 @@ private fun Content(
                     modifier = Modifier.fillMaxSize(),
                     contentPadding = androidx.compose.foundation.layout.PaddingValues(16.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
+                ) {s
                     items(uiState.projects) { project ->
                         ProjectItem(
                             project = project,

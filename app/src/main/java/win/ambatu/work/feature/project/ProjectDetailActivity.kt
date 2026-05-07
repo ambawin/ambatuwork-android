@@ -40,10 +40,7 @@ class ProjectDetailActivity : ComponentActivity() {
                 
                 ProjectDetailScreen(
                     viewModel = projectDetailViewModel,
-                    onBackClick = { finish() },
-                    onTeamSizeClick = {
-                        startActivity(ProjectMemberActivity.createIntent(this, projectId))
-                    }
+                    onBackClick = { finish() }
                 )
             }
         }

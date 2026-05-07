@@ -11,6 +11,7 @@ import kotlinx.coroutines.launch
 import win.ambatu.work.data.repository.ProjectRepository
 import win.ambatu.work.data.storage.SessionManager
 import win.ambatu.work.feature.network.SprintBoardDto
+import win.ambatu.work.feature.network.UpdateBacklogItemRequest
 
 data class SprintBoardUiState(
     val board: SprintBoardDto? = null,
@@ -53,6 +54,23 @@ class SprintBoardViewModel(
                 _uiState.update { it.copy(board = board, isLoading = false) }
             } catch (e: Exception) {
                 _uiState.update { it.copy(isLoading = false, error = e.message) }
+            }
+        }
+    }
+
+    fun updateBacklogItemStatus(backlogId: Long, newStatus: String) {
+        val token = sessionManager.getToken() ?: return
+        viewModelScope.launch {
+            try {
+                projectRepository.updateBacklogItem(
+                    token,
+                    projectId,
+                    backlogId,
+                    UpdateBacklogItemRequest(status = newStatus)
+                )
+                loadBoard()
+            } catch (e: Exception) {
+                _uiState.update { it.copy(error = e.message) }
             }
         }
     }

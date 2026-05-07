@@ -15,7 +15,9 @@ class ScrumGuideActivity : ComponentActivity() {
 
         setContent {
             AmbatuWorkTheme {
-                ScrumGuideScreen()
+                ScrumGuideScreen(
+                    onBackClick = { finish() }
+                )
             }
         }
     }

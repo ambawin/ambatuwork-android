@@ -38,6 +38,9 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberModalBottomSheetState
+import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.IconButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -46,13 +49,16 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import win.ambatu.work.controller.UserController
 import win.ambatu.work.data.model.User
+import win.ambatu.work.feature.invitation.InvitationActivity
 import win.ambatu.work.feature.network.ProjectDto
+import win.ambatu.work.feature.scrum.ScrumGuideActivity
 import win.ambatu.work.ui.theme.AmbatuWorkTheme
 
 @Composable
@@ -63,12 +69,20 @@ fun HomeScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
+    val context = LocalContext.current
+
     Content(
         user = user,
         uiState = uiState,
         onCreateProject = viewModel::createProject,
         onInviteUser = viewModel::inviteUser,
-        onProjectClick = onProjectClick
+        onProjectClick = onProjectClick,
+        onInvitationsClick = {
+            context.startActivity(InvitationActivity.createIntent(context))
+        },
+        onScrumGuideClick = {
+            context.startActivity(ScrumGuideActivity.createIntent(context))
+        }
     )
 }
 
@@ -79,16 +93,18 @@ private fun Content(
     uiState: HomeUiState = HomeUiState(),
     onCreateProject: (String, String, String, Int) -> Unit = { _, _, _, _ -> },
     onInviteUser: (Long, String) -> Unit = { _, _ -> },
-    onProjectClick: (Long) -> Unit = {}
+    onProjectClick: (Long) -> Unit = {},
+    onInvitationsClick: () -> Unit = {},
+    onScrumGuideClick: () -> Unit = {}
 ) {
     var showActionSheet by remember { mutableStateOf(false) }
     var showCreateSheet by remember { mutableStateOf(false) }
     var showInviteSheet by remember { mutableStateOf(false) }
+    var showMenu by remember { mutableStateOf(false) }
     val sheetState = rememberModalBottomSheetState()
 
     Scaffold(
         topBar = {
-            // ... (TopAppBar stays the same)
             TopAppBar(
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.background,
@@ -102,6 +118,30 @@ private fun Content(
                         Text(
                             text = "Home",
                             fontWeight = FontWeight.Bold
+                        )
+                    }
+                },
+                actions = {
+                    IconButton(onClick = { showMenu = true }) {
+                        Icon(Icons.Default.MoreVert, contentDescription = "More")
+                    }
+                    DropdownMenu(
+                        expanded = showMenu,
+                        onDismissRequest = { showMenu = false }
+                    ) {
+                        DropdownMenuItem(
+                            text = { Text("Invitations") },
+                            onClick = {
+                                showMenu = false
+                                onInvitationsClick()
+                            }
+                        )
+                        DropdownMenuItem(
+                            text = { Text("SCRUM Guide") },
+                            onClick = {
+                                showMenu = false
+                                onScrumGuideClick()
+                            }
                         )
                     }
                 }

@@ -36,7 +36,8 @@ class InvitationActivity : ComponentActivity() {
                     onInvitationAccepted = {
                         setResult(RESULT_OK)
                         finish()
-                    }
+                    },
+                    onBackClick = { finish() }
                 )
             }
         }

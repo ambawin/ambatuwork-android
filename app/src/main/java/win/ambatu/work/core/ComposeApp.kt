@@ -118,18 +118,6 @@ fun ComposeApp() {
                                 label = { Text("Home") }
                             )
                             NavigationBarItem(
-                                selected = backStack.lastOrNull() is Routes.Invitations,
-                                onClick = { backStack.replaceAll(Routes.Invitations) },
-                                icon = { Icon(Icons.Default.Mail, contentDescription = null) },
-                                label = { Text("Invitations") }
-                            )
-                            NavigationBarItem(
-                                selected = backStack.lastOrNull() is Routes.ScrumGuide,
-                                onClick = { backStack.replaceAll(Routes.ScrumGuide) },
-                                icon = { Icon(Icons.Default.Book, contentDescription = null, modifier = Modifier.size(24.dp)) },
-                                label = { Text("SCRUM Guide") }
-                            )
-                            NavigationBarItem(
                                 selected = backStack.lastOrNull() is Routes.Profile,
                                 onClick = { backStack.replaceAll(Routes.Profile(user)) },
                                 icon = {
@@ -150,7 +138,11 @@ fun ComposeApp() {
                     }
                 }
             ) { innerPadding ->
-                Surface(modifier = Modifier.padding(innerPadding)) {
+                Surface(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(bottom = innerPadding.calculateBottomPadding())
+                ) {
                     if (uiState.isCheckingSession) {
                         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                             CircularProgressIndicator()
@@ -180,20 +172,6 @@ fun ComposeApp() {
                                             context.startActivity(
                                                 ProjectDetailActivity.createIntent(context, projectId)
                                             )
-                                        }
-                                    )
-                                }
-                                entry<Routes.ScrumGuide> {
-                                    ScrumGuideScreen()
-                                }
-                                entry<Routes.Invitations> {
-                                    val invitationViewModel: InvitationViewModel = viewModel {
-                                        InvitationViewModel(projectRepository, sessionManager)
-                                    }
-                                    InvitationScreen(
-                                        viewModel = invitationViewModel,
-                                        onInvitationAccepted = {
-                                            backStack.replaceAll(Routes.Home)
                                         }
                                     )
                                 }

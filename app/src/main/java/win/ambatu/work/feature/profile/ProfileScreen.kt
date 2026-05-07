@@ -64,8 +64,6 @@ private fun Content(
                     containerColor = MaterialTheme.colorScheme.background,
                     titleContentColor = MaterialTheme.colorScheme.primary,
                 ),
-                modifier = Modifier
-                    .padding(top = 8.dp),
                 title = {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
@@ -86,12 +84,6 @@ private fun Content(
                 .fillMaxSize(),
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
-
-            item {
-                Spacer(
-                    modifier = Modifier.size(24.dp)
-                )
-            }
 
             item {
                 Column(

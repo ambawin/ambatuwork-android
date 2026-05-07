@@ -102,6 +102,14 @@ interface ApiService {
         @Path("backlog_id") backlogId: Long
     ): BacklogItemResponse
 
+    @PATCH("api/v1/projects/{project_id}/backlog-items/{backlog_id}")
+    suspend fun updateBacklogItem(
+        @Header("Authorization") authorization: String,
+        @Path("project_id") projectId: Long,
+        @Path("backlog_id") backlogId: Long,
+        @Body request: UpdateBacklogItemRequest
+    ): BacklogItemResponse
+
     @GET("api/v1/projects/{project_id}/sprints")
     suspend fun getProjectSprints(
         @Header("Authorization") authorization: String,

@@ -34,6 +34,14 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
+import androidx.compose.material3.MenuAnchorType
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -56,12 +64,24 @@ fun SprintBoardScreen(
     onBackClick: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
-    var selectedItem by remember { mutableStateOf<BacklogItemDto?>(null) }
+    var detailItem by remember { mutableStateOf<BacklogItemDto?>(null) }
+    var statusUpdateItem by remember { mutableStateOf<BacklogItemDto?>(null) }
 
-    if (selectedItem != null) {
+    if (detailItem != null) {
         BacklogDetailDialog(
-            item = selectedItem!!,
-            onDismiss = { selectedItem = null }
+            item = detailItem!!,
+            onDismiss = { detailItem = null }
+        )
+    }
+
+    if (statusUpdateItem != null) {
+        UpdateStatusDialog(
+            item = statusUpdateItem!!,
+            onDismiss = { statusUpdateItem = null },
+            onUpdate = { newStatus ->
+                viewModel.updateBacklogItemStatus(statusUpdateItem!!.id, newStatus)
+                statusUpdateItem = null
+            }
         )
     }
 
@@ -117,10 +137,18 @@ fun SprintBoardScreen(
                     }
                 }
             } else {
-                uiState.board?.let { board ->
+                val board = uiState.board
+                if (board != null) {
                     BoardContent(
                         board = board,
-                        onItemClick = { selectedItem = it }
+                        onItemClick = { item ->
+                            val canEdit = uiState.currentUserRole == "admin" ||
+                                    item.assignedToUserId == uiState.currentUserId
+                            if (canEdit) {
+                                statusUpdateItem = item
+                            }
+                        },
+                        onInfoClick = { detailItem = it }
                     )
                 }
             }
@@ -131,7 +159,8 @@ fun SprintBoardScreen(
 @Composable
 fun BoardContent(
     board: SprintBoardDto,
-    onItemClick: (BacklogItemDto) -> Unit
+    onItemClick: (BacklogItemDto) -> Unit,
+    onInfoClick: (BacklogItemDto) -> Unit
 ) {
     val scrollState = rememberScrollState()
 
@@ -146,24 +175,28 @@ fun BoardContent(
             title = "Selected",
             items = board.columns.selected,
             onItemClick = onItemClick,
+            onInfoClick = onInfoClick,
             headerColor = MaterialTheme.colorScheme.secondaryContainer
         )
         BoardColumn(
             title = "In Progress",
             items = board.columns.inProgress,
             onItemClick = onItemClick,
+            onInfoClick = onInfoClick,
             headerColor = MaterialTheme.colorScheme.tertiaryContainer
         )
         BoardColumn(
             title = "In Review",
             items = board.columns.inReview,
             onItemClick = onItemClick,
+            onInfoClick = onInfoClick,
             headerColor = MaterialTheme.colorScheme.primaryContainer
         )
         BoardColumn(
             title = "Done",
             items = board.columns.done,
             onItemClick = onItemClick,
+            onInfoClick = onInfoClick,
             headerColor = Color(0xFFC8E6C9) // Light Green
         )
     }
@@ -174,6 +207,7 @@ fun BoardColumn(
     title: String,
     items: List<BacklogItemDto>,
     onItemClick: (BacklogItemDto) -> Unit,
+    onInfoClick: (BacklogItemDto) -> Unit,
     headerColor: Color
 ) {
     Column(
@@ -220,17 +254,86 @@ fun BoardColumn(
             items(items) { item ->
                 BoardItemCard(
                     item = item,
-                    onClick = { onItemClick(item) }
+                    onClick = { onItemClick(item) },
+                    onInfoClick = { onInfoClick(item) }
                 )
             }
         }
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun UpdateStatusDialog(
+    item: BacklogItemDto,
+    onDismiss: () -> Unit,
+    onUpdate: (String) -> Unit
+) {
+    var expanded by remember { mutableStateOf(false) }
+    val statuses = listOf("selected", "in_progress", "in_review", "done")
+    var selectedStatus by remember { mutableStateOf(item.status) }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Update Status") },
+        text = {
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Text(text = item.title, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Bold)
+                
+                ExposedDropdownMenuBox(
+                    expanded = expanded,
+                    onExpandedChange = { expanded = !expanded }
+                ) {
+                    OutlinedTextField(
+                        value = selectedStatus.replace("_", " ").uppercase(),
+                        onValueChange = {},
+                        readOnly = true,
+                        label = { Text("Status") },
+                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .menuAnchor(MenuAnchorType.PrimaryNotEditable),
+                        colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors()
+                    )
+
+                    ExposedDropdownMenu(
+                        expanded = expanded,
+                        onDismissRequest = { expanded = false }
+                    ) {
+                        statuses.forEach { status ->
+                            DropdownMenuItem(
+                                text = { Text(status.replace("_", " ").uppercase()) },
+                                onClick = {
+                                    selectedStatus = status
+                                    expanded = false
+                                }
+                            )
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            Button(onClick = { onUpdate(selectedStatus) }) {
+                Text("Update")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancel")
+            }
+        }
+    )
+}
+
 @Composable
 fun BoardItemCard(
     item: BacklogItemDto,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    onInfoClick: () -> Unit
 ) {
     Card(
         onClick = onClick,
@@ -259,9 +362,23 @@ fun BoardItemCard(
                     modifier = Modifier.weight(1f)
                 )
                 
+                IconButton(
+                    onClick = onInfoClick,
+                    modifier = Modifier.height(24.dp).width(24.dp)
+                ) {
+                    Icon(
+                        Icons.Default.Info,
+                        contentDescription = "Detail",
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.fillMaxSize()
+                    )
+                }
+
+                Spacer(modifier = Modifier.width(4.dp))
+
                 Box(
                     modifier = Modifier
-                        .padding(start = 4.dp)
+                        .padding(top = 4.dp)
                         .width(4.dp)
                         .height(16.dp)
                         .background(

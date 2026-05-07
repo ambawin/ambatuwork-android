@@ -84,6 +84,15 @@ class ProjectRepository(
         return apiService.getBacklogItem(getAuthHeader(token), projectId, backlogId).data
     }
 
+    suspend fun updateBacklogItem(
+        token: String,
+        projectId: Long,
+        backlogId: Long,
+        request: UpdateBacklogItemRequest
+    ): BacklogItemDto {
+        return apiService.updateBacklogItem(getAuthHeader(token), projectId, backlogId, request).data
+    }
+
     suspend fun getProjectSprints(token: String, projectId: Long): List<SprintDto> {
         return apiService.getProjectSprints(getAuthHeader(token), projectId).data
     }

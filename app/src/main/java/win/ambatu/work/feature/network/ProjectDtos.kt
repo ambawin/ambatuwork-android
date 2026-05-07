@@ -88,6 +88,28 @@ data class BacklogItemListResponse(
 )
 
 @JsonClass(generateAdapter = true)
+data class BacklogItemResponse(
+    val data: BacklogItemDto
+)
+
+@JsonClass(generateAdapter = true)
+data class CreateBacklogItemRequest(
+    val title: String,
+    val description: String? = null,
+    val type: String? = "story",
+    @Json(name = "priority_rank")
+    val priorityRank: Int? = null,
+    @Json(name = "business_value")
+    val businessValue: Int? = null,
+    @Json(name = "estimate_points")
+    val estimatePoints: Int? = null,
+    @Json(name = "acceptance_criteria")
+    val acceptanceCriteria: List<String>? = null,
+    @Json(name = "assigned_to_user_id")
+    val assignedToUserId: Long? = null
+)
+
+@JsonClass(generateAdapter = true)
 data class ProjectResponse(
     val data: ProjectDto
 )

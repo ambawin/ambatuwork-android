@@ -19,6 +19,7 @@ import androidx.compose.material.icons.automirrored.filled.DirectionsRun
 import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.AccessTime
 import androidx.compose.material.icons.filled.CheckCircleOutline
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Dashboard
 import androidx.compose.material.icons.filled.Groups
 import androidx.compose.material.icons.filled.Settings
@@ -28,6 +29,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -67,7 +69,8 @@ enum class ProjectTab(val title: String, val icon: ImageVector) {
 @Composable
 fun ProjectDetailScreen(
     viewModel: ProjectDetailViewModel,
-    onBackClick: () -> Unit
+    onBackClick: () -> Unit,
+    onAddBacklogClick: (projectId: Long) -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
     var selectedTab by remember { mutableStateOf(ProjectTab.DASHBOARD) }
@@ -101,6 +104,25 @@ fun ProjectDetailScreen(
                         label = { Text(tab.title) },
                         icon = { Icon(tab.icon, contentDescription = tab.title) }
                     )
+                }
+            }
+        },
+        floatingActionButton = {
+            val role = uiState.project?.myRole?.lowercase()?.trim()
+            val canAddBacklog = role != null && (
+                role.contains("admin") || 
+                role.contains("owner") || 
+                role.contains("master") || 
+                role.contains("leader")
+            )
+
+            if (selectedTab == ProjectTab.BACKLOG && canAddBacklog) {
+                FloatingActionButton(
+                    onClick = { uiState.project?.id?.let { onAddBacklogClick(it) } },
+                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                ) {
+                    Icon(Icons.Default.Add, contentDescription = "Add Backlog Item")
                 }
             }
         }

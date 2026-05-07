@@ -71,4 +71,12 @@ class ProjectRepository(
     suspend fun getProjectBacklogItems(token: String, projectId: Long): List<BacklogItemDto> {
         return apiService.getProjectBacklogItems(getAuthHeader(token), projectId).data
     }
+
+    suspend fun createBacklogItem(
+        token: String,
+        projectId: Long,
+        request: CreateBacklogItemRequest
+    ): BacklogItemDto {
+        return apiService.createBacklogItem(getAuthHeader(token), projectId, request).data
+    }
 }

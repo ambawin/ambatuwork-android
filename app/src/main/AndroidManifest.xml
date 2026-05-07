@@ -29,6 +29,11 @@
             android:exported="false"
             android:label="Project Detail"
             android:theme="@style/Theme.AmbatuWork" />
+        <activity
+            android:name=".feature.project.AddBacklogItemActivity"
+            android:exported="false"
+            android:label="Add Backlog Item"
+            android:theme="@style/Theme.AmbatuWork" />
 
     </application>
 

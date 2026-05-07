@@ -13,7 +13,7 @@ import win.ambatu.work.data.storage.SessionManager
 import win.ambatu.work.feature.network.NetworkModule
 import win.ambatu.work.ui.theme.AmbatuWorkTheme
 
-class ProjectMemberActivity : ComponentActivity() {
+class AddBacklogItemActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -30,17 +30,15 @@ class ProjectMemberActivity : ComponentActivity() {
                 val sessionManager = remember { SessionManager(context) }
                 val projectRepository = remember { ProjectRepository(NetworkModule.apiService) }
 
-                val viewModel: ProjectDetailViewModel = viewModel {
-                    ProjectDetailViewModel(
-                        projectId = projectId,
-                        projectRepository = projectRepository,
-                        sessionManager = sessionManager
-                    )
-                }
-
-                ProjectMemberListScreen(
-                    viewModel = viewModel,
-                    onBackClick = { finish() }
+                AddBacklogItemScreen(
+                    projectId = projectId,
+                    projectRepository = projectRepository,
+                    sessionManager = sessionManager,
+                    onBackClick = { finish() },
+                    onSuccess = {
+                        setResult(RESULT_OK)
+                        finish()
+                    }
                 )
             }
         }
@@ -50,7 +48,7 @@ class ProjectMemberActivity : ComponentActivity() {
         private const val EXTRA_PROJECT_ID = "extra_project_id"
 
         fun createIntent(context: Context, projectId: Long): Intent {
-            return Intent(context, ProjectMemberActivity::class.java).apply {
+            return Intent(context, AddBacklogItemActivity::class.java).apply {
                 putExtra(EXTRA_PROJECT_ID, projectId)
             }
         }

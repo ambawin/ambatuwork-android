@@ -1,6 +1,7 @@
 package win.ambatu.work.feature.project
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -26,6 +27,17 @@ class ProjectDetailViewModel(
     private val projectRepository: ProjectRepository,
     private val sessionManager: SessionManager
 ) : ViewModel() {
+
+    class Factory(
+        private val projectId: Long,
+        private val projectRepository: ProjectRepository,
+        private val sessionManager: SessionManager
+    ) : ViewModelProvider.Factory {
+        @Suppress("UNCHECKED_CAST")
+        override fun <T : ViewModel> create(modelClass: Class<T>): T {
+            return ProjectDetailViewModel(projectId, projectRepository, sessionManager) as T
+        }
+    }
 
     private val _uiState = MutableStateFlow(ProjectDetailUiState())
     val uiState: StateFlow<ProjectDetailUiState> = _uiState.asStateFlow()

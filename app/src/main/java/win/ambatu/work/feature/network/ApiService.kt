@@ -30,44 +30,44 @@ interface ApiService {
         @Body request: CreateProjectRequest
     ): ProjectResponse
 
-    @GET("api/v1/projects/{projectId}")
+    @GET("api/v1/projects/{project_id}")
     suspend fun getProject(
         @Header("Authorization") authorization: String,
-        @Path("projectId") projectId: Long
+        @Path("project_id") projectId: Long
     ): ProjectResponse
 
-    @PATCH("api/v1/projects/{projectId}")
+    @PATCH("api/v1/projects/{project_id}")
     suspend fun updateProject(
         @Header("Authorization") authorization: String,
-        @Path("projectId") projectId: Long,
+        @Path("project_id") projectId: Long,
         @Body request: UpdateProjectRequest
     ): ProjectResponse
 
-    @GET("api/v1/projects/{projectId}/members")
+    @GET("api/v1/projects/{project_id}/members")
     suspend fun getProjectMembers(
         @Header("Authorization") authorization: String,
-        @Path("projectId") projectId: Long
+        @Path("project_id") projectId: Long
     ): ProjectMemberListResponse
 
-    @PATCH("api/v1/projects/{projectId}/members/{userId}")
+    @PATCH("api/v1/projects/{project_id}/members/{user_id}")
     suspend fun updateProjectMemberRole(
         @Header("Authorization") authorization: String,
-        @Path("projectId") projectId: Long,
-        @Path("userId") userId: Long,
+        @Path("project_id") projectId: Long,
+        @Path("user_id") userId: Long,
         @Body request: UpdateMemberRoleRequest
     ): ProjectMemberResponse
 
-    @DELETE("api/v1/projects/{projectId}/members/{userId}")
+    @DELETE("api/v1/projects/{project_id}/members/{user_id}")
     suspend fun removeProjectMember(
         @Header("Authorization") authorization: String,
-        @Path("projectId") projectId: Long,
-        @Path("userId") userId: Long
+        @Path("project_id") projectId: Long,
+        @Path("user_id") userId: Long
     ): MessageResponse
 
-    @POST("api/v1/projects/{projectId}/invitations")
+    @POST("api/v1/projects/{project_id}/invitations")
     suspend fun createInvitation(
         @Header("Authorization") authorization: String,
-        @Path("projectId") projectId: Long,
+        @Path("project_id") projectId: Long,
         @Body request: CreateInvitationRequest
     ): InvitationResponse
 
@@ -82,9 +82,23 @@ interface ApiService {
         @Path("token", encoded = true) token: String
     ): AcceptInvitationResponse
 
-    @GET("api/v1/projects/{projectId}/backlog-items")
+    @GET("api/v1/projects/{project_id}/backlog-items")
     suspend fun getProjectBacklogItems(
         @Header("Authorization") authorization: String,
-        @Path("projectId") projectId: Long
+        @Path("project_id") projectId: Long
     ): BacklogItemListResponse
+
+    @POST("api/v1/projects/{project_id}/backlog-items")
+    suspend fun createBacklogItem(
+        @Header("Authorization") authorization: String,
+        @Path("project_id") projectId: Long,
+        @Body request: CreateBacklogItemRequest
+    ): BacklogItemResponse
+
+    @GET("api/v1/projects/{project_id}/backlog-items/{backlog_id}")
+    suspend fun getBacklogItem(
+        @Header("Authorization") authorization: String,
+        @Path("project_id") projectId: Long,
+        @Path("backlog_id") backlogId: Long
+    ): BacklogItemResponse
 }

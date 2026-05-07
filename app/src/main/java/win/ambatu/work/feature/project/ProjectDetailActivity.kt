@@ -6,6 +6,8 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.activity.viewModels
 import androidx.compose.runtime.remember
 import androidx.lifecycle.viewmodel.compose.viewModel
 import win.ambatu.work.data.repository.ProjectRepository
@@ -14,6 +16,22 @@ import win.ambatu.work.feature.network.NetworkModule
 import win.ambatu.work.ui.theme.AmbatuWorkTheme
 
 class ProjectDetailActivity : ComponentActivity() {
+    private val projectRepository by lazy { ProjectRepository(NetworkModule.apiService) }
+    private val sessionManager by lazy { SessionManager(this) }
+    
+    private val viewModel: ProjectDetailViewModel by viewModels {
+        val projectId = intent.getLongExtra(EXTRA_PROJECT_ID, -1L)
+        ProjectDetailViewModel.Factory(projectId, projectRepository, sessionManager)
+    }
+
+    private val addBacklogLauncher = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == RESULT_OK) {
+            viewModel.loadBacklogItems()
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -26,23 +44,11 @@ class ProjectDetailActivity : ComponentActivity() {
 
         setContent {
             AmbatuWorkTheme {
-                val context = this
-                val sessionManager = remember { SessionManager(context) }
-                val projectRepository = remember { ProjectRepository(NetworkModule.apiService) }
-                
-                val projectDetailViewModel: ProjectDetailViewModel = viewModel {
-                    ProjectDetailViewModel(
-                        projectId = projectId,
-                        projectRepository = projectRepository,
-                        sessionManager = sessionManager
-                    )
-                }
-                
                 ProjectDetailScreen(
-                    viewModel = projectDetailViewModel,
+                    viewModel = viewModel,
                     onBackClick = { finish() },
-                    onTeamSizeClick = {
-                        startActivity(ProjectMemberActivity.createIntent(this, projectId))
+                    onAddBacklogClick = { id ->
+                        addBacklogLauncher.launch(AddBacklogItemActivity.createIntent(this, id))
                     }
                 )
             }

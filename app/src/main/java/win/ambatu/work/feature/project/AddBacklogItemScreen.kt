@@ -1,0 +1,287 @@
+package win.ambatu.work.feature.project
+
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.launch
+import win.ambatu.work.data.repository.ProjectRepository
+import win.ambatu.work.data.storage.SessionManager
+import win.ambatu.work.feature.network.CreateBacklogItemRequest
+import win.ambatu.work.feature.network.ProjectMemberDto
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun AddBacklogItemScreen(
+    projectId: Long,
+    projectRepository: ProjectRepository,
+    sessionManager: SessionManager,
+    onBackClick: () -> Unit,
+    onSuccess: () -> Unit
+) {
+    var title by remember { mutableStateOf("") }
+    var description by remember { mutableStateOf("") }
+    var type by remember { mutableStateOf("story") }
+    var businessValue by remember { mutableStateOf("") }
+    var estimatePoints by remember { mutableStateOf("") }
+    var assignedToUserId by remember { mutableStateOf<Long?>(null) }
+    var acceptanceCriteria by remember { mutableStateOf(listOf<String>()) }
+    
+    var members by remember { mutableStateOf<List<ProjectMemberDto>>(emptyList()) }
+    var isLoading by remember { mutableStateOf(false) }
+    var isSubmitting by remember { mutableStateOf(false) }
+    var error by remember { mutableStateOf<String?>(null) }
+    
+    val scope = rememberCoroutineScope()
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    val itemTypes = listOf("story", "task", "bug", "improvements")
+    var expandedType by remember { mutableStateOf(false) }
+    var expandedMembers by remember { mutableStateOf(false) }
+
+    LaunchedEffect(projectId) {
+        isLoading = true
+        try {
+            val token = sessionManager.getToken()
+            if (token != null) {
+                members = projectRepository.getProjectMembers(token, projectId)
+            }
+        } catch (e: Exception) {
+            error = "Failed to load members: ${e.message}"
+        } finally {
+            isLoading = false
+        }
+    }
+
+    Scaffold(
+        snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
+        topBar = {
+            TopAppBar(
+                title = { Text("Add Backlog Item") },
+                navigationIcon = {
+                    IconButton(onClick = onBackClick) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                    }
+                }
+            )
+        }
+    ) { innerPadding ->
+        if (isLoading) {
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                CircularProgressIndicator()
+            }
+        } else {
+            Column(
+                modifier = Modifier
+                    .padding(innerPadding)
+                    .padding(16.dp)
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                OutlinedTextField(
+                    value = title,
+                    onValueChange = { title = it },
+                    label = { Text("Title") },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true
+                )
+
+                OutlinedTextField(
+                    value = description,
+                    onValueChange = { description = it },
+                    label = { Text("Description") },
+                    modifier = Modifier.fillMaxWidth(),
+                    minLines = 3
+                )
+
+                // Type Dropdown
+                ExposedDropdownMenuBox(
+                    expanded = expandedType,
+                    onExpandedChange = { expandedType = !expandedType }
+                ) {
+                    OutlinedTextField(
+                        value = type.uppercase(),
+                        onValueChange = {},
+                        readOnly = true,
+                        label = { Text("Type") },
+                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedType) },
+                        modifier = Modifier
+                            .menuAnchor()
+                            .fillMaxWidth()
+                    )
+                    ExposedDropdownMenu(
+                        expanded = expandedType,
+                        onDismissRequest = { expandedType = false }
+                    ) {
+                        itemTypes.forEach { itemType ->
+                            DropdownMenuItem(
+                                text = { Text(itemType.uppercase()) },
+                                onClick = {
+                                    type = itemType
+                                    expandedType = false
+                                }
+                            )
+                        }
+                    }
+                }
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    OutlinedTextField(
+                        value = businessValue,
+                        onValueChange = { if (it.all { char -> char.isDigit() }) businessValue = it },
+                        label = { Text("Business Value") },
+                        modifier = Modifier.weight(1f),
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                    )
+                    OutlinedTextField(
+                        value = estimatePoints,
+                        onValueChange = { if (it.all { char -> char.isDigit() }) estimatePoints = it },
+                        label = { Text("Estimate Points") },
+                        modifier = Modifier.weight(1f),
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                    )
+                }
+
+                Text("Acceptance Criteria", style = MaterialTheme.typography.titleMedium)
+                
+                acceptanceCriteria.forEachIndexed { index, criteria ->
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        OutlinedTextField(
+                            value = criteria,
+                            onValueChange = { newValue ->
+                                val newList = acceptanceCriteria.toMutableList()
+                                newList[index] = newValue
+                                acceptanceCriteria = newList
+                            },
+                            placeholder = { Text("e.g. User can toggle dark mode") },
+                            modifier = Modifier.weight(1f),
+                            singleLine = true
+                        )
+                        IconButton(onClick = {
+                            val newList = acceptanceCriteria.toMutableList()
+                            newList.removeAt(index)
+                            acceptanceCriteria = newList
+                        }) {
+                            Icon(Icons.Default.Delete, contentDescription = "Remove")
+                        }
+                    }
+                }
+                
+                TextButton(
+                    onClick = { acceptanceCriteria = acceptanceCriteria + "" },
+                    modifier = Modifier.align(Alignment.Start)
+                ) {
+                    Icon(Icons.Default.Add, contentDescription = null)
+                    Spacer(Modifier.width(8.dp))
+                    Text("Add Criteria")
+                }
+
+                // Member Dropdown for Assignment
+                ExposedDropdownMenuBox(
+                    expanded = expandedMembers,
+                    onExpandedChange = { expandedMembers = !expandedMembers }
+                ) {
+                    val selectedMember = members.find { it.user.id == assignedToUserId }
+                    OutlinedTextField(
+                        value = selectedMember?.user?.name ?: "Unassigned",
+                        onValueChange = {},
+                        readOnly = true,
+                        label = { Text("Assign To") },
+                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedMembers) },
+                        modifier = Modifier
+                            .menuAnchor()
+                            .fillMaxWidth()
+                    )
+                    ExposedDropdownMenu(
+                        expanded = expandedMembers,
+                        onDismissRequest = { expandedMembers = false }
+                    ) {
+                        DropdownMenuItem(
+                            text = { Text("Unassigned") },
+                            onClick = {
+                                assignedToUserId = null
+                                expandedMembers = false
+                            }
+                        )
+                        members.forEach { member ->
+                            DropdownMenuItem(
+                                text = { Text(member.user.name ?: "Unknown") },
+                                onClick = {
+                                    assignedToUserId = member.user.id
+                                    expandedMembers = false
+                                }
+                            )
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                Button(
+                    onClick = {
+                        if (title.isBlank()) {
+                            scope.launch {
+                                snackbarHostState.showSnackbar("Title is required")
+                            }
+                            return@Button
+                        }
+                        
+                        isSubmitting = true
+                        scope.launch {
+                            try {
+                                val token = sessionManager.getToken()
+                                if (token != null) {
+                                    val request = CreateBacklogItemRequest(
+                                        title = title,
+                                        description = description.ifBlank { null },
+                                        type = type,
+                                        businessValue = businessValue.toIntOrNull(),
+                                        estimatePoints = estimatePoints.toIntOrNull(),
+                                        acceptanceCriteria = acceptanceCriteria.filter { it.isNotBlank() }.ifEmpty { null },
+                                        assignedToUserId = assignedToUserId
+                                    )
+                                    projectRepository.createBacklogItem(token, projectId, request)
+                                    onSuccess()
+                                }
+                            } catch (e: Exception) {
+                                snackbarHostState.showSnackbar("Error: ${e.message}")
+                            } finally {
+                                isSubmitting = false
+                            }
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                    enabled = !isSubmitting && title.isNotBlank()
+                ) {
+                    if (isSubmitting) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(24.dp),
+                            color = MaterialTheme.colorScheme.onPrimary,
+                            strokeWidth = 2.dp
+                        )
+                    } else {
+                        Text("Create Backlog Item")
+                    }
+                }
+            }
+        }
+    }
+}

@@ -64,14 +64,12 @@ private fun Content(
                     containerColor = MaterialTheme.colorScheme.background,
                     titleContentColor = MaterialTheme.colorScheme.primary,
                 ),
-                modifier = Modifier
-                    .padding(top = 8.dp),
                 title = {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         Text(
-                            text = "AmbatuWork",
+                            text = "My Account",
                             fontWeight = FontWeight.Bold
                         )
                     }

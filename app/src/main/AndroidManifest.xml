@@ -25,6 +25,11 @@
             </intent-filter>
         </activity>
         <activity
+            android:name=".feature.auth.LoginActivity"
+            android:exported="false"
+            android:label="Login"
+            android:theme="@style/Theme.AmbatuWork" />
+        <activity
             android:name=".feature.project.ProjectDetailActivity"
             android:exported="false"
             android:label="Project Detail"
@@ -38,6 +43,16 @@
             android:name=".feature.project.SprintBoardActivity"
             android:exported="false"
             android:label="Sprint Board"
+            android:theme="@style/Theme.AmbatuWork" />
+        <activity
+            android:name=".feature.invitation.InvitationActivity"
+            android:exported="false"
+            android:label="Invitations"
+            android:theme="@style/Theme.AmbatuWork" />
+        <activity
+            android:name=".feature.scrum.ScrumGuideActivity"
+            android:exported="false"
+            android:label="SCRUM Guide"
             android:theme="@style/Theme.AmbatuWork" />
 
     </application>

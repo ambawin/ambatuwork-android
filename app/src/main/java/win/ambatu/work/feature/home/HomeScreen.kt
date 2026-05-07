@@ -19,6 +19,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Group
 import androidx.compose.material.icons.filled.GroupAdd
+import androidx.compose.material.icons.filled.Mail
 import androidx.compose.material.icons.filled.PostAdd
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -38,6 +39,9 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberModalBottomSheetState
+import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.IconButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -46,13 +50,17 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import java.util.Calendar
 import win.ambatu.work.controller.UserController
 import win.ambatu.work.data.model.User
+import win.ambatu.work.feature.invitation.InvitationActivity
 import win.ambatu.work.feature.network.ProjectDto
+import win.ambatu.work.feature.scrum.ScrumGuideActivity
 import win.ambatu.work.ui.theme.AmbatuWorkTheme
 
 @Composable
@@ -63,12 +71,20 @@ fun HomeScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
+    val context = LocalContext.current
+
     Content(
-        user = user,
+        user = uiState.user ?: user,
         uiState = uiState,
         onCreateProject = viewModel::createProject,
         onInviteUser = viewModel::inviteUser,
-        onProjectClick = onProjectClick
+        onProjectClick = onProjectClick,
+        onInvitationsClick = {
+            context.startActivity(InvitationActivity.createIntent(context))
+        },
+        onScrumGuideClick = {
+            context.startActivity(ScrumGuideActivity.createIntent(context))
+        }
     )
 }
 
@@ -79,29 +95,56 @@ private fun Content(
     uiState: HomeUiState = HomeUiState(),
     onCreateProject: (String, String, String, Int) -> Unit = { _, _, _, _ -> },
     onInviteUser: (Long, String) -> Unit = { _, _ -> },
-    onProjectClick: (Long) -> Unit = {}
+    onProjectClick: (Long) -> Unit = {},
+    onInvitationsClick: () -> Unit = {},
+    onScrumGuideClick: () -> Unit = {}
 ) {
     var showActionSheet by remember { mutableStateOf(false) }
     var showCreateSheet by remember { mutableStateOf(false) }
     var showInviteSheet by remember { mutableStateOf(false) }
+    var showMenu by remember { mutableStateOf(false) }
     val sheetState = rememberModalBottomSheetState()
+
+    val greeting = remember {
+        val calendar = Calendar.getInstance()
+        when (calendar.get(Calendar.HOUR_OF_DAY)) {
+            in 0..11 -> "Good Morning"
+            in 12..16 -> "Good Afternoon"
+            else -> "Good Evening"
+        }
+    }
+    val firstName = user.name.split(" ").firstOrNull() ?: user.name
 
     Scaffold(
         topBar = {
-            // ... (TopAppBar stays the same)
             TopAppBar(
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.background,
                     titleContentColor = MaterialTheme.colorScheme.primary,
                 ),
                 title = {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.padding(horizontal = 8.dp)
+                    Text(
+                        text = "AmbatuWork",
+                        fontWeight = FontWeight.Bold
+                    )
+                },
+                actions = {
+                    IconButton(onClick = onInvitationsClick) {
+                        Icon(Icons.Default.Mail, contentDescription = "Invitations")
+                    }
+                    IconButton(onClick = { showMenu = true }) {
+                        Icon(Icons.Default.MoreVert, contentDescription = "More")
+                    }
+                    DropdownMenu(
+                        expanded = showMenu,
+                        onDismissRequest = { showMenu = false }
                     ) {
-                        Text(
-                            text = "Home",
-                            fontWeight = FontWeight.Bold
+                        DropdownMenuItem(
+                            text = { Text("SCRUM Guide") },
+                            onClick = {
+                                showMenu = false
+                                onScrumGuideClick()
+                            }
                         )
                     }
                 }
@@ -117,119 +160,142 @@ private fun Content(
             }
         }
     ) { innerPadding ->
-        Box(
+        Column(
             modifier = Modifier
                 .padding(innerPadding)
                 .fillMaxSize()
         ) {
-            if (uiState.isLoading && uiState.projects.isEmpty()) {
-                CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
-            } else if (uiState.projects.isEmpty() && !uiState.isLoading) {
-                Column(
-                    modifier = Modifier
-                        .align(Alignment.Center)
-                        .padding(32.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Text(
-                        text = "No projects found",
-                        style = MaterialTheme.typography.headlineSmall,
-                        fontWeight = FontWeight.Bold
-                    )
-                    Text(
-                        text = "Create one or join via invitation!",
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.secondary
-                    )
-                }
-            } else {
-                LazyColumn(
-                    modifier = Modifier.fillMaxSize(),
-                    contentPadding = androidx.compose.foundation.layout.PaddingValues(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    items(uiState.projects) { project ->
-                        ProjectItem(
-                            project = project,
-                            onClick = { onProjectClick(project.id) }
+            Column(
+                modifier = Modifier.padding(16.dp)
+            ) {
+                Text(
+                    text = "$greeting,",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.secondary
+                )
+                Text(
+                    text = firstName,
+                    fontWeight = FontWeight.Bold,
+                    style = MaterialTheme.typography.headlineMedium
+                )
+            }
+
+            Box(
+                modifier = Modifier.fillMaxSize()
+            ) {
+                if (uiState.isLoading && uiState.projects.isEmpty()) {
+                    CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+                } else if (uiState.projects.isEmpty() && !uiState.isLoading) {
+                    Column(
+                        modifier = Modifier
+                            .align(Alignment.Center)
+                            .padding(32.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(
+                            text = "No projects found",
+                            style = MaterialTheme.typography.headlineSmall,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Text(
+                            text = "Create one or join via invitation!",
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.secondary
                         )
                     }
+                } else {
+                    LazyColumn(
+                        modifier = Modifier.fillMaxSize(),
+                        contentPadding = androidx.compose.foundation.layout.PaddingValues(
+                            start = 16.dp,
+                            end = 16.dp,
+                            bottom = 16.dp,
+                            top = 0.dp
+                        ),
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        items(uiState.projects) { project ->
+                            ProjectItem(
+                                project = project,
+                                onClick = { onProjectClick(project.id) }
+                            )
+                        }
+                    }
+                }
+
+                if (uiState.error != null) {
+                    Text(
+                        text = uiState.error,
+                        color = MaterialTheme.colorScheme.error,
+                        modifier = Modifier
+                            .align(Alignment.BottomCenter)
+                            .padding(16.dp)
+                    )
                 }
             }
-
-            if (uiState.error != null) {
-                Text(
-                    text = uiState.error,
-                    color = MaterialTheme.colorScheme.error,
-                    modifier = Modifier
-                        .align(Alignment.BottomCenter)
-                        .padding(16.dp)
-                )
-            }
         }
-    }
 
-    if (showActionSheet) {
-        ModalBottomSheet(
-            onDismissRequest = { showActionSheet = false },
-            sheetState = sheetState
-        ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 32.dp)
+        if (showActionSheet) {
+            ModalBottomSheet(
+                onDismissRequest = { showActionSheet = false },
+                sheetState = sheetState
             ) {
-                ListItem(
-                    headlineContent = { Text("Create New Project") },
-                    leadingContent = { Icon(Icons.Default.PostAdd, null) },
-                    modifier = Modifier.clickable {
-                        showActionSheet = false
-                        showCreateSheet = true
-                    }
-                )
-                ListItem(
-                    headlineContent = { Text("Invite User to Project") },
-                    leadingContent = { Icon(Icons.Default.GroupAdd, null) },
-                    modifier = Modifier.clickable {
-                        showActionSheet = false
-                        showInviteSheet = true
-                    }
-                )
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 32.dp)
+                ) {
+                    ListItem(
+                        headlineContent = { Text("Create New Project") },
+                        leadingContent = { Icon(Icons.Default.PostAdd, null) },
+                        modifier = Modifier.clickable {
+                            showActionSheet = false
+                            showCreateSheet = true
+                        }
+                    )
+                    ListItem(
+                        headlineContent = { Text("Invite User to Project") },
+                        leadingContent = { Icon(Icons.Default.GroupAdd, null) },
+                        modifier = Modifier.clickable {
+                            showActionSheet = false
+                            showInviteSheet = true
+                        }
+                    )
+                }
             }
         }
-    }
 
-    if (showCreateSheet) {
-        ModalBottomSheet(
-            onDismissRequest = { showCreateSheet = false },
-            sheetState = sheetState
-        ) {
-            CreateProjectForm(
-                onDismiss = { showCreateSheet = false },
+        if (showCreateSheet) {
+            ModalBottomSheet(
+                onDismissRequest = { showCreateSheet = false },
+                sheetState = sheetState
+            ) {
+                CreateProjectForm(
                 onCreate = { name, description, goal, sprint ->
                     onCreateProject(name, description, goal, sprint)
                     showCreateSheet = false
                 }
             )
+            }
         }
-    }
 
-    if (showInviteSheet) {
-        ModalBottomSheet(
-            onDismissRequest = { showInviteSheet = false },
-            sheetState = sheetState
-        ) {
-            InviteUserForm(
+        if (showInviteSheet) {
+            ModalBottomSheet(
+                onDismissRequest = { showInviteSheet = false },
+                sheetState = sheetState
+            ) {
+                InviteUserForm(
                 projects = uiState.projects,
-                onDismiss = { showInviteSheet = false },
                 onInvite = { projectId, email ->
                     onInviteUser(projectId, email)
                     showInviteSheet = false
                 }
             )
+            }
         }
     }
 }
+
 
 @Composable
 fun ProjectItem(
@@ -288,7 +354,6 @@ fun ProjectItem(
 
 @Composable
 fun CreateProjectForm(
-    onDismiss: () -> Unit,
     onCreate: (String, String, String, Int) -> Unit
 ) {
     var name by remember { mutableStateOf("") }
@@ -348,7 +413,6 @@ fun CreateProjectForm(
 @Composable
 fun InviteUserForm(
     projects: List<ProjectDto>,
-    onDismiss: () -> Unit,
     onInvite: (Long, String) -> Unit
 ) {
     var expanded by remember { mutableStateOf(false) }

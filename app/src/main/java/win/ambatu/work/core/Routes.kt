@@ -8,9 +8,6 @@ import win.ambatu.work.data.model.User
 @Serializable
 sealed interface Routes : NavKey {
     @Serializable
-    data object Login : Routes
-
-    @Serializable
     data object Home : Routes
 
     @Serializable

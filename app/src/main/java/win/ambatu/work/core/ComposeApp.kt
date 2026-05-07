@@ -47,9 +47,7 @@ import win.ambatu.work.data.model.User
 import win.ambatu.work.data.repository.AuthRepository
 import win.ambatu.work.data.repository.ProjectRepository
 import win.ambatu.work.data.storage.SessionManager
-import win.ambatu.work.feature.auth.GoogleSignInManager
-import win.ambatu.work.feature.auth.LoginScreen
-import win.ambatu.work.feature.auth.LoginViewModel
+import win.ambatu.work.feature.auth.LoginActivity
 import win.ambatu.work.feature.home.HomeScreen
 import win.ambatu.work.feature.home.HomeViewModel
 import win.ambatu.work.feature.project.ProjectDetailActivity
@@ -61,101 +59,63 @@ import win.ambatu.work.feature.profile.ProfileScreen
 import win.ambatu.work.ui.theme.AmbatuWorkTheme
 
 @Composable
-fun ComposeApp() {
+fun ComposeApp(
+    onLogout: () -> Unit = {}
+) {
     val context = LocalContext.current
-    val activity = context as Activity
     val sessionManager = remember { SessionManager(context) }
     val authRepository = remember { AuthRepository(NetworkModule.apiService) }
     val projectRepository = remember { ProjectRepository(NetworkModule.apiService) }
-    val googleSignInManager = remember { GoogleSignInManager(activity) }
 
-    val loginViewModel: LoginViewModel = viewModel {
-        LoginViewModel(
-            googleSignInManager = googleSignInManager,
-            authRepository = authRepository,
-            sessionManager = sessionManager
-        )
+    val homeViewModel: HomeViewModel = viewModel {
+        HomeViewModel(authRepository, projectRepository, sessionManager)
     }
 
-    val uiState by loginViewModel.uiState.collectAsState()
-    val backStack = rememberNavBackStack(Routes.Login as NavKey)
+    val backStack = rememberNavBackStack(Routes.Home as NavKey)
 
-    LaunchedEffect(uiState.isLoggedIn, uiState.isCheckingSession) {
-        if (uiState.isCheckingSession) return@LaunchedEffect
-
-        if (uiState.isLoggedIn) {
-            if (backStack.any { it is Routes.Login }) {
-                backStack.replaceAll(Routes.Home)
-            }
-        } else {
-            if (backStack.none { it is Routes.Login }) {
-                backStack.replaceAll(Routes.Login)
-            }
-        }
-    }
+    val uiState by homeViewModel.uiState.collectAsState()
+    val user = uiState.user ?: UserController.getPlaceholderUser()
 
     CompositionLocalProvider(LocalBackStack provides backStack) {
         AmbatuWorkTheme {
-            val user = uiState.user?.let { dto ->
-                User(
-                    id = dto.id?.toInt() ?: 0,
-                    name = dto.name ?: "",
-                    email = dto.email ?: "",
-                    picture = dto.avatarUrl,
-                    points = 0,
-                    rank = 0
-                )
-            } ?: UserController.getPlaceholderUser()
-
             Scaffold(
                 bottomBar = {
-                    if (uiState.isLoggedIn && backStack.none { it is Routes.Login }) {
-                        NavigationBar {
-                            NavigationBarItem(
-                                selected = backStack.lastOrNull() is Routes.Home,
-                                onClick = { backStack.replaceAll(Routes.Home) },
-                                icon = { Icon(Icons.Default.Home, contentDescription = null) },
-                                label = { Text("Home") }
-                            )
-                            NavigationBarItem(
-                                selected = backStack.lastOrNull() is Routes.Invitations,
-                                onClick = { backStack.replaceAll(Routes.Invitations) },
-                                icon = { Icon(Icons.Default.Mail, contentDescription = null) },
-                                label = { Text("Invitations") }
-                            )
-                            NavigationBarItem(
-                                selected = backStack.lastOrNull() is Routes.ScrumGuide,
-                                onClick = { backStack.replaceAll(Routes.ScrumGuide) },
-                                icon = { Icon(Icons.Default.Book, contentDescription = null, modifier = Modifier.size(24.dp)) },
-                                label = { Text("SCRUM Guide") }
-                            )
-                            NavigationBarItem(
-                                selected = backStack.lastOrNull() is Routes.Profile,
-                                onClick = { backStack.replaceAll(Routes.Profile(user)) },
-                                icon = {
-                                    AsyncImage(
-                                        model = user.picture,
-                                        placeholder = painterResource(id = R.drawable.profile_placeholder),
-                                        error = painterResource(id = R.drawable.profile_placeholder),
-                                        contentDescription = "User profile picture",
-                                        modifier = Modifier
-                                            .size(24.dp)
-                                            .clip(CircleShape),
-                                        contentScale = ContentScale.Crop
-                                    )
-                                },
-                                label = { Text("Profile") }
-                            )
-                        }
+                    NavigationBar {
+                        NavigationBarItem(
+                            selected = backStack.lastOrNull() is Routes.Home,
+                            onClick = { backStack.replaceAll(Routes.Home) },
+                            icon = { Icon(Icons.Default.Home, contentDescription = null) },
+                            label = { Text("Home") }
+                        )
+                        NavigationBarItem(
+                            selected = backStack.lastOrNull() is Routes.Profile,
+                            onClick = { 
+                                // In a real app, you'd pass the actual user here
+                                backStack.replaceAll(Routes.Profile(user)) 
+                            },
+                            icon = {
+                                AsyncImage(
+                                    model = user.picture,
+                                    placeholder = painterResource(id = R.drawable.profile_placeholder),
+                                    error = painterResource(id = R.drawable.profile_placeholder),
+                                    contentDescription = "User profile picture",
+                                    modifier = Modifier
+                                        .size(24.dp)
+                                        .clip(CircleShape),
+                                    contentScale = ContentScale.Crop
+                                )
+                            },
+                            label = { Text("Profile") }
+                        )
                     }
                 }
             ) { innerPadding ->
-                Surface(modifier = Modifier.padding(innerPadding)) {
-                    if (uiState.isCheckingSession) {
-                        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                            CircularProgressIndicator()
-                        }
-                    } else if (backStack.isNotEmpty()) {
+                Surface(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(bottom = innerPadding.calculateBottomPadding())
+                ) {
+                    if (backStack.isNotEmpty()) {
                         NavDisplay(
                             backStack = backStack,
                             transitionSpec = { EnterTransition.None togetherWith ExitTransition.None },
@@ -165,14 +125,7 @@ fun ComposeApp() {
                                 rememberViewModelStoreNavEntryDecorator()
                             ),
                             entryProvider = entryProvider {
-                                entry<Routes.Login> {
-                                    LoginScreen(viewModel = loginViewModel)
-                                }
                                 entry<Routes.Home> {
-                                    val homeViewModel: HomeViewModel = viewModel {
-                                        HomeViewModel(projectRepository, sessionManager)
-                                    }
-
                                     HomeScreen(
                                         user = user,
                                         viewModel = homeViewModel,
@@ -183,25 +136,12 @@ fun ComposeApp() {
                                         }
                                     )
                                 }
-                                entry<Routes.ScrumGuide> {
-                                    ScrumGuideScreen()
-                                }
-                                entry<Routes.Invitations> {
-                                    val invitationViewModel: InvitationViewModel = viewModel {
-                                        InvitationViewModel(projectRepository, sessionManager)
-                                    }
-                                    InvitationScreen(
-                                        viewModel = invitationViewModel,
-                                        onInvitationAccepted = {
-                                            backStack.replaceAll(Routes.Home)
-                                        }
-                                    )
-                                }
                                 entry<Routes.Profile> { route ->
                                     ProfileScreen(
                                         user = route.user,
                                         onLogoutClick = {
-                                            loginViewModel.logout()
+                                            sessionManager.clearToken()
+                                            onLogout()
                                         }
                                     )
                                 }

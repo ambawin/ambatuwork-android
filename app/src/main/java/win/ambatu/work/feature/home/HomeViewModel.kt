@@ -9,11 +9,14 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import win.ambatu.work.data.repository.ProjectRepository
 import win.ambatu.work.data.storage.SessionManager
+import win.ambatu.work.data.model.User
+import win.ambatu.work.data.repository.AuthRepository
 import win.ambatu.work.feature.network.CreateProjectRequest
 import win.ambatu.work.feature.network.ProjectDto
 
 data class HomeUiState(
     val projects: List<ProjectDto> = emptyList(),
+    val user: User? = null,
     val isLoading: Boolean = false,
     val error: String? = null,
     val isCreatingProject: Boolean = false,
@@ -21,6 +24,7 @@ data class HomeUiState(
 )
 
 class HomeViewModel(
+    private val authRepository: AuthRepository,
     private val projectRepository: ProjectRepository,
     private val sessionManager: SessionManager
 ) : ViewModel() {
@@ -29,7 +33,28 @@ class HomeViewModel(
     val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
 
     init {
+        loadUser()
         loadProjects()
+    }
+
+    fun loadUser() {
+        val token = sessionManager.getToken() ?: return
+        viewModelScope.launch {
+            try {
+                val dto = authRepository.getMe("Bearer $token")
+                val user = User(
+                    id = dto.id?.toInt() ?: 0,
+                    name = dto.name ?: "",
+                    email = dto.email ?: "",
+                    picture = dto.avatarUrl,
+                    points = 0,
+                    rank = 0
+                )
+                _uiState.update { it.copy(user = user) }
+            } catch (e: Exception) {
+                // Handle error
+            }
+        }
     }
 
     fun loadProjects() {

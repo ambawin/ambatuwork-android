@@ -137,10 +137,17 @@ fun SprintBoardScreen(
                     }
                 }
             } else {
-                uiState.board?.let { board ->
+                val board = uiState.board
+                if (board != null) {
                     BoardContent(
                         board = board,
-                        onItemClick = { statusUpdateItem = it },
+                        onItemClick = { item ->
+                            val canEdit = uiState.currentUserRole == "admin" ||
+                                    item.assignedToUserId == uiState.currentUserId
+                            if (canEdit) {
+                                statusUpdateItem = item
+                            }
+                        },
                         onInfoClick = { detailItem = it }
                     )
                 }

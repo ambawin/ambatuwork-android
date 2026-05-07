@@ -13,11 +13,13 @@ import win.ambatu.work.data.storage.SessionManager
 import win.ambatu.work.feature.network.BacklogItemDto
 import win.ambatu.work.feature.network.ProjectDto
 import win.ambatu.work.feature.network.ProjectMemberDto
+import win.ambatu.work.feature.network.SprintDto
 
 data class ProjectDetailUiState(
     val project: ProjectDto? = null,
     val members: List<ProjectMemberDto> = emptyList(),
     val backlogItems: List<BacklogItemDto> = emptyList(),
+    val sprints: List<SprintDto> = emptyList(),
     val isLoading: Boolean = false,
     val error: String? = null
 )
@@ -46,6 +48,7 @@ class ProjectDetailViewModel(
         loadProject()
         loadMembers()
         loadBacklogItems()
+        loadSprints()
     }
 
     fun loadProject() {
@@ -81,6 +84,18 @@ class ProjectDetailViewModel(
                 _uiState.update { it.copy(backlogItems = items) }
             } catch (e: Exception) {
                 // Handle backlog loading error if needed
+            }
+        }
+    }
+
+    fun loadSprints() {
+        val token = sessionManager.getToken() ?: return
+        viewModelScope.launch {
+            try {
+                val sprints = projectRepository.getProjectSprints(token, projectId)
+                _uiState.update { it.copy(sprints = sprints) }
+            } catch (e: Exception) {
+                // Handle sprint loading error if needed
             }
         }
     }

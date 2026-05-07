@@ -94,4 +94,11 @@ interface ApiService {
         @Path("project_id") projectId: Long,
         @Body request: CreateBacklogItemRequest
     ): BacklogItemResponse
+
+    @GET("api/v1/projects/{project_id}/backlog-items/{backlog_id}")
+    suspend fun getBacklogItem(
+        @Header("Authorization") authorization: String,
+        @Path("project_id") projectId: Long,
+        @Path("backlog_id") backlogId: Long
+    ): BacklogItemResponse
 }

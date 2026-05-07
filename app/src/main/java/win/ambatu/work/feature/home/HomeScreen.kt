@@ -72,7 +72,7 @@ fun HomeScreen(
     val context = LocalContext.current
 
     Content(
-        user = user,
+        user = uiState.user ?: user,
         uiState = uiState,
         onCreateProject = viewModel::createProject,
         onInviteUser = viewModel::inviteUser,

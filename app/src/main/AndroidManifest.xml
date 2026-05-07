@@ -25,6 +25,11 @@
             </intent-filter>
         </activity>
         <activity
+            android:name=".feature.auth.LoginActivity"
+            android:exported="false"
+            android:label="Login"
+            android:theme="@style/Theme.AmbatuWork" />
+        <activity
             android:name=".feature.project.ProjectDetailActivity"
             android:exported="false"
             android:label="Project Detail"

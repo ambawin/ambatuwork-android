@@ -52,6 +52,9 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.HorizontalDivider
+import win.ambatu.work.feature.project.AddBacklogItemActivity
+import win.ambatu.work.feature.project.AddSprintActivity
+import win.ambatu.work.feature.project.SprintBoardActivity
 import win.ambatu.work.feature.project.BacklogTab
 import win.ambatu.work.feature.project.DashboardTab
 import win.ambatu.work.feature.project.ProjectTab
@@ -105,6 +108,22 @@ fun HomeScreen(
         }
     }
 
+    val addBacklogLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            viewModel.loadProjects()
+        }
+    }
+
+    val addSprintLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            viewModel.loadProjects()
+        }
+    }
+
     Content(
         user = uiState.user ?: user,
         uiState = uiState,
@@ -113,9 +132,15 @@ fun HomeScreen(
         onProjectClick = onProjectClick,
         onSelectProject = viewModel::selectProject,
         onProfileClick = onProfileClick,
-        onAddBacklogClick = onAddBacklogClick,
-        onAddSprintClick = onAddSprintClick,
-        onSprintClick = onSprintClick,
+        onAddBacklogClick = { projectId ->
+            addBacklogLauncher.launch(AddBacklogItemActivity.createIntent(context, projectId))
+        },
+        onAddSprintClick = { projectId ->
+            addSprintLauncher.launch(AddSprintActivity.createIntent(context, projectId))
+        },
+        onSprintClick = { projectId, sprintId ->
+            context.startActivity(SprintBoardActivity.createIntent(context, projectId, sprintId))
+        },
         onInvitationsClick = {
             invitationLauncher.launch(InvitationActivity.createIntent(context))
         },

@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -39,7 +40,6 @@ import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.TopAppBar
@@ -65,12 +65,17 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import coil3.compose.AsyncImage
 import java.util.Calendar
+import win.ambatu.work.R
 import win.ambatu.work.controller.UserController
 import win.ambatu.work.data.model.User
 import win.ambatu.work.feature.invitation.InvitationActivity
@@ -152,70 +157,69 @@ private fun Content(
                     titleContentColor = MaterialTheme.colorScheme.onBackground,
                 ),
                 navigationIcon = {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.padding(start = 8.dp)
+                    IconButton(onClick = onProfileClick) {
+                        AsyncImage(
+                            model = user.picture,
+                            placeholder = painterResource(id = R.drawable.profile_placeholder),
+                            error = painterResource(id = R.drawable.profile_placeholder),
+                            contentDescription = "Profile",
+                            modifier = Modifier
+                                .size(32.dp)
+                                .clip(CircleShape),
+                            contentScale = ContentScale.Crop
+                        )
+                    }
+                },
+                title = {
+                    ExposedDropdownMenuBox(
+                        expanded = projectSwitcherExpanded,
+                        onExpandedChange = { projectSwitcherExpanded = it }
                     ) {
-                        IconButton(onClick = onProfileClick) {
+                        Row(
+                            modifier = Modifier
+                                .menuAnchor()
+                                .clickable { projectSwitcherExpanded = true }
+                                .padding(horizontal = 8.dp, vertical = 4.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = uiState.selectedProject?.name ?: "Select Project",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold
+                            )
                             Icon(
-                                imageVector = Icons.Default.AccountCircle,
-                                contentDescription = "Profile",
-                                modifier = Modifier.size(32.dp),
-                                tint = MaterialTheme.colorScheme.primary
+                                imageVector = Icons.Default.ArrowDropDown,
+                                contentDescription = null
                             )
                         }
 
-                        ExposedDropdownMenuBox(
+                        ExposedDropdownMenu(
                             expanded = projectSwitcherExpanded,
-                            onExpandedChange = { projectSwitcherExpanded = it }
+                            onDismissRequest = { projectSwitcherExpanded = false }
                         ) {
-                            Row(
-                                modifier = Modifier
-                                    .menuAnchor()
-                                    .clickable { projectSwitcherExpanded = true }
-                                    .padding(horizontal = 8.dp, vertical = 4.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Text(
-                                    text = uiState.selectedProject?.name ?: "Select Project",
-                                    style = MaterialTheme.typography.titleMedium,
-                                    fontWeight = FontWeight.Bold
-                                )
-                                Icon(
-                                    imageVector = Icons.Default.ArrowDropDown,
-                                    contentDescription = null
-                                )
-                            }
-
-                            ExposedDropdownMenu(
-                                expanded = projectSwitcherExpanded,
-                                onDismissRequest = { projectSwitcherExpanded = false }
-                            ) {
-                                uiState.projects.forEach { project ->
-                                    DropdownMenuItem(
-                                        text = { Text(project.name) },
-                                        onClick = {
-                                            onSelectProject(project)
-                                            projectSwitcherExpanded = false
-                                        }
-                                    )
-                                }
-                                if (uiState.projects.isNotEmpty()) {
-                                    HorizontalDivider()
-                                }
+                            uiState.projects.forEach { project ->
                                 DropdownMenuItem(
-                                    text = { Text("Add New Project") },
-                                    leadingIcon = { Icon(Icons.Default.Add, null) },
+                                    text = { Text(project.name) },
                                     onClick = {
+                                        onSelectProject(project)
                                         projectSwitcherExpanded = false
-                                        showCreateSheet = true
                                     }
                                 )
                             }
+                            if (uiState.projects.isNotEmpty()) {
+                                HorizontalDivider()
+                            }
+                            DropdownMenuItem(
+                                text = { Text("Add New Project") },
+                                leadingIcon = { Icon(Icons.Default.Add, null) },
+                                onClick = {
+                                    projectSwitcherExpanded = false
+                                    showCreateSheet = true
+                                }
+                            )
                         }
                     }
                 },
-                title = { },
                 actions = {
                     IconButton(onClick = onInvitationsClick) {
                         Icon(Icons.Default.Mail, contentDescription = "Invitations")

@@ -14,54 +14,40 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Group
+import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.GroupAdd
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Mail
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.PostAdd
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Button
-import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material.icons.filled.ArrowDropDown
-import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberModalBottomSheetState
-import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarItem
-import androidx.compose.material3.HorizontalDivider
-import win.ambatu.work.feature.project.AddBacklogItemActivity
-import win.ambatu.work.feature.project.AddSprintActivity
-import win.ambatu.work.feature.project.SprintBoardActivity
-import win.ambatu.work.feature.project.BacklogTab
-import win.ambatu.work.feature.project.BacklogDetailDialog
-import win.ambatu.work.feature.network.BacklogItemDto
-import win.ambatu.work.feature.project.DashboardTab
-import win.ambatu.work.feature.project.ProjectTab
-import win.ambatu.work.feature.project.SettingsTab
-import win.ambatu.work.feature.project.SprintTab
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -76,15 +62,25 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
-import java.util.Calendar
 import win.ambatu.work.R
 import win.ambatu.work.controller.UserController
 import win.ambatu.work.data.model.User
 import win.ambatu.work.feature.invitation.InvitationActivity
+import win.ambatu.work.feature.network.BacklogItemDto
 import win.ambatu.work.feature.network.ProjectDto
+import win.ambatu.work.feature.project.AddBacklogItemActivity
+import win.ambatu.work.feature.project.AddSprintActivity
+import win.ambatu.work.feature.project.BacklogDetailDialog
+import win.ambatu.work.feature.project.BacklogTab
+import win.ambatu.work.feature.project.DashboardTab
+import win.ambatu.work.feature.project.ProjectTab
+import win.ambatu.work.feature.project.SettingsTab
+import win.ambatu.work.feature.project.SprintBoardActivity
+import win.ambatu.work.feature.project.SprintTab
 import win.ambatu.work.feature.scrum.ScrumGuideActivity
 import win.ambatu.work.ui.theme.AmbatuWorkTheme
 
@@ -213,6 +209,7 @@ private fun Content(
                         Row(
                             modifier = Modifier
                                 .menuAnchor()
+                                .widthIn(min = 200.dp)
                                 .clickable { projectSwitcherExpanded = true }
                                 .padding(horizontal = 8.dp, vertical = 4.dp),
                             verticalAlignment = Alignment.CenterVertically
@@ -220,7 +217,10 @@ private fun Content(
                             Text(
                                 text = uiState.selectedProject?.name ?: "Select Project",
                                 style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Bold
+                                fontWeight = FontWeight.Bold,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                                modifier = Modifier.weight(1f, fill = false)
                             )
                             Icon(
                                 imageVector = Icons.Default.ArrowDropDown,
@@ -230,7 +230,8 @@ private fun Content(
 
                         ExposedDropdownMenu(
                             expanded = projectSwitcherExpanded,
-                            onDismissRequest = { projectSwitcherExpanded = false }
+                            onDismissRequest = { projectSwitcherExpanded = false },
+                            modifier = Modifier.exposedDropdownSize()
                         ) {
                             uiState.projects.forEach { project ->
                                 DropdownMenuItem(

@@ -142,8 +142,12 @@ fun SprintBoardScreen(
                     BoardContent(
                         board = board,
                         onItemClick = { item ->
-                            val canEdit = uiState.currentUserRole == "admin" ||
-                                    item.assignedToUserId == uiState.currentUserId
+                            val role = uiState.currentUserRole?.lowercase()?.trim() ?: ""
+                            val isAdmin = role.contains("admin") || 
+                                         role.contains("owner") || 
+                                         role.contains("master") || 
+                                         role.contains("leader")
+                            val canEdit = isAdmin || item.assignedToUserId == uiState.currentUserId
                             if (canEdit) {
                                 statusUpdateItem = item
                             }

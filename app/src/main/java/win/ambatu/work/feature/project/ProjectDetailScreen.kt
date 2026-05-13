@@ -89,6 +89,7 @@ fun ProjectDetailScreen(
     viewModel: ProjectDetailViewModel,
     onBackClick: () -> Unit,
     onAddBacklogClick: (projectId: Long) -> Unit,
+    onAddSprintClick: (projectId: Long) -> Unit,
     onSprintClick: (projectId: Long, sprintId: Long) -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -150,6 +151,16 @@ fun ProjectDetailScreen(
                     contentColor = MaterialTheme.colorScheme.onPrimaryContainer
                 ) {
                     Icon(Icons.Default.Add, contentDescription = "Add Backlog Item")
+                }
+            }
+
+            if (selectedTab == ProjectTab.SPRINT && canAddBacklog) {
+                FloatingActionButton(
+                    onClick = { uiState.project?.id?.let { onAddSprintClick(it) } },
+                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                ) {
+                    Icon(Icons.Default.Add, contentDescription = "Add Sprint")
                 }
             }
         }

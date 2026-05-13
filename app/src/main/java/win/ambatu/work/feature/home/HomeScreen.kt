@@ -1,5 +1,8 @@
 package win.ambatu.work.feature.home
 
+import android.app.Activity
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -42,6 +45,7 @@ import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberModalBottomSheetState
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.IconButton
@@ -88,6 +92,14 @@ fun HomeScreen(
 
     val context = LocalContext.current
 
+    val invitationLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            viewModel.loadProjects()
+        }
+    }
+
     Content(
         user = uiState.user ?: user,
         uiState = uiState,
@@ -100,7 +112,7 @@ fun HomeScreen(
         onAddSprintClick = onAddSprintClick,
         onSprintClick = onSprintClick,
         onInvitationsClick = {
-            context.startActivity(InvitationActivity.createIntent(context))
+            invitationLauncher.launch(InvitationActivity.createIntent(context))
         },
         onScrumGuideClick = {
             context.startActivity(ScrumGuideActivity.createIntent(context))
@@ -216,6 +228,14 @@ private fun Content(
                         onDismissRequest = { showMenu = false }
                     ) {
                         DropdownMenuItem(
+                            text = { Text("Invite Member") },
+                            leadingIcon = { Icon(Icons.Default.GroupAdd, null) },
+                            onClick = {
+                                showMenu = false
+                                showInviteSheet = true
+                            }
+                        )
+                        DropdownMenuItem(
                             text = { Text("Project Settings") },
                             leadingIcon = { Icon(Icons.Default.Settings, null) },
                             onClick = {
@@ -225,6 +245,7 @@ private fun Content(
                         )
                         DropdownMenuItem(
                             text = { Text("SCRUM Guide") },
+                            leadingIcon = { Icon(Icons.Default.Info, null) },
                             onClick = {
                                 showMenu = false
                                 onScrumGuideClick()

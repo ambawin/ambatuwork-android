@@ -59,6 +59,11 @@
             android:exported="false"
             android:label="SCRUM Guide"
             android:theme="@style/Theme.AmbatuWork" />
+        <activity
+            android:name=".feature.profile.ProfileActivity"
+            android:exported="false"
+            android:label="Profile"
+            android:theme="@style/Theme.AmbatuWork" />
 
     </application>
 

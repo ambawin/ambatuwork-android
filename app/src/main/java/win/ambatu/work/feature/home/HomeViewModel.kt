@@ -12,10 +12,17 @@ import win.ambatu.work.data.storage.SessionManager
 import win.ambatu.work.data.model.User
 import win.ambatu.work.data.repository.AuthRepository
 import win.ambatu.work.feature.network.CreateProjectRequest
+import win.ambatu.work.feature.network.BacklogItemDto
 import win.ambatu.work.feature.network.ProjectDto
+import win.ambatu.work.feature.network.ProjectMemberDto
+import win.ambatu.work.feature.network.SprintDto
 
 data class HomeUiState(
     val projects: List<ProjectDto> = emptyList(),
+    val selectedProject: ProjectDto? = null,
+    val members: List<ProjectMemberDto> = emptyList(),
+    val backlogItems: List<BacklogItemDto> = emptyList(),
+    val sprints: List<SprintDto> = emptyList(),
     val user: User? = null,
     val isLoading: Boolean = false,
     val error: String? = null,
@@ -63,9 +70,50 @@ class HomeViewModel(
             _uiState.update { it.copy(isLoading = true, error = null) }
             try {
                 val response = projectRepository.getProjects(token)
-                _uiState.update { it.copy(projects = response, isLoading = false) }
+                val firstProject = response.firstOrNull()
+                val currentSelected = _uiState.value.selectedProject
+                
+                _uiState.update { 
+                    it.copy(
+                        projects = response, 
+                        isLoading = false,
+                        selectedProject = currentSelected ?: firstProject
+                    ) 
+                }
+
+                val projectToLoad = currentSelected ?: firstProject
+                if (projectToLoad != null) {
+                    loadProjectDetails(projectToLoad.id)
+                }
             } catch (e: Exception) {
                 _uiState.update { it.copy(isLoading = false, error = e.message) }
+            }
+        }
+    }
+
+    fun selectProject(project: ProjectDto) {
+        _uiState.update { it.copy(selectedProject = project) }
+        loadProjectDetails(project.id)
+    }
+
+    private fun loadProjectDetails(projectId: Long) {
+        val token = sessionManager.getToken() ?: return
+        viewModelScope.launch {
+            try {
+                // Fetch details in parallel if possible, or sequentially for simplicity
+                val members = projectRepository.getProjectMembers(token, projectId)
+                val backlog = projectRepository.getProjectBacklogItems(token, projectId)
+                val sprints = projectRepository.getProjectSprints(token, projectId)
+                
+                _uiState.update { 
+                    it.copy(
+                        members = members,
+                        backlogItems = backlog,
+                        sprints = sprints
+                    )
+                }
+            } catch (e: Exception) {
+                // Handle detail loading error
             }
         }
     }

@@ -36,12 +36,23 @@ import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material.icons.filled.AccountCircle
+import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.HorizontalDivider
+import win.ambatu.work.feature.project.BacklogTab
+import win.ambatu.work.feature.project.DashboardTab
+import win.ambatu.work.feature.project.ProjectTab
+import win.ambatu.work.feature.project.SettingsTab
+import win.ambatu.work.feature.project.SprintTab
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -67,7 +78,11 @@ import win.ambatu.work.ui.theme.AmbatuWorkTheme
 fun HomeScreen(
     user: User,
     viewModel: HomeViewModel,
-    onProjectClick: (Long) -> Unit
+    onProjectClick: (Long) -> Unit,
+    onProfileClick: () -> Unit = {},
+    onAddBacklogClick: (Long) -> Unit = {},
+    onAddSprintClick: (Long) -> Unit = {},
+    onSprintClick: (Long, Long) -> Unit = { _, _ -> }
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
@@ -79,6 +94,11 @@ fun HomeScreen(
         onCreateProject = viewModel::createProject,
         onInviteUser = viewModel::inviteUser,
         onProjectClick = onProjectClick,
+        onSelectProject = viewModel::selectProject,
+        onProfileClick = onProfileClick,
+        onAddBacklogClick = onAddBacklogClick,
+        onAddSprintClick = onAddSprintClick,
+        onSprintClick = onSprintClick,
         onInvitationsClick = {
             context.startActivity(InvitationActivity.createIntent(context))
         },
@@ -96,6 +116,11 @@ private fun Content(
     onCreateProject: (String, String, String, Int) -> Unit = { _, _, _, _ -> },
     onInviteUser: (Long, String) -> Unit = { _, _ -> },
     onProjectClick: (Long) -> Unit = {},
+    onSelectProject: (ProjectDto) -> Unit = {},
+    onProfileClick: () -> Unit = {},
+    onAddBacklogClick: (Long) -> Unit = {},
+    onAddSprintClick: (Long) -> Unit = {},
+    onSprintClick: (Long, Long) -> Unit = { _, _ -> },
     onInvitationsClick: () -> Unit = {},
     onScrumGuideClick: () -> Unit = {}
 ) {
@@ -103,31 +128,82 @@ private fun Content(
     var showCreateSheet by remember { mutableStateOf(false) }
     var showInviteSheet by remember { mutableStateOf(false) }
     var showMenu by remember { mutableStateOf(false) }
+    var projectSwitcherExpanded by remember { mutableStateOf(false) }
+    var selectedTab by remember { mutableStateOf(ProjectTab.DASHBOARD) }
     val sheetState = rememberModalBottomSheetState()
-
-    val greeting = remember {
-        val calendar = Calendar.getInstance()
-        when (calendar.get(Calendar.HOUR_OF_DAY)) {
-            in 0..11 -> "Good Morning"
-            in 12..16 -> "Good Afternoon"
-            else -> "Good Evening"
-        }
-    }
-    val firstName = user.name.split(" ").firstOrNull() ?: user.name
 
     Scaffold(
         topBar = {
             TopAppBar(
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.background,
-                    titleContentColor = MaterialTheme.colorScheme.primary,
+                    titleContentColor = MaterialTheme.colorScheme.onBackground,
                 ),
-                title = {
-                    Text(
-                        text = "AmbatuWork",
-                        fontWeight = FontWeight.Bold
-                    )
+                navigationIcon = {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.padding(start = 8.dp)
+                    ) {
+                        IconButton(onClick = onProfileClick) {
+                            Icon(
+                                imageVector = Icons.Default.AccountCircle,
+                                contentDescription = "Profile",
+                                modifier = Modifier.size(32.dp),
+                                tint = MaterialTheme.colorScheme.primary
+                            )
+                        }
+
+                        ExposedDropdownMenuBox(
+                            expanded = projectSwitcherExpanded,
+                            onExpandedChange = { projectSwitcherExpanded = it }
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .menuAnchor()
+                                    .clickable { projectSwitcherExpanded = true }
+                                    .padding(horizontal = 8.dp, vertical = 4.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = uiState.selectedProject?.name ?: "Select Project",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold
+                                )
+                                Icon(
+                                    imageVector = Icons.Default.ArrowDropDown,
+                                    contentDescription = null
+                                )
+                            }
+
+                            ExposedDropdownMenu(
+                                expanded = projectSwitcherExpanded,
+                                onDismissRequest = { projectSwitcherExpanded = false }
+                            ) {
+                                uiState.projects.forEach { project ->
+                                    DropdownMenuItem(
+                                        text = { Text(project.name) },
+                                        onClick = {
+                                            onSelectProject(project)
+                                            projectSwitcherExpanded = false
+                                        }
+                                    )
+                                }
+                                if (uiState.projects.isNotEmpty()) {
+                                    HorizontalDivider()
+                                }
+                                DropdownMenuItem(
+                                    text = { Text("Add New Project") },
+                                    leadingIcon = { Icon(Icons.Default.Add, null) },
+                                    onClick = {
+                                        projectSwitcherExpanded = false
+                                        showCreateSheet = true
+                                    }
+                                )
+                            }
+                        }
+                    }
                 },
+                title = { },
                 actions = {
                     IconButton(onClick = onInvitationsClick) {
                         Icon(Icons.Default.Mail, contentDescription = "Invitations")
@@ -140,6 +216,14 @@ private fun Content(
                         onDismissRequest = { showMenu = false }
                     ) {
                         DropdownMenuItem(
+                            text = { Text("Project Settings") },
+                            leadingIcon = { Icon(Icons.Default.Settings, null) },
+                            onClick = {
+                                showMenu = false
+                                // Handle project settings
+                            }
+                        )
+                        DropdownMenuItem(
                             text = { Text("SCRUM Guide") },
                             onClick = {
                                 showMenu = false
@@ -150,88 +234,117 @@ private fun Content(
                 }
             )
         },
+        bottomBar = {
+            NavigationBar {
+                ProjectTab.entries.forEach { tab ->
+                    NavigationBarItem(
+                        selected = selectedTab == tab,
+                        onClick = { selectedTab = tab },
+                        label = { Text(tab.title) },
+                        icon = { Icon(tab.icon, contentDescription = tab.title) }
+                    )
+                }
+            }
+        },
         floatingActionButton = {
-            FloatingActionButton(
-                onClick = { showActionSheet = true },
-                containerColor = MaterialTheme.colorScheme.primaryContainer,
-                contentColor = MaterialTheme.colorScheme.onPrimaryContainer
-            ) {
-                Icon(Icons.Default.Add, contentDescription = "Add")
+            if (uiState.selectedProject != null) {
+                val role = uiState.selectedProject.myRole?.lowercase()?.trim()
+                val canEdit = role != null && (
+                        role.contains("admin") ||
+                                role.contains("owner") ||
+                                role.contains("master") ||
+                                role.contains("leader")
+                        )
+
+                if (selectedTab == ProjectTab.BACKLOG && canEdit) {
+                    FloatingActionButton(
+                        onClick = { onAddBacklogClick(uiState.selectedProject.id) },
+                        containerColor = MaterialTheme.colorScheme.primaryContainer,
+                        contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                    ) {
+                        Icon(Icons.Default.Add, contentDescription = "Add Backlog Item")
+                    }
+                }
+
+                if (selectedTab == ProjectTab.SPRINT && canEdit) {
+                    FloatingActionButton(
+                        onClick = { onAddSprintClick(uiState.selectedProject.id) },
+                        containerColor = MaterialTheme.colorScheme.primaryContainer,
+                        contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                    ) {
+                        Icon(Icons.Default.Add, contentDescription = "Add Sprint")
+                    }
+                }
+            } else {
+                FloatingActionButton(
+                    onClick = { showCreateSheet = true },
+                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                ) {
+                    Icon(Icons.Default.Add, contentDescription = "Add Project")
+                }
             }
         }
     ) { innerPadding ->
-        Column(
+        Box(
             modifier = Modifier
                 .padding(innerPadding)
                 .fillMaxSize()
         ) {
-            Column(
-                modifier = Modifier.padding(16.dp)
-            ) {
-                Text(
-                    text = "$greeting,",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.secondary
-                )
-                Text(
-                    text = firstName,
-                    fontWeight = FontWeight.Bold,
-                    style = MaterialTheme.typography.headlineMedium
-                )
-            }
-
-            Box(
-                modifier = Modifier.fillMaxSize()
-            ) {
-                if (uiState.isLoading && uiState.projects.isEmpty()) {
-                    CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
-                } else if (uiState.projects.isEmpty() && !uiState.isLoading) {
-                    Column(
-                        modifier = Modifier
-                            .align(Alignment.Center)
-                            .padding(32.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Text(
-                            text = "No projects found",
-                            style = MaterialTheme.typography.headlineSmall,
-                            fontWeight = FontWeight.Bold
-                        )
-                        Text(
-                            text = "Create one or join via invitation!",
-                            style = MaterialTheme.typography.bodyLarge,
-                            color = MaterialTheme.colorScheme.secondary
-                        )
-                    }
-                } else {
-                    LazyColumn(
-                        modifier = Modifier.fillMaxSize(),
-                        contentPadding = androidx.compose.foundation.layout.PaddingValues(
-                            start = 16.dp,
-                            end = 16.dp,
-                            bottom = 16.dp,
-                            top = 0.dp
-                        ),
-                        verticalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        items(uiState.projects) { project ->
-                            ProjectItem(
-                                project = project,
-                                onClick = { onProjectClick(project.id) }
-                            )
-                        }
+            if (uiState.isLoading && uiState.selectedProject == null) {
+                CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+            } else if (uiState.selectedProject == null) {
+                Column(
+                    modifier = Modifier
+                        .align(Alignment.Center)
+                        .padding(32.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = "No projects found",
+                        style = MaterialTheme.typography.headlineSmall,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Text(
+                        text = "Create one to get started!",
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.secondary
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Button(onClick = { showCreateSheet = true }) {
+                        Text("Create Project")
                     }
                 }
-
-                if (uiState.error != null) {
-                    Text(
-                        text = uiState.error,
-                        color = MaterialTheme.colorScheme.error,
-                        modifier = Modifier
-                            .align(Alignment.BottomCenter)
-                            .padding(16.dp)
+            } else {
+                when (selectedTab) {
+                    ProjectTab.DASHBOARD -> DashboardTab(
+                        project = uiState.selectedProject,
+                        members = uiState.members
+                    )
+                    ProjectTab.BACKLOG -> BacklogTab(
+                        backlogItems = uiState.backlogItems,
+                        onItemClick = { /* Handle item click if needed */ }
+                    )
+                    ProjectTab.SPRINT -> SprintTab(
+                        sprints = uiState.sprints,
+                        onSprintClick = { sprintId ->
+                            onSprintClick(uiState.selectedProject.id, sprintId)
+                        }
+                    )
+                    ProjectTab.SETTINGS -> SettingsTab(
+                        members = uiState.members
                     )
                 }
+            }
+
+            if (uiState.error != null) {
+                Text(
+                    text = uiState.error,
+                    color = MaterialTheme.colorScheme.error,
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .padding(16.dp)
+                )
             }
         }
 
@@ -296,61 +409,6 @@ private fun Content(
     }
 }
 
-
-@Composable
-fun ProjectItem(
-    project: ProjectDto,
-    onClick: () -> Unit = {}
-) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick),
-        shape = RoundedCornerShape(12.dp)
-    ) {
-        Column(
-            modifier = Modifier.padding(16.dp)
-        ) {
-            Text(
-                text = project.name,
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold
-            )
-            project.description?.let {
-                if (it.isNotBlank()) {
-                    Text(
-                        text = it,
-                        style = MaterialTheme.typography.bodyMedium,
-                        maxLines = 2,
-                        modifier = Modifier.padding(top = 4.dp)
-                    )
-                }
-            }
-            Spacer(modifier = Modifier.height(8.dp))
-            Row(
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Icon(
-                    Icons.Default.Group,
-                    contentDescription = null,
-                    modifier = Modifier.size(16.dp),
-                    tint = MaterialTheme.colorScheme.primary
-                )
-                Text(
-                    text = " ${project.memberCount ?: 0} members",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.primary
-                )
-                Spacer(modifier = Modifier.weight(1f))
-                Text(
-                    text = project.status ?: "Active",
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.secondary
-                )
-            }
-        }
-    }
-}
 
 @Composable
 fun CreateProjectForm(

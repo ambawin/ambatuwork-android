@@ -56,6 +56,8 @@ import win.ambatu.work.feature.project.AddBacklogItemActivity
 import win.ambatu.work.feature.project.AddSprintActivity
 import win.ambatu.work.feature.project.SprintBoardActivity
 import win.ambatu.work.feature.project.BacklogTab
+import win.ambatu.work.feature.project.BacklogDetailDialog
+import win.ambatu.work.feature.network.BacklogItemDto
 import win.ambatu.work.feature.project.DashboardTab
 import win.ambatu.work.feature.project.ProjectTab
 import win.ambatu.work.feature.project.SettingsTab
@@ -172,7 +174,15 @@ private fun Content(
     var showMenu by remember { mutableStateOf(false) }
     var projectSwitcherExpanded by remember { mutableStateOf(false) }
     var selectedTab by remember { mutableStateOf(ProjectTab.DASHBOARD) }
+    var selectedBacklogItem by remember { mutableStateOf<BacklogItemDto?>(null) }
     val sheetState = rememberModalBottomSheetState()
+
+    if (selectedBacklogItem != null) {
+        BacklogDetailDialog(
+            item = selectedBacklogItem!!,
+            onDismiss = { selectedBacklogItem = null }
+        )
+    }
 
     Scaffold(
         topBar = {
@@ -373,12 +383,14 @@ private fun Content(
                     )
                     ProjectTab.BACKLOG -> BacklogTab(
                         backlogItems = uiState.backlogItems,
-                        onItemClick = { /* Handle item click if needed */ }
+                        onItemClick = { item -> selectedBacklogItem = item }
                     )
                     ProjectTab.SPRINT -> SprintTab(
                         sprints = uiState.sprints,
                         onSprintClick = { sprintId ->
-                            onSprintClick(uiState.selectedProject.id, sprintId)
+                            uiState.selectedProject?.id?.let { projectId ->
+                                onSprintClick(projectId, sprintId)
+                            }
                         }
                     )
                     ProjectTab.SETTINGS -> SettingsTab(

@@ -40,6 +40,11 @@
             android:label="Add Backlog Item"
             android:theme="@style/Theme.AmbatuWork" />
         <activity
+            android:name=".feature.project.AddSprintActivity"
+            android:exported="false"
+            android:label="Add Sprint"
+            android:theme="@style/Theme.AmbatuWork" />
+        <activity
             android:name=".feature.project.SprintBoardActivity"
             android:exported="false"
             android:label="Sprint Board"
@@ -53,6 +58,11 @@
             android:name=".feature.scrum.ScrumGuideActivity"
             android:exported="false"
             android:label="SCRUM Guide"
+            android:theme="@style/Theme.AmbatuWork" />
+        <activity
+            android:name=".feature.profile.ProfileActivity"
+            android:exported="false"
+            android:label="Profile"
             android:theme="@style/Theme.AmbatuWork" />
 
     </application>

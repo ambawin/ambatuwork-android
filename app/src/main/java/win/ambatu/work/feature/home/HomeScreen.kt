@@ -1,5 +1,8 @@
 package win.ambatu.work.feature.home
 
+import android.app.Activity
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -11,37 +14,40 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Group
+import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.GroupAdd
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Mail
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.PostAdd
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Button
-import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberModalBottomSheetState
-import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.IconButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -50,16 +56,31 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import java.util.Calendar
+import coil3.compose.AsyncImage
+import win.ambatu.work.R
 import win.ambatu.work.controller.UserController
 import win.ambatu.work.data.model.User
 import win.ambatu.work.feature.invitation.InvitationActivity
+import win.ambatu.work.feature.network.BacklogItemDto
 import win.ambatu.work.feature.network.ProjectDto
+import win.ambatu.work.feature.project.AddBacklogItemActivity
+import win.ambatu.work.feature.project.AddSprintActivity
+import win.ambatu.work.feature.project.BacklogDetailDialog
+import win.ambatu.work.feature.project.BacklogTab
+import win.ambatu.work.feature.project.DashboardTab
+import win.ambatu.work.feature.project.ProjectTab
+import win.ambatu.work.feature.project.SettingsTab
+import win.ambatu.work.feature.project.SprintBoardActivity
+import win.ambatu.work.feature.project.SprintTab
 import win.ambatu.work.feature.scrum.ScrumGuideActivity
 import win.ambatu.work.ui.theme.AmbatuWorkTheme
 
@@ -67,11 +88,39 @@ import win.ambatu.work.ui.theme.AmbatuWorkTheme
 fun HomeScreen(
     user: User,
     viewModel: HomeViewModel,
-    onProjectClick: (Long) -> Unit
+    onProjectClick: (Long) -> Unit,
+    onProfileClick: () -> Unit = {},
+    onAddBacklogClick: (Long) -> Unit = {},
+    onAddSprintClick: (Long) -> Unit = {},
+    onSprintClick: (Long, Long) -> Unit = { _, _ -> }
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
     val context = LocalContext.current
+
+    val invitationLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            viewModel.loadProjects()
+        }
+    }
+
+    val addBacklogLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            viewModel.loadProjects()
+        }
+    }
+
+    val addSprintLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            viewModel.loadProjects()
+        }
+    }
 
     Content(
         user = uiState.user ?: user,
@@ -79,8 +128,19 @@ fun HomeScreen(
         onCreateProject = viewModel::createProject,
         onInviteUser = viewModel::inviteUser,
         onProjectClick = onProjectClick,
+        onSelectProject = viewModel::selectProject,
+        onProfileClick = onProfileClick,
+        onAddBacklogClick = { projectId ->
+            addBacklogLauncher.launch(AddBacklogItemActivity.createIntent(context, projectId))
+        },
+        onAddSprintClick = { projectId ->
+            addSprintLauncher.launch(AddSprintActivity.createIntent(context, projectId))
+        },
+        onSprintClick = { projectId, sprintId ->
+            context.startActivity(SprintBoardActivity.createIntent(context, projectId, sprintId))
+        },
         onInvitationsClick = {
-            context.startActivity(InvitationActivity.createIntent(context))
+            invitationLauncher.launch(InvitationActivity.createIntent(context))
         },
         onScrumGuideClick = {
             context.startActivity(ScrumGuideActivity.createIntent(context))
@@ -96,6 +156,11 @@ private fun Content(
     onCreateProject: (String, String, String, Int) -> Unit = { _, _, _, _ -> },
     onInviteUser: (Long, String) -> Unit = { _, _ -> },
     onProjectClick: (Long) -> Unit = {},
+    onSelectProject: (ProjectDto) -> Unit = {},
+    onProfileClick: () -> Unit = {},
+    onAddBacklogClick: (Long) -> Unit = {},
+    onAddSprintClick: (Long) -> Unit = {},
+    onSprintClick: (Long, Long) -> Unit = { _, _ -> },
     onInvitationsClick: () -> Unit = {},
     onScrumGuideClick: () -> Unit = {}
 ) {
@@ -103,30 +168,93 @@ private fun Content(
     var showCreateSheet by remember { mutableStateOf(false) }
     var showInviteSheet by remember { mutableStateOf(false) }
     var showMenu by remember { mutableStateOf(false) }
+    var projectSwitcherExpanded by remember { mutableStateOf(false) }
+    var selectedTab by remember { mutableStateOf(ProjectTab.DASHBOARD) }
+    var selectedBacklogItem by remember { mutableStateOf<BacklogItemDto?>(null) }
     val sheetState = rememberModalBottomSheetState()
 
-    val greeting = remember {
-        val calendar = Calendar.getInstance()
-        when (calendar.get(Calendar.HOUR_OF_DAY)) {
-            in 0..11 -> "Good Morning"
-            in 12..16 -> "Good Afternoon"
-            else -> "Good Evening"
-        }
+    if (selectedBacklogItem != null) {
+        BacklogDetailDialog(
+            item = selectedBacklogItem!!,
+            onDismiss = { selectedBacklogItem = null }
+        )
     }
-    val firstName = user.name.split(" ").firstOrNull() ?: user.name
 
     Scaffold(
         topBar = {
             TopAppBar(
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.background,
-                    titleContentColor = MaterialTheme.colorScheme.primary,
+                    titleContentColor = MaterialTheme.colorScheme.onBackground,
                 ),
+                navigationIcon = {
+                    IconButton(onClick = onProfileClick) {
+                        AsyncImage(
+                            model = user.picture,
+                            placeholder = painterResource(id = R.drawable.profile_placeholder),
+                            error = painterResource(id = R.drawable.profile_placeholder),
+                            contentDescription = "Profile",
+                            modifier = Modifier
+                                .size(32.dp)
+                                .clip(CircleShape),
+                            contentScale = ContentScale.Crop
+                        )
+                    }
+                },
                 title = {
-                    Text(
-                        text = "AmbatuWork",
-                        fontWeight = FontWeight.Bold
-                    )
+                    ExposedDropdownMenuBox(
+                        expanded = projectSwitcherExpanded,
+                        onExpandedChange = { projectSwitcherExpanded = it }
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .menuAnchor()
+                                .widthIn(min = 200.dp)
+                                .clickable { projectSwitcherExpanded = true }
+                                .padding(horizontal = 8.dp, vertical = 4.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = uiState.selectedProject?.name ?: "Select Project",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                                modifier = Modifier.weight(1f, fill = false)
+                            )
+                            Icon(
+                                imageVector = Icons.Default.ArrowDropDown,
+                                contentDescription = null
+                            )
+                        }
+
+                        ExposedDropdownMenu(
+                            expanded = projectSwitcherExpanded,
+                            onDismissRequest = { projectSwitcherExpanded = false },
+                            modifier = Modifier.exposedDropdownSize()
+                        ) {
+                            uiState.projects.forEach { project ->
+                                DropdownMenuItem(
+                                    text = { Text(project.name) },
+                                    onClick = {
+                                        onSelectProject(project)
+                                        projectSwitcherExpanded = false
+                                    }
+                                )
+                            }
+                            if (uiState.projects.isNotEmpty()) {
+                                HorizontalDivider()
+                            }
+                            DropdownMenuItem(
+                                text = { Text("Add New Project") },
+                                leadingIcon = { Icon(Icons.Default.Add, null) },
+                                onClick = {
+                                    projectSwitcherExpanded = false
+                                    showCreateSheet = true
+                                }
+                            )
+                        }
+                    }
                 },
                 actions = {
                     IconButton(onClick = onInvitationsClick) {
@@ -140,7 +268,24 @@ private fun Content(
                         onDismissRequest = { showMenu = false }
                     ) {
                         DropdownMenuItem(
+                            text = { Text("Invite Member") },
+                            leadingIcon = { Icon(Icons.Default.GroupAdd, null) },
+                            onClick = {
+                                showMenu = false
+                                showInviteSheet = true
+                            }
+                        )
+                        DropdownMenuItem(
+                            text = { Text("Project Settings") },
+                            leadingIcon = { Icon(Icons.Default.Settings, null) },
+                            onClick = {
+                                showMenu = false
+                                // Handle project settings
+                            }
+                        )
+                        DropdownMenuItem(
                             text = { Text("SCRUM Guide") },
+                            leadingIcon = { Icon(Icons.Default.Info, null) },
                             onClick = {
                                 showMenu = false
                                 onScrumGuideClick()
@@ -150,88 +295,119 @@ private fun Content(
                 }
             )
         },
+        bottomBar = {
+            NavigationBar {
+                ProjectTab.entries.forEach { tab ->
+                    NavigationBarItem(
+                        selected = selectedTab == tab,
+                        onClick = { selectedTab = tab },
+                        label = { Text(tab.title) },
+                        icon = { Icon(tab.icon, contentDescription = tab.title) }
+                    )
+                }
+            }
+        },
         floatingActionButton = {
-            FloatingActionButton(
-                onClick = { showActionSheet = true },
-                containerColor = MaterialTheme.colorScheme.primaryContainer,
-                contentColor = MaterialTheme.colorScheme.onPrimaryContainer
-            ) {
-                Icon(Icons.Default.Add, contentDescription = "Add")
+            if (uiState.selectedProject != null) {
+                val role = uiState.selectedProject.myRole?.lowercase()?.trim()
+                val canEdit = role != null && (
+                        role.contains("admin") ||
+                                role.contains("owner") ||
+                                role.contains("master") ||
+                                role.contains("leader")
+                        )
+
+                if (selectedTab == ProjectTab.BACKLOG && canEdit) {
+                    FloatingActionButton(
+                        onClick = { onAddBacklogClick(uiState.selectedProject.id) },
+                        containerColor = MaterialTheme.colorScheme.primaryContainer,
+                        contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                    ) {
+                        Icon(Icons.Default.Add, contentDescription = "Add Backlog Item")
+                    }
+                }
+
+                if (selectedTab == ProjectTab.SPRINT && canEdit) {
+                    FloatingActionButton(
+                        onClick = { onAddSprintClick(uiState.selectedProject.id) },
+                        containerColor = MaterialTheme.colorScheme.primaryContainer,
+                        contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                    ) {
+                        Icon(Icons.Default.Add, contentDescription = "Add Sprint")
+                    }
+                }
+            } else {
+                FloatingActionButton(
+                    onClick = { showCreateSheet = true },
+                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                ) {
+                    Icon(Icons.Default.Add, contentDescription = "Add Project")
+                }
             }
         }
     ) { innerPadding ->
-        Column(
+        Box(
             modifier = Modifier
                 .padding(innerPadding)
                 .fillMaxSize()
         ) {
-            Column(
-                modifier = Modifier.padding(16.dp)
-            ) {
-                Text(
-                    text = "$greeting,",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.secondary
-                )
-                Text(
-                    text = firstName,
-                    fontWeight = FontWeight.Bold,
-                    style = MaterialTheme.typography.headlineMedium
-                )
-            }
-
-            Box(
-                modifier = Modifier.fillMaxSize()
-            ) {
-                if (uiState.isLoading && uiState.projects.isEmpty()) {
-                    CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
-                } else if (uiState.projects.isEmpty() && !uiState.isLoading) {
-                    Column(
-                        modifier = Modifier
-                            .align(Alignment.Center)
-                            .padding(32.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Text(
-                            text = "No projects found",
-                            style = MaterialTheme.typography.headlineSmall,
-                            fontWeight = FontWeight.Bold
-                        )
-                        Text(
-                            text = "Create one or join via invitation!",
-                            style = MaterialTheme.typography.bodyLarge,
-                            color = MaterialTheme.colorScheme.secondary
-                        )
-                    }
-                } else {
-                    LazyColumn(
-                        modifier = Modifier.fillMaxSize(),
-                        contentPadding = androidx.compose.foundation.layout.PaddingValues(
-                            start = 16.dp,
-                            end = 16.dp,
-                            bottom = 16.dp,
-                            top = 0.dp
-                        ),
-                        verticalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        items(uiState.projects) { project ->
-                            ProjectItem(
-                                project = project,
-                                onClick = { onProjectClick(project.id) }
-                            )
-                        }
+            if (uiState.isLoading && uiState.selectedProject == null) {
+                CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+            } else if (uiState.selectedProject == null) {
+                Column(
+                    modifier = Modifier
+                        .align(Alignment.Center)
+                        .padding(32.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = "No projects found",
+                        style = MaterialTheme.typography.headlineSmall,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Text(
+                        text = "Create one to get started!",
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.secondary
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Button(onClick = { showCreateSheet = true }) {
+                        Text("Create Project")
                     }
                 }
-
-                if (uiState.error != null) {
-                    Text(
-                        text = uiState.error,
-                        color = MaterialTheme.colorScheme.error,
-                        modifier = Modifier
-                            .align(Alignment.BottomCenter)
-                            .padding(16.dp)
+            } else {
+                when (selectedTab) {
+                    ProjectTab.DASHBOARD -> DashboardTab(
+                        project = uiState.selectedProject,
+                        members = uiState.members
+                    )
+                    ProjectTab.BACKLOG -> BacklogTab(
+                        backlogItems = uiState.backlogItems,
+                        onItemClick = { item -> selectedBacklogItem = item }
+                    )
+                    ProjectTab.SPRINT -> SprintTab(
+                        sprints = uiState.sprints,
+                        onSprintClick = { sprintId ->
+                            uiState.selectedProject?.id?.let { projectId ->
+                                onSprintClick(projectId, sprintId)
+                            }
+                        }
+                    )
+                    ProjectTab.SETTINGS -> SettingsTab(
+                        members = uiState.members
                     )
                 }
+            }
+
+            if (uiState.error != null) {
+                Text(
+                    text = uiState.error,
+                    color = MaterialTheme.colorScheme.error,
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .padding(16.dp)
+                )
             }
         }
 
@@ -296,61 +472,6 @@ private fun Content(
     }
 }
 
-
-@Composable
-fun ProjectItem(
-    project: ProjectDto,
-    onClick: () -> Unit = {}
-) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick),
-        shape = RoundedCornerShape(12.dp)
-    ) {
-        Column(
-            modifier = Modifier.padding(16.dp)
-        ) {
-            Text(
-                text = project.name,
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold
-            )
-            project.description?.let {
-                if (it.isNotBlank()) {
-                    Text(
-                        text = it,
-                        style = MaterialTheme.typography.bodyMedium,
-                        maxLines = 2,
-                        modifier = Modifier.padding(top = 4.dp)
-                    )
-                }
-            }
-            Spacer(modifier = Modifier.height(8.dp))
-            Row(
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Icon(
-                    Icons.Default.Group,
-                    contentDescription = null,
-                    modifier = Modifier.size(16.dp),
-                    tint = MaterialTheme.colorScheme.primary
-                )
-                Text(
-                    text = " ${project.memberCount ?: 0} members",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.primary
-                )
-                Spacer(modifier = Modifier.weight(1f))
-                Text(
-                    text = project.status ?: "Active",
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.secondary
-                )
-            }
-        }
-    }
-}
 
 @Composable
 fun CreateProjectForm(

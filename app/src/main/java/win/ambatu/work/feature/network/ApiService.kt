@@ -116,6 +116,13 @@ interface ApiService {
         @Path("project_id") projectId: Long
     ): SprintListResponse
 
+    @POST("api/v1/projects/{project_id}/sprints")
+    suspend fun createSprint(
+        @Header("Authorization") authorization: String,
+        @Path("project_id") projectId: Long,
+        @Body request: CreateSprintRequest
+    ): SprintResponse
+
     @GET("api/v1/projects/{project_id}/sprints/{sprint_id}/board")
     suspend fun getSprintBoard(
         @Header("Authorization") authorization: String,

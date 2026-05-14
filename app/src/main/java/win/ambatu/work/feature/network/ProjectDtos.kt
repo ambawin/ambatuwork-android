@@ -217,6 +217,24 @@ data class SprintListResponse(
 )
 
 @JsonClass(generateAdapter = true)
+data class SprintResponse(
+    val data: SprintDto
+)
+
+@JsonClass(generateAdapter = true)
+data class CreateSprintRequest(
+    val name: String,
+    @Json(name = "sprint_goal")
+    val sprintGoal: String,
+    @Json(name = "start_date")
+    val startDate: String,
+    @Json(name = "end_date")
+    val endDate: String,
+    @Json(name = "backlog_item_ids")
+    val backlogItemIds: List<Long>
+)
+
+@JsonClass(generateAdapter = true)
 data class SprintBoardDto(
     val sprint: SprintDto,
     val columns: SprintBoardColumnsDto

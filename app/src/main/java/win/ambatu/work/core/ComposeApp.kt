@@ -78,76 +78,35 @@ fun ComposeApp(
 
     CompositionLocalProvider(LocalBackStack provides backStack) {
         AmbatuWorkTheme {
-            Scaffold(
-                bottomBar = {
-                    NavigationBar {
-                        NavigationBarItem(
-                            selected = backStack.lastOrNull() is Routes.Home,
-                            onClick = { backStack.replaceAll(Routes.Home) },
-                            icon = { Icon(Icons.Default.Home, contentDescription = null) },
-                            label = { Text("Home") }
-                        )
-                        NavigationBarItem(
-                            selected = backStack.lastOrNull() is Routes.Profile,
-                            onClick = { 
-                                // In a real app, you'd pass the actual user here
-                                backStack.replaceAll(Routes.Profile(user)) 
-                            },
-                            icon = {
-                                AsyncImage(
-                                    model = user.picture,
-                                    placeholder = painterResource(id = R.drawable.profile_placeholder),
-                                    error = painterResource(id = R.drawable.profile_placeholder),
-                                    contentDescription = "User profile picture",
-                                    modifier = Modifier
-                                        .size(24.dp)
-                                        .clip(CircleShape),
-                                    contentScale = ContentScale.Crop
+            Surface(modifier = Modifier.fillMaxSize()) {
+                if (backStack.isNotEmpty()) {
+                    NavDisplay(
+                        backStack = backStack,
+                        transitionSpec = { EnterTransition.None togetherWith ExitTransition.None },
+                        popTransitionSpec = { EnterTransition.None togetherWith ExitTransition.None },
+                        entryDecorators = listOf(
+                            rememberSaveableStateHolderNavEntryDecorator(),
+                            rememberViewModelStoreNavEntryDecorator()
+                        ),
+                        entryProvider = entryProvider {
+                            entry<Routes.Home> {
+                                HomeScreen(
+                                    user = user,
+                                    viewModel = homeViewModel,
+                                    onProjectClick = { projectId ->
+                                        context.startActivity(
+                                            win.ambatu.work.feature.project.ProjectDetailActivity.createIntent(context, projectId)
+                                        )
+                                    },
+                                    onProfileClick = {
+                                        context.startActivity(
+                                            win.ambatu.work.feature.profile.ProfileActivity.createIntent(context, user)
+                                        )
+                                    }
                                 )
-                            },
-                            label = { Text("Profile") }
-                        )
-                    }
-                }
-            ) { innerPadding ->
-                Surface(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(bottom = innerPadding.calculateBottomPadding())
-                ) {
-                    if (backStack.isNotEmpty()) {
-                        NavDisplay(
-                            backStack = backStack,
-                            transitionSpec = { EnterTransition.None togetherWith ExitTransition.None },
-                            popTransitionSpec = { EnterTransition.None togetherWith ExitTransition.None },
-                            entryDecorators = listOf(
-                                rememberSaveableStateHolderNavEntryDecorator(),
-                                rememberViewModelStoreNavEntryDecorator()
-                            ),
-                            entryProvider = entryProvider {
-                                entry<Routes.Home> {
-                                    HomeScreen(
-                                        user = user,
-                                        viewModel = homeViewModel,
-                                        onProjectClick = { projectId ->
-                                            context.startActivity(
-                                                ProjectDetailActivity.createIntent(context, projectId)
-                                            )
-                                        }
-                                    )
-                                }
-                                entry<Routes.Profile> { route ->
-                                    ProfileScreen(
-                                        user = route.user,
-                                        onLogoutClick = {
-                                            sessionManager.clearToken()
-                                            onLogout()
-                                        }
-                                    )
-                                }
                             }
-                        )
-                    }
+                        }
+                    )
                 }
             }
         }

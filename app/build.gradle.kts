@@ -6,6 +6,7 @@ plugins {
     id("kotlin-parcelize")
     alias(libs.plugins.ksp)
     alias(libs.plugins.jetbrains.kotlin.serialization)
+    id("com.google.dagger.hilt.android")
 }
 
 android {
@@ -52,8 +53,10 @@ android {
     }
 
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
+//        sourceCompatibility = JavaVersion.VERSION_11
+//        targetCompatibility = JavaVersion.VERSION_11
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
 
     buildFeatures {
@@ -115,4 +118,9 @@ dependencies {
 
     // Google Fonts
     implementation(libs.androidx.compose.ui.google.fonts)
+
+    // Hilt
+    implementation("com.google.dagger:hilt-android:2.59.2")
+    ksp("com.google.dagger:hilt-android-compiler:2.59.2")
+    implementation("androidx.hilt:hilt-navigation-compose:1.2.0")
 }

@@ -3,13 +3,14 @@ package win.ambatu.work.feature.auth
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import win.ambatu.work.feature.auth.GoogleSignInManager
 import win.ambatu.work.data.repository.AuthRepository
 import win.ambatu.work.data.storage.SessionManager
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import win.ambatu.work.BuildConfig
+import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
 
 data class LoginUiState(
     val isCheckingSession: Boolean = true,
@@ -19,8 +20,8 @@ data class LoginUiState(
     val user: win.ambatu.work.feature.network.UserDto? = null
 )
 
-class LoginViewModel(
-    private val googleSignInManager: GoogleSignInManager,
+@HiltViewModel
+class LoginViewModel @Inject constructor(
     private val authRepository: AuthRepository,
     private val sessionManager: SessionManager
 ) : ViewModel() {
@@ -79,7 +80,7 @@ class LoginViewModel(
         _uiState.value = LoginUiState(isCheckingSession = false, isLoggedIn = false)
     }
 
-    fun signInWithGoogle() {
+    fun signInWithGoogle(googleSignInManager: GoogleSignInManager) {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true, isCheckingSession = false, error = null)
 
@@ -91,7 +92,6 @@ class LoginViewModel(
                 Log.d("GoogleAuth", "Backend login success, token type=${response.tokenType}")
 
                 Log.d("Network", "BASE_URL=${BuildConfig.BASE_URL}")
-
 
                 sessionManager.saveToken(response.token)
 

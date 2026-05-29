@@ -63,13 +63,7 @@ fun ComposeApp(
     onLogout: () -> Unit = {}
 ) {
     val context = LocalContext.current
-    val sessionManager = remember { SessionManager(context) }
-    val authRepository = remember { AuthRepository(NetworkModule.apiService) }
-    val projectRepository = remember { ProjectRepository(NetworkModule.apiService) }
-
-    val homeViewModel: HomeViewModel = viewModel {
-        HomeViewModel(authRepository, projectRepository, sessionManager)
-    }
+    val homeViewModel: HomeViewModel = viewModel()
 
     val backStack = rememberNavBackStack(Routes.Home as NavKey)
 

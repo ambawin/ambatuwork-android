@@ -41,13 +41,14 @@ import win.ambatu.work.ui.theme.WhiteAmbatu
 
 @Composable
 fun LoginScreen(
-    viewModel: LoginViewModel
+    viewModel: LoginViewModel,
+    onSignInClick: () -> Unit
 ) {
     val uiState = viewModel.uiState.collectAsState()
     Content(
         uiState = uiState,
         onSignInWithGoogleClick = {
-            viewModel.signInWithGoogle()
+            onSignInClick()
             Log.d("GoogleAuth", "Web client id = ${BuildConfig.GOOGLE_WEB_CLIENT_ID}")
         }
     )

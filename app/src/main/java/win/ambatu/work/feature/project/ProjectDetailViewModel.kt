@@ -1,7 +1,7 @@
 package win.ambatu.work.feature.project
 
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -14,6 +14,8 @@ import win.ambatu.work.feature.network.BacklogItemDto
 import win.ambatu.work.feature.network.ProjectDto
 import win.ambatu.work.feature.network.ProjectMemberDto
 import win.ambatu.work.feature.network.SprintDto
+import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
 
 data class ProjectDetailUiState(
     val project: ProjectDto? = null,
@@ -24,22 +26,14 @@ data class ProjectDetailUiState(
     val error: String? = null
 )
 
-class ProjectDetailViewModel(
-    private val projectId: Long,
+@HiltViewModel
+class ProjectDetailViewModel @Inject constructor(
+    savedStateHandle: SavedStateHandle,
     private val projectRepository: ProjectRepository,
     private val sessionManager: SessionManager
 ) : ViewModel() {
 
-    class Factory(
-        private val projectId: Long,
-        private val projectRepository: ProjectRepository,
-        private val sessionManager: SessionManager
-    ) : ViewModelProvider.Factory {
-        @Suppress("UNCHECKED_CAST")
-        override fun <T : ViewModel> create(modelClass: Class<T>): T {
-            return ProjectDetailViewModel(projectId, projectRepository, sessionManager) as T
-        }
-    }
+    private val projectId = savedStateHandle.get<Long>("extra_project_id") ?: -1L
 
     private val _uiState = MutableStateFlow(ProjectDetailUiState())
     val uiState: StateFlow<ProjectDetailUiState> = _uiState.asStateFlow()

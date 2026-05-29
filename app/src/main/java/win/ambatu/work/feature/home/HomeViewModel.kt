@@ -16,6 +16,8 @@ import win.ambatu.work.feature.network.BacklogItemDto
 import win.ambatu.work.feature.network.ProjectDto
 import win.ambatu.work.feature.network.ProjectMemberDto
 import win.ambatu.work.feature.network.SprintDto
+import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
 
 data class HomeUiState(
     val projects: List<ProjectDto> = emptyList(),
@@ -30,7 +32,8 @@ data class HomeUiState(
     val isInvitingUser: Boolean = false
 )
 
-class HomeViewModel(
+@HiltViewModel
+class HomeViewModel @Inject constructor(
     private val authRepository: AuthRepository,
     private val projectRepository: ProjectRepository,
     private val sessionManager: SessionManager

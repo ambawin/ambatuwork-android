@@ -1,7 +1,6 @@
 package win.ambatu.work.feature.auth
 
 import android.app.Activity
-import android.content.Context
 import androidx.credentials.CredentialManager
 import androidx.credentials.CustomCredential
 import androidx.credentials.GetCredentialRequest
@@ -11,8 +10,11 @@ import com.google.android.libraries.identity.googleid.GetSignInWithGoogleOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import win.ambatu.work.BuildConfig
 import java.security.SecureRandom
+import dagger.hilt.android.scopes.ActivityScoped
+import javax.inject.Inject
 
-class GoogleSignInManager(
+@ActivityScoped
+class GoogleSignInManager @Inject constructor(
     private val activity: Activity
 ) {
     private val credentialManager = CredentialManager.create(activity)

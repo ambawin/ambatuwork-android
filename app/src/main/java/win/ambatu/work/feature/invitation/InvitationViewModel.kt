@@ -10,6 +10,8 @@ import kotlinx.coroutines.launch
 import win.ambatu.work.data.repository.ProjectRepository
 import win.ambatu.work.data.storage.SessionManager
 import win.ambatu.work.feature.network.ProjectInvitationDto
+import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
 
 data class InvitationUiState(
     val invitations: List<ProjectInvitationDto> = emptyList(),
@@ -19,7 +21,8 @@ data class InvitationUiState(
     val acceptSuccess: Boolean = false
 )
 
-class InvitationViewModel(
+@HiltViewModel
+class InvitationViewModel @Inject constructor(
     private val projectRepository: ProjectRepository,
     private val sessionManager: SessionManager
 ) : ViewModel() {

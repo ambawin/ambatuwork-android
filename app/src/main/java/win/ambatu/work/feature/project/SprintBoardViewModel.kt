@@ -1,7 +1,7 @@
 package win.ambatu.work.feature.project
 
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -13,6 +13,8 @@ import win.ambatu.work.data.repository.ProjectRepository
 import win.ambatu.work.data.storage.SessionManager
 import win.ambatu.work.feature.network.SprintBoardDto
 import win.ambatu.work.feature.network.UpdateBacklogItemRequest
+import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
 
 data class SprintBoardUiState(
     val board: SprintBoardDto? = null,
@@ -22,26 +24,16 @@ data class SprintBoardUiState(
     val currentUserRole: String? = null
 )
 
-class SprintBoardViewModel(
-    private val projectId: Long,
-    private val sprintId: Long,
+@HiltViewModel
+class SprintBoardViewModel @Inject constructor(
+    savedStateHandle: SavedStateHandle,
     private val projectRepository: ProjectRepository,
     private val authRepository: AuthRepository,
     private val sessionManager: SessionManager
 ) : ViewModel() {
 
-    class Factory(
-        private val projectId: Long,
-        private val sprintId: Long,
-        private val projectRepository: ProjectRepository,
-        private val authRepository: AuthRepository,
-        private val sessionManager: SessionManager
-    ) : ViewModelProvider.Factory {
-        @Suppress("UNCHECKED_CAST")
-        override fun <T : ViewModel> create(modelClass: Class<T>): T {
-            return SprintBoardViewModel(projectId, sprintId, projectRepository, authRepository, sessionManager) as T
-        }
-    }
+    private val projectId = savedStateHandle.get<Long>("extra_project_id") ?: -1L
+    private val sprintId = savedStateHandle.get<Long>("extra_sprint_id") ?: -1L
 
     private val _uiState = MutableStateFlow(SprintBoardUiState())
     val uiState: StateFlow<SprintBoardUiState> = _uiState.asStateFlow()

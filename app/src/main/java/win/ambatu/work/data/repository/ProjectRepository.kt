@@ -1,8 +1,11 @@
 package win.ambatu.work.data.repository
 
 import win.ambatu.work.feature.network.*
+import javax.inject.Inject
+import javax.inject.Singleton
 
-class ProjectRepository(
+@Singleton
+class ProjectRepository @Inject constructor(
     private val apiService: ApiService
 ) {
     private fun getAuthHeader(token: String) = "Bearer $token"

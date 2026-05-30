@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
@@ -35,16 +36,19 @@ import androidx.compose.ui.unit.sp
 import win.ambatu.work.BuildConfig
 import win.ambatu.work.R
 import win.ambatu.work.ui.theme.AmbatuWorkTheme
+import win.ambatu.work.ui.theme.MontserratFamily
+import win.ambatu.work.ui.theme.WhiteAmbatu
 
 @Composable
 fun LoginScreen(
-    viewModel: LoginViewModel
+    viewModel: LoginViewModel,
+    onSignInClick: () -> Unit
 ) {
     val uiState = viewModel.uiState.collectAsState()
     Content(
         uiState = uiState,
         onSignInWithGoogleClick = {
-            viewModel.signInWithGoogle()
+            onSignInClick()
             Log.d("GoogleAuth", "Web client id = ${BuildConfig.GOOGLE_WEB_CLIENT_ID}")
         }
     )
@@ -84,9 +88,10 @@ private fun Content(
                 // Welcome Text
                 Text(
                     text = "AmbatuWork",
-                    style = MaterialTheme.typography.headlineLarge,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onBackground,
+                    fontFamily = MontserratFamily,
+                    fontWeight = FontWeight.ExtraBold,
+                    fontSize = 32.sp,
+                    color = WhiteAmbatu,
                     letterSpacing = 1.sp
                 )
 
@@ -94,8 +99,9 @@ private fun Content(
 
                 Text(
                     text = "Make your team, do their WORK!",
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    fontFamily = MontserratFamily,
+                    fontSize = 18.sp,
+                    color = WhiteAmbatu,
                     textAlign = TextAlign.Center,
                     lineHeight = 24.sp
                 )
@@ -106,23 +112,19 @@ private fun Content(
                 if (uiState.value.isLoading) {
                     CircularProgressIndicator(
                         modifier = Modifier.size(48.dp),
-                        color = MaterialTheme.colorScheme.primary,
+                        color = WhiteAmbatu,
                         strokeWidth = 4.dp
                     )
                 } else {
-                    OutlinedButton(
+                    Button(
                         onClick = onSignInWithGoogleClick,
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(56.dp),
-                        shape = RoundedCornerShape(12.dp),
-                        colors = ButtonDefaults.outlinedButtonColors(
-                            containerColor = Color.Transparent,
-                            contentColor = MaterialTheme.colorScheme.onSurface
-                        ),
-                        border = androidx.compose.foundation.BorderStroke(
-                            width = 1.dp,
-                            color = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f)
+                        shape = RoundedCornerShape(64.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = WhiteAmbatu,
+                            contentColor = Color.Black
                         )
                     ) {
                         Text(
@@ -145,15 +147,15 @@ private fun Content(
                     )
                 }
 
-                Spacer(modifier = Modifier.height(32.dp))
+//                Spacer(modifier = Modifier.height(32.dp))
 
-                Text(
-                    text = "By continuing, you agree to our Terms of Service and Privacy Policy",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.outline,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.padding(horizontal = 16.dp)
-                )
+//                Text(
+//                    text = "By continuing, you agree to our Terms of Service and Privacy Policy",
+//                    style = MaterialTheme.typography.labelSmall,
+//                    color = MaterialTheme.colorScheme.outline,
+//                    textAlign = TextAlign.Center,
+//                    modifier = Modifier.padding(horizontal = 16.dp)
+//                )
             }
         }
     }

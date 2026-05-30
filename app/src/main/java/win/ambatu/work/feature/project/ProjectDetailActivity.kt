@@ -8,21 +8,13 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
-import androidx.compose.runtime.remember
-import androidx.lifecycle.viewmodel.compose.viewModel
-import win.ambatu.work.data.repository.ProjectRepository
-import win.ambatu.work.data.storage.SessionManager
-import win.ambatu.work.feature.network.NetworkModule
 import win.ambatu.work.ui.theme.AmbatuWorkTheme
+import dagger.hilt.android.AndroidEntryPoint
 
+@AndroidEntryPoint
 class ProjectDetailActivity : ComponentActivity() {
-    private val projectRepository by lazy { ProjectRepository(NetworkModule.apiService) }
-    private val sessionManager by lazy { SessionManager(this) }
-    
-    private val viewModel: ProjectDetailViewModel by viewModels {
-        val projectId = intent.getLongExtra(EXTRA_PROJECT_ID, -1L)
-        ProjectDetailViewModel.Factory(projectId, projectRepository, sessionManager)
-    }
+
+    private val viewModel: ProjectDetailViewModel by viewModels()
 
     private val addBacklogLauncher = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()

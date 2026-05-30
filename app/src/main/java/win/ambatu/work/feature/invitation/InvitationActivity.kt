@@ -7,23 +7,13 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
-import win.ambatu.work.data.repository.ProjectRepository
-import win.ambatu.work.data.storage.SessionManager
-import win.ambatu.work.feature.network.NetworkModule
 import win.ambatu.work.ui.theme.AmbatuWorkTheme
+import dagger.hilt.android.AndroidEntryPoint
 
+@AndroidEntryPoint
 class InvitationActivity : ComponentActivity() {
-    private val projectRepository by lazy { ProjectRepository(NetworkModule.apiService) }
-    private val sessionManager by lazy { SessionManager(this) }
 
-    private val viewModel: InvitationViewModel by viewModels {
-        val factory = object : androidx.lifecycle.ViewModelProvider.Factory {
-            override fun <T : androidx.lifecycle.ViewModel> create(modelClass: Class<T>): T {
-                return InvitationViewModel(projectRepository, sessionManager) as T
-            }
-        }
-        factory
-    }
+    private val viewModel: InvitationViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

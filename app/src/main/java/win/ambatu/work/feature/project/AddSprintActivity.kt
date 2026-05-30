@@ -6,13 +6,21 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.runtime.remember
 import win.ambatu.work.data.repository.ProjectRepository
 import win.ambatu.work.data.storage.SessionManager
-import win.ambatu.work.feature.network.NetworkModule
 import win.ambatu.work.ui.theme.AmbatuWorkTheme
+import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 
+@AndroidEntryPoint
 class AddSprintActivity : ComponentActivity() {
+
+    @Inject
+    lateinit var projectRepository: ProjectRepository
+
+    @Inject
+    lateinit var sessionManager: SessionManager
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -25,10 +33,6 @@ class AddSprintActivity : ComponentActivity() {
 
         setContent {
             AmbatuWorkTheme {
-                val context = this
-                val sessionManager = remember { SessionManager(context) }
-                val projectRepository = remember { ProjectRepository(NetworkModule.apiService) }
-
                 AddSprintScreen(
                     projectId = projectId,
                     projectRepository = projectRepository,

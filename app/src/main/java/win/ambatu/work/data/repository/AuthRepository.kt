@@ -3,8 +3,11 @@ package win.ambatu.work.data.repository
 import win.ambatu.work.feature.network.ApiService
 import win.ambatu.work.feature.network.GoogleAuthRequest
 import win.ambatu.work.feature.network.GoogleAuthResponse
+import javax.inject.Inject
+import javax.inject.Singleton
 
-class AuthRepository(
+@Singleton
+class AuthRepository @Inject constructor(
     private val apiService: ApiService
 ) {
     suspend fun loginWithGoogle(idToken: String): GoogleAuthResponse {

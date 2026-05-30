@@ -60,11 +60,14 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
 import win.ambatu.work.R
 import win.ambatu.work.feature.network.BacklogItemDto
 import win.ambatu.work.feature.network.DefinitionOfDoneDto
 import win.ambatu.work.feature.network.SprintDto
+import win.ambatu.work.ui.theme.Typography
+import win.ambatu.work.ui.theme.WhiteAmbatu
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 import java.util.Locale
@@ -218,9 +221,11 @@ fun DashboardTab(
             val owner = members.find { it.user.id == project.ownerUserId }
             Column(modifier = Modifier.fillMaxWidth()) {
                 Text(
-                    text = project.name,
-                    style = MaterialTheme.typography.headlineLarge,
-                    fontWeight = FontWeight.Bold
+                    text = "Hello, Dap!",
+                    style = Typography.headlineLarge,
+                    fontSize = 36.sp,
+                    fontWeight = FontWeight.ExtraBold,
+                    color = WhiteAmbatu
                 )
                 Text(
                     text = project.description ?: "No description provided",

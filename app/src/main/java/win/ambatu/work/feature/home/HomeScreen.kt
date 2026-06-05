@@ -24,6 +24,7 @@ import androidx.compose.material.icons.filled.GroupAdd
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Mail
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.Book
 import androidx.compose.material.icons.filled.PostAdd
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Button
@@ -84,6 +85,7 @@ import win.ambatu.work.feature.project.SettingsTab
 import win.ambatu.work.feature.project.SprintBoardActivity
 import win.ambatu.work.feature.project.SprintTab
 import win.ambatu.work.feature.scrum.ScrumGuideActivity
+import win.ambatu.work.feature.swagger.SwaggerUiActivity
 import win.ambatu.work.ui.theme.AmbatuWorkTheme
 import win.ambatu.work.ui.theme.YellowAmbatu
 
@@ -147,6 +149,9 @@ fun HomeScreen(
         },
         onScrumGuideClick = {
             context.startActivity(ScrumGuideActivity.createIntent(context))
+        },
+        onSwaggerUiClick = {
+            context.startActivity(SwaggerUiActivity.createIntent(context))
         }
     )
 }
@@ -165,7 +170,8 @@ private fun Content(
     onAddSprintClick: (Long) -> Unit = {},
     onSprintClick: (Long, Long) -> Unit = { _, _ -> },
     onInvitationsClick: () -> Unit = {},
-    onScrumGuideClick: () -> Unit = {}
+    onScrumGuideClick: () -> Unit = {},
+    onSwaggerUiClick: () -> Unit = {}
 ) {
     var showActionSheet by remember { mutableStateOf(false) }
     var showCreateSheet by remember { mutableStateOf(false) }
@@ -293,6 +299,14 @@ private fun Content(
                             onClick = {
                                 showMenu = false
                                 onScrumGuideClick()
+                            }
+                        )
+                        DropdownMenuItem(
+                            text = { Text("API Documentation") },
+                            leadingIcon = { Icon(Icons.Default.Book, null) },
+                            onClick = {
+                                showMenu = false
+                                onSwaggerUiClick()
                             }
                         )
                     }

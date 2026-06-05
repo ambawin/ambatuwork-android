@@ -1,0 +1,4350 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+        "title": "Ambatuwork API v1",
+        "description": "API documentation for Ambatuwork, a Scrum-based collaboration application used by Web and Android clients. Authenticate your requests using a Sanctum Bearer token.",
+        "version": "1.0.0"
+    },
+    "servers": [
+        {
+            "url": "/api/v1",
+            "description": "API v1 Endpoint Base"
+        }
+    ],
+    "paths": {
+        "/auth/google": {
+            "post": {
+                "tags": [
+                    "Authentication"
+                ],
+                "summary": "Exchange Google ID Token for API Token",
+                "description": "Exchanges a Google ID token for a Sanctum API token. If the user doesn't exist, it creates a new user.",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "id_token"
+                                ],
+                                "properties": {
+                                    "id_token": {
+                                        "description": "Google ID Token",
+                                        "type": "string",
+                                        "example": "google-id-token-xyz"
+                                    },
+                                    "device_name": {
+                                        "description": "Device/client identifier",
+                                        "type": "string",
+                                        "example": "android_client",
+                                        "default": "android"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Authentication",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "token": {
+                                            "type": "string",
+                                            "example": "1|sanctum-token-example"
+                                        },
+                                        "token_type": {
+                                            "type": "string",
+                                            "example": "Bearer"
+                                        },
+                                        "user": {
+                                            "$ref": "#/components/schemas/User"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocessable Content / Validation failure"
+                    }
+                }
+            }
+        },
+        "/auth/me": {
+            "get": {
+                "tags": [
+                    "Authentication"
+                ],
+                "summary": "Get Authenticated User",
+                "description": "Returns the currently logged in user's details.",
+                "responses": {
+                    "200": {
+                        "description": "Authenticated User Data",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/User"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/auth/logout": {
+            "post": {
+                "tags": [
+                    "Authentication"
+                ],
+                "summary": "Logout Authenticated User",
+                "description": "Revokes and deletes the current Sanctum token.",
+                "responses": {
+                    "200": {
+                        "description": "Successfully logged out",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Logged out successfully."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/projects/{project}/sprints/{sprint}/checkins": {
+            "get": {
+                "tags": [
+                    "Daily Check-ins"
+                ],
+                "summary": "List Daily Check-ins",
+                "description": "Returns all daily check-ins submitted during the specified sprint.",
+                "parameters": [
+                    {
+                        "name": "project",
+                        "in": "path",
+                        "description": "Project ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "sprint",
+                        "in": "path",
+                        "description": "Sprint ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/DailyCheckin"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "description": "Project or Sprint not found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Daily Check-ins"
+                ],
+                "summary": "Submit Daily Check-in",
+                "description": "Submits a member's daily check-in. If the check-in contains blockers, an Impediment is automatically created.",
+                "parameters": [
+                    {
+                        "name": "project",
+                        "in": "path",
+                        "description": "Project ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "sprint",
+                        "in": "path",
+                        "description": "Sprint ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "confidence_score",
+                                    "checkin_date"
+                                ],
+                                "properties": {
+                                    "yesterday": {
+                                        "type": "string",
+                                        "example": "Implemented tests",
+                                        "nullable": true
+                                    },
+                                    "today": {
+                                        "type": "string",
+                                        "example": "Debugging routes",
+                                        "nullable": true
+                                    },
+                                    "blockers": {
+                                        "type": "string",
+                                        "example": "Database connection timeout",
+                                        "nullable": true
+                                    },
+                                    "confidence_score": {
+                                        "type": "integer",
+                                        "example": 4,
+                                        "maximum": 5,
+                                        "minimum": 1
+                                    },
+                                    "checkin_date": {
+                                        "type": "string",
+                                        "format": "date",
+                                        "example": "2026-06-04"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Check-in submitted successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/DailyCheckin"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "description": "Project or Sprint not found"
+                    },
+                    "422": {
+                        "description": "Validation failed"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/projects/{project}/impediments": {
+            "get": {
+                "tags": [
+                    "Impediments"
+                ],
+                "summary": "List Impediments",
+                "description": "Returns all impediments (blockers) for the specified project, newest first.",
+                "parameters": [
+                    {
+                        "name": "project",
+                        "in": "path",
+                        "description": "Project ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/Impediment"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "description": "Project not found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Impediments"
+                ],
+                "summary": "Create Impediment",
+                "description": "Creates a new impediment/blocker for the project. Automatically associates it with the active sprint if one exists.",
+                "parameters": [
+                    {
+                        "name": "project",
+                        "in": "path",
+                        "description": "Project ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "title"
+                                ],
+                                "properties": {
+                                    "title": {
+                                        "type": "string",
+                                        "example": "Slow local development build",
+                                        "maxLength": 255
+                                    },
+                                    "description": {
+                                        "type": "string",
+                                        "example": "Webpack compilation takes more than 30s",
+                                        "nullable": true,
+                                        "maxLength": 2000
+                                    },
+                                    "status": {
+                                        "type": "string",
+                                        "example": "open",
+                                        "default": "open",
+                                        "enum": [
+                                            "open",
+                                            "in_progress",
+                                            "resolved",
+                                            "ignored"
+                                        ]
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Impediment created successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/Impediment"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "description": "Project not found"
+                    },
+                    "422": {
+                        "description": "Validation failed"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/projects/{project}/impediments/{impediment}": {
+            "patch": {
+                "tags": [
+                    "Impediments"
+                ],
+                "summary": "Update Impediment",
+                "description": "Updates an impediment's details or status.",
+                "parameters": [
+                    {
+                        "name": "project",
+                        "in": "path",
+                        "description": "Project ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "impediment",
+                        "in": "path",
+                        "description": "Impediment ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "title": {
+                                        "type": "string",
+                                        "example": "Slow dev build - updated",
+                                        "maxLength": 255
+                                    },
+                                    "description": {
+                                        "type": "string",
+                                        "example": "Updated description",
+                                        "nullable": true,
+                                        "maxLength": 2000
+                                    },
+                                    "status": {
+                                        "type": "string",
+                                        "example": "in_progress",
+                                        "enum": [
+                                            "open",
+                                            "in_progress",
+                                            "resolved",
+                                            "ignored"
+                                        ]
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Impediment updated successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/Impediment"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "description": "Project or Impediment not found"
+                    },
+                    "422": {
+                        "description": "Validation failed"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/projects/{project}/impediments/{impediment}/resolve": {
+            "post": {
+                "tags": [
+                    "Impediments"
+                ],
+                "summary": "Resolve Impediment",
+                "description": "Marks an impediment as resolved.",
+                "parameters": [
+                    {
+                        "name": "project",
+                        "in": "path",
+                        "description": "Project ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "impediment",
+                        "in": "path",
+                        "description": "Impediment ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Impediment resolved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/Impediment"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "description": "Project or Impediment not found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/projects/{project}/sprints/{sprint}/peer-review-cycle": {
+            "get": {
+                "tags": [
+                    "Peer Reviews"
+                ],
+                "summary": "Get Peer Review Cycle details",
+                "description": "Returns the peer review cycle details for the specified sprint.",
+                "parameters": [
+                    {
+                        "name": "project",
+                        "in": "path",
+                        "description": "Project ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "sprint",
+                        "in": "path",
+                        "description": "Sprint ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/PeerReviewCycle"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "description": "Project, Sprint or Cycle not found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Peer Reviews"
+                ],
+                "summary": "Create/Open Peer Review Cycle",
+                "description": "Creates and opens a peer review cycle for a sprint.",
+                "parameters": [
+                    {
+                        "name": "project",
+                        "in": "path",
+                        "description": "Project ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "sprint",
+                        "in": "path",
+                        "description": "Sprint ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Cycle created/opened successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/PeerReviewCycle"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "description": "Project or Sprint not found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/projects/{project}/peer-review-cycles/{cycle}/reviews": {
+            "post": {
+                "tags": [
+                    "Peer Reviews"
+                ],
+                "summary": "Submit Peer Review",
+                "description": "Submits a peer review for another user in the open cycle.",
+                "parameters": [
+                    {
+                        "name": "project",
+                        "in": "path",
+                        "description": "Project ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "cycle",
+                        "in": "path",
+                        "description": "Peer Review Cycle ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "reviewee_user_id",
+                                    "collaboration_score",
+                                    "delivery_score",
+                                    "communication_score"
+                                ],
+                                "properties": {
+                                    "reviewee_user_id": {
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "collaboration_score": {
+                                        "type": "integer",
+                                        "example": 5,
+                                        "maximum": 5,
+                                        "minimum": 1
+                                    },
+                                    "delivery_score": {
+                                        "type": "integer",
+                                        "example": 4,
+                                        "maximum": 5,
+                                        "minimum": 1
+                                    },
+                                    "communication_score": {
+                                        "type": "integer",
+                                        "example": 5,
+                                        "maximum": 5,
+                                        "minimum": 1
+                                    },
+                                    "continue_feedback": {
+                                        "type": "string",
+                                        "example": "Good planning.",
+                                        "nullable": true
+                                    },
+                                    "improve_feedback": {
+                                        "type": "string",
+                                        "example": "None.",
+                                        "nullable": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Peer review submitted successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/PeerReview"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "description": "Project or Cycle not found"
+                    },
+                    "422": {
+                        "description": "Validation failed"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/projects/{project}/peer-review-cycles/{cycle}/close": {
+            "post": {
+                "tags": [
+                    "Peer Reviews"
+                ],
+                "summary": "Close Peer Review Cycle",
+                "description": "Closes an open peer review cycle.",
+                "parameters": [
+                    {
+                        "name": "project",
+                        "in": "path",
+                        "description": "Project ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "cycle",
+                        "in": "path",
+                        "description": "Cycle ID to close",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Cycle closed successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/PeerReviewCycle"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "description": "Project or Cycle not found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/projects/{project}/peer-review-cycles/{cycle}/summary": {
+            "get": {
+                "tags": [
+                    "Peer Reviews"
+                ],
+                "summary": "Get Peer Review Cycle Summary (Owners)",
+                "description": "Returns the full aggregated peer review summary for all active project members. Restricted to project owners.",
+                "parameters": [
+                    {
+                        "name": "project",
+                        "in": "path",
+                        "description": "Project ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "cycle",
+                        "in": "path",
+                        "description": "Cycle ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "user": {
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "integer",
+                                                                "example": 2
+                                                            },
+                                                            "name": {
+                                                                "type": "string",
+                                                                "example": "Sam Example"
+                                                            },
+                                                            "avatar_url": {
+                                                                "type": "string",
+                                                                "format": "uri",
+                                                                "example": null,
+                                                                "nullable": true
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    },
+                                                    "review_count": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "avg_collaboration_score": {
+                                                        "type": "number",
+                                                        "format": "float",
+                                                        "example": 5
+                                                    },
+                                                    "avg_delivery_score": {
+                                                        "type": "number",
+                                                        "format": "float",
+                                                        "example": 4
+                                                    },
+                                                    "avg_communication_score": {
+                                                        "type": "number",
+                                                        "format": "float",
+                                                        "example": 5
+                                                    },
+                                                    "feedbacks": {
+                                                        "type": "array",
+                                                        "items": {
+                                                            "properties": {
+                                                                "continue": {
+                                                                    "type": "string",
+                                                                    "example": "Good planning."
+                                                                },
+                                                                "improve": {
+                                                                    "type": "string",
+                                                                    "example": "None."
+                                                                }
+                                                            },
+                                                            "type": "object"
+                                                        }
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "description": "Project or Cycle not found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/projects/{project}/peer-review-cycles/{cycle}/my-summary": {
+            "get": {
+                "tags": [
+                    "Peer Reviews"
+                ],
+                "summary": "Get My Peer Review Summary (Anonymous & Aggregated)",
+                "description": "Returns the current user's aggregated anonymous peer reviews.",
+                "parameters": [
+                    {
+                        "name": "project",
+                        "in": "path",
+                        "description": "Project ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "cycle",
+                        "in": "path",
+                        "description": "Cycle ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "properties": {
+                                                "user": {
+                                                    "properties": {
+                                                        "id": {
+                                                            "type": "integer",
+                                                            "example": 2
+                                                        },
+                                                        "name": {
+                                                            "type": "string",
+                                                            "example": "Sam Example"
+                                                        }
+                                                    },
+                                                    "type": "object"
+                                                },
+                                                "review_count": {
+                                                    "type": "integer",
+                                                    "example": 0
+                                                },
+                                                "avg_collaboration_score": {
+                                                    "type": "number",
+                                                    "format": "float",
+                                                    "example": null,
+                                                    "nullable": true
+                                                },
+                                                "avg_delivery_score": {
+                                                    "type": "number",
+                                                    "format": "float",
+                                                    "example": null,
+                                                    "nullable": true
+                                                },
+                                                "avg_communication_score": {
+                                                    "type": "number",
+                                                    "format": "float",
+                                                    "example": null,
+                                                    "nullable": true
+                                                },
+                                                "feedbacks": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "properties": {
+                                                            "continue": {
+                                                                "type": "string",
+                                                                "example": "Good planning."
+                                                            },
+                                                            "improve": {
+                                                                "type": "string",
+                                                                "example": "None."
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    }
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "description": "Project or Cycle not found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/projects/{project}/backlog-items": {
+            "get": {
+                "tags": [
+                    "Backlog Items"
+                ],
+                "summary": "List Backlog Items",
+                "description": "Returns all non-archived backlog items for the project, ordered by priority rank.",
+                "parameters": [
+                    {
+                        "name": "project",
+                        "in": "path",
+                        "description": "Project ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/BacklogItem"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "description": "Project not found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Backlog Items"
+                ],
+                "summary": "Create Backlog Item",
+                "description": "Creates a new backlog item in the project.",
+                "parameters": [
+                    {
+                        "name": "project",
+                        "in": "path",
+                        "description": "Project ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "title"
+                                ],
+                                "properties": {
+                                    "title": {
+                                        "type": "string",
+                                        "example": "Add dark mode",
+                                        "maxLength": 255
+                                    },
+                                    "description": {
+                                        "type": "string",
+                                        "example": "Support theme switching",
+                                        "nullable": true,
+                                        "maxLength": 5000
+                                    },
+                                    "type": {
+                                        "type": "string",
+                                        "example": "story",
+                                        "default": "story",
+                                        "enum": [
+                                            "story",
+                                            "task",
+                                            "bug",
+                                            "improvement"
+                                        ]
+                                    },
+                                    "priority_rank": {
+                                        "type": "number",
+                                        "example": 1.5,
+                                        "nullable": true
+                                    },
+                                    "business_value": {
+                                        "type": "integer",
+                                        "example": 80,
+                                        "nullable": true,
+                                        "maximum": 100,
+                                        "minimum": 1
+                                    },
+                                    "estimate_points": {
+                                        "type": "integer",
+                                        "example": 5,
+                                        "nullable": true,
+                                        "maximum": 100,
+                                        "minimum": 1
+                                    },
+                                    "acceptance_criteria": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string",
+                                            "maxLength": 1000
+                                        },
+                                        "example": [
+                                            "User can toggle dark mode",
+                                            "Preference persists after refresh"
+                                        ],
+                                        "nullable": true
+                                    },
+                                    "assigned_to_user_id": {
+                                        "type": "integer",
+                                        "example": 2,
+                                        "nullable": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Backlog item created successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/BacklogItem"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "description": "Project not found"
+                    },
+                    "422": {
+                        "description": "Validation failed"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/projects/{project}/backlog-items/{backlogItem}": {
+            "get": {
+                "tags": [
+                    "Backlog Items"
+                ],
+                "summary": "Get Backlog Item",
+                "description": "Returns details of a single backlog item.",
+                "parameters": [
+                    {
+                        "name": "project",
+                        "in": "path",
+                        "description": "Project ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "backlogItem",
+                        "in": "path",
+                        "description": "Backlog Item ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/BacklogItem"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "description": "Project or Backlog Item not found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Backlog Items"
+                ],
+                "summary": "Archive Backlog Item",
+                "description": "Archives a backlog item by setting its status to archived.",
+                "parameters": [
+                    {
+                        "name": "project",
+                        "in": "path",
+                        "description": "Project ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "backlogItem",
+                        "in": "path",
+                        "description": "Backlog Item ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Backlog item archived successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Backlog item archived."
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/BacklogItem"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "description": "Project or Backlog Item not found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "patch": {
+                "tags": [
+                    "Backlog Items"
+                ],
+                "summary": "Update Backlog Item",
+                "description": "Updates backlog item details. All fields are optional.",
+                "parameters": [
+                    {
+                        "name": "project",
+                        "in": "path",
+                        "description": "Project ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "backlogItem",
+                        "in": "path",
+                        "description": "Backlog Item ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "title": {
+                                        "type": "string",
+                                        "example": "Add dark mode",
+                                        "maxLength": 255
+                                    },
+                                    "description": {
+                                        "type": "string",
+                                        "example": "New description",
+                                        "nullable": true,
+                                        "maxLength": 5000
+                                    },
+                                    "type": {
+                                        "type": "string",
+                                        "example": "story",
+                                        "enum": [
+                                            "story",
+                                            "task",
+                                            "bug",
+                                            "improvement"
+                                        ]
+                                    },
+                                    "status": {
+                                        "type": "string",
+                                        "example": "in_progress",
+                                        "enum": [
+                                            "backlog",
+                                            "ready",
+                                            "selected",
+                                            "in_progress",
+                                            "in_review",
+                                            "done",
+                                            "archived"
+                                        ]
+                                    },
+                                    "priority_rank": {
+                                        "type": "number",
+                                        "example": 2,
+                                        "nullable": true
+                                    },
+                                    "business_value": {
+                                        "type": "integer",
+                                        "example": 90,
+                                        "nullable": true,
+                                        "maximum": 100,
+                                        "minimum": 1
+                                    },
+                                    "estimate_points": {
+                                        "type": "integer",
+                                        "example": 8,
+                                        "nullable": true,
+                                        "maximum": 100,
+                                        "minimum": 1
+                                    },
+                                    "acceptance_criteria": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string",
+                                            "maxLength": 1000
+                                        },
+                                        "example": [
+                                            "User can toggle dark mode"
+                                        ],
+                                        "nullable": true
+                                    },
+                                    "assigned_to_user_id": {
+                                        "type": "integer",
+                                        "example": 2,
+                                        "nullable": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Backlog item updated successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/BacklogItem"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "description": "Project or Backlog Item not found"
+                    },
+                    "422": {
+                        "description": "Validation failed"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/projects": {
+            "get": {
+                "tags": [
+                    "Projects"
+                ],
+                "summary": "List Projects",
+                "description": "Returns a list of active projects visible to the authenticated user.",
+                "responses": {
+                    "200": {
+                        "description": "Successful request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/Project"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Projects"
+                ],
+                "summary": "Create Project",
+                "description": "Creates a new project. Also establishes the creator as the Owner and sets up a default Definition of Done.",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "name",
+                                    "product_goal",
+                                    "default_sprint_length_days"
+                                ],
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "example": "Website Redesign",
+                                        "maxLength": 255
+                                    },
+                                    "description": {
+                                        "type": "string",
+                                        "example": "Refresh the marketing site",
+                                        "nullable": true,
+                                        "maxLength": 2000
+                                    },
+                                    "product_goal": {
+                                        "type": "string",
+                                        "example": "Increase demo requests by 20%",
+                                        "maxLength": 5000
+                                    },
+                                    "default_sprint_length_days": {
+                                        "type": "integer",
+                                        "example": 14,
+                                        "maximum": 30,
+                                        "minimum": 1
+                                    },
+                                    "wip_limit_per_member": {
+                                        "type": "integer",
+                                        "example": 3,
+                                        "nullable": true,
+                                        "maximum": 20,
+                                        "minimum": 1
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Project created successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/Project"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "422": {
+                        "description": "Validation failed"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/projects/{project}": {
+            "get": {
+                "tags": [
+                    "Projects"
+                ],
+                "summary": "Get Project",
+                "description": "Returns details of a single project visible to the authenticated user.",
+                "parameters": [
+                    {
+                        "name": "project",
+                        "in": "path",
+                        "description": "Project ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/Project"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "description": "Project not found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "patch": {
+                "tags": [
+                    "Projects"
+                ],
+                "summary": "Update Project",
+                "description": "Updates project settings. All fields in request are optional.",
+                "parameters": [
+                    {
+                        "name": "project",
+                        "in": "path",
+                        "description": "Project ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "example": "Website Refresh",
+                                        "maxLength": 255
+                                    },
+                                    "description": {
+                                        "type": "string",
+                                        "example": "New refresh",
+                                        "nullable": true,
+                                        "maxLength": 2000
+                                    },
+                                    "product_goal": {
+                                        "type": "string",
+                                        "example": "New product goal",
+                                        "maxLength": 5000
+                                    },
+                                    "default_sprint_length_days": {
+                                        "type": "integer",
+                                        "example": 14,
+                                        "maximum": 30,
+                                        "minimum": 1
+                                    },
+                                    "wip_limit_per_member": {
+                                        "type": "integer",
+                                        "example": 5,
+                                        "nullable": true,
+                                        "maximum": 20,
+                                        "minimum": 1
+                                    },
+                                    "status": {
+                                        "type": "string",
+                                        "example": "active",
+                                        "enum": [
+                                            "active",
+                                            "archived"
+                                        ]
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Project updated successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/Project"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "description": "Project not found"
+                    },
+                    "422": {
+                        "description": "Validation failed"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/projects/{project}/definition-of-done": {
+            "get": {
+                "tags": [
+                    "Definition of Done"
+                ],
+                "summary": "Get Definition of Done",
+                "description": "Returns the active Definition of Done checklist for the specified project.",
+                "parameters": [
+                    {
+                        "name": "project",
+                        "in": "path",
+                        "description": "Project ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/DefinitionOfDone"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "description": "Project or Definition of Done not found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "patch": {
+                "tags": [
+                    "Definition of Done"
+                ],
+                "summary": "Create or Update Definition of Done",
+                "description": "Creates or updates the active Definition of Done checklist for the specified project.",
+                "parameters": [
+                    {
+                        "name": "project",
+                        "in": "path",
+                        "description": "Project ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "title": {
+                                        "type": "string",
+                                        "example": "Team Definition of Done",
+                                        "maxLength": 255
+                                    },
+                                    "checklist": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string",
+                                            "maxLength": 500
+                                        },
+                                        "example": [
+                                            "Tests pass",
+                                            "Code reviewed",
+                                            "Documentation updated"
+                                        ]
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Definition of Done updated successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/DefinitionOfDone"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "201": {
+                        "description": "Definition of Done created successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/DefinitionOfDone"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "description": "Project not found"
+                    },
+                    "422": {
+                        "description": "Validation failed"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/invitations": {
+            "get": {
+                "tags": [
+                    "Invitations"
+                ],
+                "summary": "List Pending User Invitations",
+                "description": "Returns pending invitations addressed to the authenticated user's email.",
+                "responses": {
+                    "200": {
+                        "description": "Successful request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/ProjectInvitation"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/projects/{project}/invitations": {
+            "get": {
+                "tags": [
+                    "Invitations"
+                ],
+                "summary": "List Project Invitations",
+                "description": "Returns all pending invitations for the specified project.",
+                "parameters": [
+                    {
+                        "name": "project",
+                        "in": "path",
+                        "description": "Project ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/ProjectInvitation"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "description": "Project not found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Invitations"
+                ],
+                "summary": "Create Project Invitation",
+                "description": "Creates a pending invitation to join the project. The invitee is specified by email.",
+                "parameters": [
+                    {
+                        "name": "project",
+                        "in": "path",
+                        "description": "Project ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "email",
+                                    "role"
+                                ],
+                                "properties": {
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email",
+                                        "example": "sam@example.com"
+                                    },
+                                    "role": {
+                                        "type": "string",
+                                        "example": "member",
+                                        "enum": [
+                                            "member",
+                                            "supervisor"
+                                        ]
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Invitation created successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/ProjectInvitation"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "description": "Project not found"
+                    },
+                    "422": {
+                        "description": "Validation failed"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/projects/{project}/invitations/{invitation}": {
+            "delete": {
+                "tags": [
+                    "Invitations"
+                ],
+                "summary": "Revoke Project Invitation",
+                "description": "Revokes a pending invitation.",
+                "parameters": [
+                    {
+                        "name": "project",
+                        "in": "path",
+                        "description": "Project ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "invitation",
+                        "in": "path",
+                        "description": "Invitation ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Invitation revoked successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Invitation revoked."
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/ProjectInvitation"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "description": "Project or Invitation not found"
+                    },
+                    "422": {
+                        "description": "Validation failed"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/invitations/{token}/accept": {
+            "post": {
+                "tags": [
+                    "Invitations"
+                ],
+                "summary": "Accept Invitation",
+                "description": "Accepts a project invitation using the plain token string.",
+                "parameters": [
+                    {
+                        "name": "token",
+                        "in": "path",
+                        "description": "Invitation Token",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Invitation accepted successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Invitation accepted."
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/Project"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "404": {
+                        "description": "Invitation not found"
+                    },
+                    "422": {
+                        "description": "Validation failed"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/projects/{project}/members": {
+            "get": {
+                "tags": [
+                    "Project Members"
+                ],
+                "summary": "List Project Members",
+                "description": "Returns a list of all active members and supervisors in the specified project.",
+                "parameters": [
+                    {
+                        "name": "project",
+                        "in": "path",
+                        "description": "Project ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "project_id": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "user_id": {
+                                                        "type": "integer",
+                                                        "example": 2
+                                                    },
+                                                    "role": {
+                                                        "type": "string",
+                                                        "example": "member"
+                                                    },
+                                                    "status": {
+                                                        "type": "string",
+                                                        "example": "active"
+                                                    },
+                                                    "joined_at": {
+                                                        "type": "string",
+                                                        "format": "date-time",
+                                                        "example": "2026-06-01T12:00:00.000000Z"
+                                                    },
+                                                    "created_at": {
+                                                        "type": "string",
+                                                        "format": "date-time",
+                                                        "example": "2026-06-01T12:00:00.000000Z"
+                                                    },
+                                                    "updated_at": {
+                                                        "type": "string",
+                                                        "format": "date-time",
+                                                        "example": "2026-06-01T12:00:00.000000Z"
+                                                    },
+                                                    "user": {
+                                                        "$ref": "#/components/schemas/User"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "description": "Project not found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/projects/{project}/members/{user}": {
+            "delete": {
+                "tags": [
+                    "Project Members"
+                ],
+                "summary": "Remove Member",
+                "description": "Removes a member from the project. The owner cannot be removed.",
+                "parameters": [
+                    {
+                        "name": "project",
+                        "in": "path",
+                        "description": "Project ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "user",
+                        "in": "path",
+                        "description": "User ID of the member to remove",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Member removed successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Member removed from project."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "description": "Project or Member not found"
+                    },
+                    "422": {
+                        "description": "Validation failed / Owner cannot be removed"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "patch": {
+                "tags": [
+                    "Project Members"
+                ],
+                "summary": "Change Member Role",
+                "description": "Updates a project member's role (e.g. from member to supervisor). The owner's role cannot be changed.",
+                "parameters": [
+                    {
+                        "name": "project",
+                        "in": "path",
+                        "description": "Project ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "user",
+                        "in": "path",
+                        "description": "User ID of the member",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "role"
+                                ],
+                                "properties": {
+                                    "role": {
+                                        "type": "string",
+                                        "example": "supervisor",
+                                        "enum": [
+                                            "member",
+                                            "supervisor"
+                                        ]
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Member role updated successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "project_id": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "user_id": {
+                                                    "type": "integer",
+                                                    "example": 2
+                                                },
+                                                "role": {
+                                                    "type": "string",
+                                                    "example": "supervisor"
+                                                },
+                                                "status": {
+                                                    "type": "string",
+                                                    "example": "active"
+                                                },
+                                                "joined_at": {
+                                                    "type": "string",
+                                                    "format": "date-time",
+                                                    "example": "2026-06-01T12:00:00.000000Z"
+                                                },
+                                                "created_at": {
+                                                    "type": "string",
+                                                    "format": "date-time",
+                                                    "example": "2026-06-01T12:00:00.000000Z"
+                                                },
+                                                "updated_at": {
+                                                    "type": "string",
+                                                    "format": "date-time",
+                                                    "example": "2026-06-01T12:00:00.000000Z"
+                                                },
+                                                "user": {
+                                                    "$ref": "#/components/schemas/User"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "description": "Project or Member not found"
+                    },
+                    "422": {
+                        "description": "Validation failed / Owner role cannot be changed"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/projects/{project}/sprints/{sprint}/retrospective": {
+            "get": {
+                "tags": [
+                    "Retrospective"
+                ],
+                "summary": "Get Retrospective details",
+                "description": "Returns the retrospective details and feedback items for the specified sprint.",
+                "parameters": [
+                    {
+                        "name": "project",
+                        "in": "path",
+                        "description": "Project ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "sprint",
+                        "in": "path",
+                        "description": "Sprint ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/Retrospective"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "description": "Project, Sprint or Retrospective not found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Retrospective"
+                ],
+                "summary": "Submit Retrospective Score",
+                "description": "Submits or updates the overall team happiness score for a sprint retrospective.",
+                "parameters": [
+                    {
+                        "name": "project",
+                        "in": "path",
+                        "description": "Project ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "sprint",
+                        "in": "path",
+                        "description": "Sprint ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "team_happiness_score"
+                                ],
+                                "properties": {
+                                    "team_happiness_score": {
+                                        "type": "integer",
+                                        "example": 5,
+                                        "maximum": 5,
+                                        "minimum": 1
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Retrospective score saved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/Retrospective"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "description": "Project or Sprint not found"
+                    },
+                    "422": {
+                        "description": "Validation failed"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/projects/{project}/sprints/{sprint}/retrospective/items": {
+            "post": {
+                "tags": [
+                    "Retrospective"
+                ],
+                "summary": "Create Retrospective Feedback Item",
+                "description": "Creates a feedback item (went well, to improve, or action item) for a sprint retrospective.",
+                "parameters": [
+                    {
+                        "name": "project",
+                        "in": "path",
+                        "description": "Project ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "sprint",
+                        "in": "path",
+                        "description": "Sprint ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "type",
+                                    "body"
+                                ],
+                                "properties": {
+                                    "type": {
+                                        "type": "string",
+                                        "example": "went_well",
+                                        "enum": [
+                                            "went_well",
+                                            "to_improve",
+                                            "action_item"
+                                        ]
+                                    },
+                                    "body": {
+                                        "type": "string",
+                                        "example": "Collaboration was awesome!"
+                                    },
+                                    "assigned_to_user_id": {
+                                        "type": "integer",
+                                        "example": 2,
+                                        "nullable": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Feedback item created successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/RetroItem"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "description": "Project or Sprint not found"
+                    },
+                    "422": {
+                        "description": "Validation failed"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/projects/{project}/sprints/{sprint}/retrospective/items/{retroItem}": {
+            "delete": {
+                "tags": [
+                    "Retrospective"
+                ],
+                "summary": "Delete Retrospective Feedback Item",
+                "description": "Deletes a feedback item. Users can only delete their own items.",
+                "parameters": [
+                    {
+                        "name": "project",
+                        "in": "path",
+                        "description": "Project ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "sprint",
+                        "in": "path",
+                        "description": "Sprint ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "retroItem",
+                        "in": "path",
+                        "description": "Retrospective Item ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Feedback item deleted successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Retrospective item deleted."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "description": "Project, Sprint or Item not found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "patch": {
+                "tags": [
+                    "Retrospective"
+                ],
+                "summary": "Update Retrospective Feedback Item",
+                "description": "Updates a feedback item's body or details. Users can only update their own items.",
+                "parameters": [
+                    {
+                        "name": "project",
+                        "in": "path",
+                        "description": "Project ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "sprint",
+                        "in": "path",
+                        "description": "Sprint ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "retroItem",
+                        "in": "path",
+                        "description": "Retrospective Item ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "type": {
+                                        "type": "string",
+                                        "example": "went_well",
+                                        "enum": [
+                                            "went_well",
+                                            "to_improve",
+                                            "action_item"
+                                        ]
+                                    },
+                                    "body": {
+                                        "type": "string",
+                                        "example": "Collaboration was extremely awesome!"
+                                    },
+                                    "assigned_to_user_id": {
+                                        "type": "integer",
+                                        "example": 2,
+                                        "nullable": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Feedback item updated successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/RetroItem"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "description": "Project, Sprint or Item not found"
+                    },
+                    "422": {
+                        "description": "Validation failed"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/projects/{project}/sprints/{sprint}/board": {
+            "get": {
+                "tags": [
+                    "Sprint Board"
+                ],
+                "summary": "Get Sprint Board",
+                "description": "Returns the sprint board columns and items for the specified sprint.",
+                "parameters": [
+                    {
+                        "name": "project",
+                        "in": "path",
+                        "description": "Project ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "sprint",
+                        "in": "path",
+                        "description": "Sprint ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "properties": {
+                                                "sprint": {
+                                                    "$ref": "#/components/schemas/Sprint"
+                                                },
+                                                "columns": {
+                                                    "properties": {
+                                                        "selected": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "$ref": "#/components/schemas/BacklogItem"
+                                                            }
+                                                        },
+                                                        "in_progress": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "$ref": "#/components/schemas/BacklogItem"
+                                                            }
+                                                        },
+                                                        "in_review": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "$ref": "#/components/schemas/BacklogItem"
+                                                            }
+                                                        },
+                                                        "done": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "$ref": "#/components/schemas/BacklogItem"
+                                                            }
+                                                        }
+                                                    },
+                                                    "type": "object"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "description": "Project or Sprint not found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/projects/{project}/sprints": {
+            "get": {
+                "tags": [
+                    "Sprints"
+                ],
+                "summary": "List Project Sprints",
+                "description": "Returns a list of all sprints associated with the specified project, newest first.",
+                "parameters": [
+                    {
+                        "name": "project",
+                        "in": "path",
+                        "description": "Project ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/Sprint"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "description": "Project not found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Sprints"
+                ],
+                "summary": "Create Sprint",
+                "description": "Creates a planned sprint and commits the selected backlog items into it. Only one active sprint is allowed per project.",
+                "parameters": [
+                    {
+                        "name": "project",
+                        "in": "path",
+                        "description": "Project ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "name",
+                                    "sprint_goal",
+                                    "start_date",
+                                    "end_date",
+                                    "backlog_item_ids"
+                                ],
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "example": "Sprint 12",
+                                        "maxLength": 255
+                                    },
+                                    "sprint_goal": {
+                                        "type": "string",
+                                        "example": "Ship the invitation flow",
+                                        "maxLength": 5000
+                                    },
+                                    "start_date": {
+                                        "type": "string",
+                                        "format": "date",
+                                        "example": "2026-06-01"
+                                    },
+                                    "end_date": {
+                                        "type": "string",
+                                        "format": "date",
+                                        "example": "2026-06-14"
+                                    },
+                                    "backlog_item_ids": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "integer"
+                                        },
+                                        "example": [
+                                            10,
+                                            11,
+                                            12
+                                        ]
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Sprint created successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/Sprint"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "description": "Project not found"
+                    },
+                    "422": {
+                        "description": "Validation failed"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/projects/{project}/sprints/{sprint}": {
+            "get": {
+                "tags": [
+                    "Sprints"
+                ],
+                "summary": "Get Sprint details",
+                "description": "Returns details of a single sprint.",
+                "parameters": [
+                    {
+                        "name": "project",
+                        "in": "path",
+                        "description": "Project ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "sprint",
+                        "in": "path",
+                        "description": "Sprint ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/Sprint"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "description": "Project or Sprint not found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/projects/{project}/sprints/{sprint}/start": {
+            "post": {
+                "tags": [
+                    "Sprints"
+                ],
+                "summary": "Start Sprint",
+                "description": "Starts a planned sprint. The sprint must contain at least one backlog item and the project cannot already have an active sprint.",
+                "parameters": [
+                    {
+                        "name": "project",
+                        "in": "path",
+                        "description": "Project ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "sprint",
+                        "in": "path",
+                        "description": "Sprint ID to start",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Sprint started successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/Sprint"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "description": "Project or Sprint not found"
+                    },
+                    "422": {
+                        "description": "Validation failed"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/projects/{project}/sprints/{sprint}/close": {
+            "post": {
+                "tags": [
+                    "Sprints"
+                ],
+                "summary": "Close Sprint",
+                "description": "Closes an active sprint. Unfinished items are moved back to ready.",
+                "parameters": [
+                    {
+                        "name": "project",
+                        "in": "path",
+                        "description": "Project ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "sprint",
+                        "in": "path",
+                        "description": "Sprint ID to close",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Sprint closed successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Sprint closed."
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/Sprint"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "description": "Project or Sprint not found"
+                    },
+                    "422": {
+                        "description": "Validation failed"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/projects/{project}/sprints/{sprint}/review": {
+            "get": {
+                "tags": [
+                    "Sprint Review"
+                ],
+                "summary": "Get Sprint Review",
+                "description": "Returns the sprint review details for the specified sprint.",
+                "parameters": [
+                    {
+                        "name": "project",
+                        "in": "path",
+                        "description": "Project ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "sprint",
+                        "in": "path",
+                        "description": "Sprint ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/SprintReview"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "description": "Project, Sprint or Review not found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Sprint Review"
+                ],
+                "summary": "Submit Sprint Review",
+                "description": "Submits or updates the sprint review. Updates backlog item statuses based on the review decisions.",
+                "parameters": [
+                    {
+                        "name": "project",
+                        "in": "path",
+                        "description": "Project ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "sprint",
+                        "in": "path",
+                        "description": "Sprint ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "summary",
+                                    "items"
+                                ],
+                                "properties": {
+                                    "summary": {
+                                        "type": "string",
+                                        "example": "Finished core features."
+                                    },
+                                    "demo_url": {
+                                        "type": "string",
+                                        "format": "uri",
+                                        "example": "https://example.com/demo",
+                                        "nullable": true
+                                    },
+                                    "items": {
+                                        "type": "array",
+                                        "items": {
+                                            "properties": {
+                                                "backlog_item_id": {
+                                                    "type": "integer",
+                                                    "example": 10
+                                                },
+                                                "decision": {
+                                                    "type": "string",
+                                                    "example": "accepted",
+                                                    "enum": [
+                                                        "accepted",
+                                                        "carry_over",
+                                                        "rejected"
+                                                    ]
+                                                },
+                                                "notes": {
+                                                    "type": "string",
+                                                    "example": "Looking good",
+                                                    "nullable": true
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Sprint review saved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/SprintReview"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "description": "Project or Sprint not found"
+                    },
+                    "422": {
+                        "description": "Validation failed"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "User": {
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "name": {
+                        "type": "string",
+                        "example": "Jane Doe"
+                    },
+                    "email": {
+                        "type": "string",
+                        "format": "email",
+                        "example": "jane@example.com"
+                    },
+                    "avatar_url": {
+                        "type": "string",
+                        "format": "uri",
+                        "example": "https://lh3.googleusercontent.com/...",
+                        "nullable": true
+                    },
+                    "last_login_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "example": "2026-06-04T12:00:00.000000Z",
+                        "nullable": true
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "example": "2026-06-01T10:00:00.000000Z"
+                    },
+                    "updated_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "example": "2026-06-04T12:00:00.000000Z"
+                    }
+                },
+                "type": "object"
+            },
+            "DefinitionOfDone": {
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "project_id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "title": {
+                        "type": "string",
+                        "example": "Default Definition of Done"
+                    },
+                    "checklist": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "example": [
+                            "Tests pass",
+                            "Code reviewed",
+                            "Documentation updated"
+                        ]
+                    },
+                    "is_active": {
+                        "type": "boolean",
+                        "example": true
+                    },
+                    "created_by_user_id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "example": "2026-06-01T10:00:00.000000Z"
+                    },
+                    "updated_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "example": "2026-06-04T12:00:00.000000Z"
+                    }
+                },
+                "type": "object"
+            },
+            "Project": {
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "name": {
+                        "type": "string",
+                        "example": "Website Redesign"
+                    },
+                    "description": {
+                        "type": "string",
+                        "example": "Refresh the marketing site",
+                        "nullable": true
+                    },
+                    "product_goal": {
+                        "type": "string",
+                        "example": "Increase demo requests by 20%"
+                    },
+                    "owner_user_id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "default_sprint_length_days": {
+                        "type": "integer",
+                        "example": 14
+                    },
+                    "wip_limit_per_member": {
+                        "type": "integer",
+                        "example": 3,
+                        "nullable": true
+                    },
+                    "status": {
+                        "type": "string",
+                        "example": "active"
+                    },
+                    "definition_of_done": {
+                        "$ref": "#/components/schemas/DefinitionOfDone"
+                    },
+                    "my_role": {
+                        "type": "string",
+                        "example": "owner"
+                    },
+                    "member_count": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "backlog_item_count": {
+                        "type": "integer",
+                        "example": 4
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "example": "2026-06-01T10:00:00.000000Z"
+                    },
+                    "updated_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "example": "2026-06-04T12:00:00.000000Z"
+                    }
+                },
+                "type": "object"
+            },
+            "BacklogItem": {
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 10
+                    },
+                    "project_id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "title": {
+                        "type": "string",
+                        "example": "Add dark mode"
+                    },
+                    "description": {
+                        "type": "string",
+                        "example": "Support theme switching in the settings screen",
+                        "nullable": true
+                    },
+                    "type": {
+                        "type": "string",
+                        "example": "story"
+                    },
+                    "status": {
+                        "type": "string",
+                        "example": "in_progress"
+                    },
+                    "priority_rank": {
+                        "type": "number",
+                        "example": 1
+                    },
+                    "business_value": {
+                        "type": "integer",
+                        "example": 80,
+                        "nullable": true
+                    },
+                    "estimate_points": {
+                        "type": "integer",
+                        "example": 5,
+                        "nullable": true
+                    },
+                    "acceptance_criteria": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "example": [
+                            "User can toggle dark mode",
+                            "Preference persists after refresh"
+                        ],
+                        "nullable": true
+                    },
+                    "created_by_user_id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "assigned_to_user_id": {
+                        "type": "integer",
+                        "example": 2,
+                        "nullable": true
+                    },
+                    "assigned_to_user": {
+                        "oneOf": [
+                            {
+                                "$ref": "#/components/schemas/User"
+                            }
+                        ],
+                        "nullable": true
+                    },
+                    "done_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "example": null,
+                        "nullable": true
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "example": "2026-06-01T10:00:00.000000Z"
+                    },
+                    "updated_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "example": "2026-06-04T12:00:00.000000Z"
+                    }
+                },
+                "type": "object"
+            },
+            "Sprint": {
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 5
+                    },
+                    "project_id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "name": {
+                        "type": "string",
+                        "example": "Sprint 12"
+                    },
+                    "sprint_goal": {
+                        "type": "string",
+                        "example": "Ship the invitation flow"
+                    },
+                    "status": {
+                        "type": "string",
+                        "example": "active"
+                    },
+                    "start_date": {
+                        "type": "string",
+                        "format": "date",
+                        "example": "2026-06-01"
+                    },
+                    "end_date": {
+                        "type": "string",
+                        "format": "date",
+                        "example": "2026-06-14"
+                    },
+                    "created_by_user_id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "closed_by_user_id": {
+                        "type": "integer",
+                        "example": null,
+                        "nullable": true
+                    },
+                    "closed_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "example": null,
+                        "nullable": true
+                    },
+                    "item_count": {
+                        "type": "integer",
+                        "example": 3
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "example": "2026-06-01T10:00:00.000000Z"
+                    },
+                    "updated_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "example": "2026-06-04T12:00:00.000000Z"
+                    }
+                },
+                "type": "object"
+            },
+            "DailyCheckin": {
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "project_id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "sprint_id": {
+                        "type": "integer",
+                        "example": 5
+                    },
+                    "user_id": {
+                        "type": "integer",
+                        "example": 2
+                    },
+                    "yesterday": {
+                        "type": "string",
+                        "example": "Implemented tests",
+                        "nullable": true
+                    },
+                    "today": {
+                        "type": "string",
+                        "example": "Debugging routes",
+                        "nullable": true
+                    },
+                    "blockers": {
+                        "type": "string",
+                        "example": "Database connection timeout",
+                        "nullable": true
+                    },
+                    "confidence_score": {
+                        "type": "integer",
+                        "example": 4
+                    },
+                    "checkin_date": {
+                        "type": "string",
+                        "format": "date",
+                        "example": "2026-06-04"
+                    },
+                    "user": {
+                        "$ref": "#/components/schemas/User"
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "example": "2026-06-04T12:00:00.000000Z"
+                    },
+                    "updated_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "example": "2026-06-04T12:00:00.000000Z"
+                    }
+                },
+                "type": "object"
+            },
+            "Impediment": {
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "project_id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "sprint_id": {
+                        "type": "integer",
+                        "example": 5,
+                        "nullable": true
+                    },
+                    "reported_by_user_id": {
+                        "type": "integer",
+                        "example": 2
+                    },
+                    "resolved_by_user_id": {
+                        "type": "integer",
+                        "example": 1,
+                        "nullable": true
+                    },
+                    "title": {
+                        "type": "string",
+                        "example": "Database connection timeout"
+                    },
+                    "description": {
+                        "type": "string",
+                        "example": "Sail mysql is throwing timeout exception",
+                        "nullable": true
+                    },
+                    "status": {
+                        "type": "string",
+                        "example": "resolved"
+                    },
+                    "resolved_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "example": "2026-06-04T12:30:00.000000Z",
+                        "nullable": true
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "example": "2026-06-04T12:00:00.000000Z"
+                    },
+                    "updated_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "example": "2026-06-04T12:30:00.000000Z"
+                    }
+                },
+                "type": "object"
+            },
+            "RetroItem": {
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "type": {
+                        "type": "string",
+                        "example": "went_well"
+                    },
+                    "body": {
+                        "type": "string",
+                        "example": "Collaboration was awesome!"
+                    },
+                    "author_user_id": {
+                        "type": "integer",
+                        "example": 2
+                    },
+                    "author": {
+                        "$ref": "#/components/schemas/User"
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "example": "2026-06-04T12:00:00.000000Z"
+                    },
+                    "updated_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "example": "2026-06-04T12:00:00.000000Z"
+                    }
+                },
+                "type": "object"
+            },
+            "Retrospective": {
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "sprint_id": {
+                        "type": "integer",
+                        "example": 5
+                    },
+                    "team_happiness_score": {
+                        "type": "integer",
+                        "example": 5
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "example": "2026-06-04T12:00:00.000000Z"
+                    },
+                    "updated_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "example": "2026-06-04T12:00:00.000000Z"
+                    },
+                    "items": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/RetroItem"
+                        }
+                    }
+                },
+                "type": "object"
+            },
+            "SprintReviewItem": {
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "backlog_item_id": {
+                        "type": "integer",
+                        "example": 10
+                    },
+                    "decision": {
+                        "type": "string",
+                        "example": "accepted"
+                    },
+                    "notes": {
+                        "type": "string",
+                        "example": "Looking good",
+                        "nullable": true
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "example": "2026-06-04T12:00:00.000000Z"
+                    },
+                    "updated_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "example": "2026-06-04T12:00:00.000000Z"
+                    }
+                },
+                "type": "object"
+            },
+            "SprintReview": {
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "sprint_id": {
+                        "type": "integer",
+                        "example": 5
+                    },
+                    "summary": {
+                        "type": "string",
+                        "example": "Finished core features."
+                    },
+                    "demo_url": {
+                        "type": "string",
+                        "format": "uri",
+                        "example": "https://example.com/demo",
+                        "nullable": true
+                    },
+                    "created_by_user_id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "example": "2026-06-04T12:00:00.000000Z"
+                    },
+                    "updated_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "example": "2026-06-04T12:00:00.000000Z"
+                    },
+                    "items": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/SprintReviewItem"
+                        }
+                    }
+                },
+                "type": "object"
+            },
+            "PeerReviewCycle": {
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "project_id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "sprint_id": {
+                        "type": "integer",
+                        "example": 5
+                    },
+                    "status": {
+                        "type": "string",
+                        "example": "open"
+                    },
+                    "created_by_user_id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "example": "2026-06-04T12:00:00.000000Z"
+                    },
+                    "updated_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "example": "2026-06-04T12:00:00.000000Z"
+                    }
+                },
+                "type": "object"
+            },
+            "PeerReview": {
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "peer_review_cycle_id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "reviewer_user_id": {
+                        "type": "integer",
+                        "example": 2
+                    },
+                    "reviewee_user_id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "collaboration_score": {
+                        "type": "integer",
+                        "example": 5
+                    },
+                    "delivery_score": {
+                        "type": "integer",
+                        "example": 4
+                    },
+                    "communication_score": {
+                        "type": "integer",
+                        "example": 5
+                    },
+                    "continue_feedback": {
+                        "type": "string",
+                        "example": "Good planning.",
+                        "nullable": true
+                    },
+                    "improve_feedback": {
+                        "type": "string",
+                        "example": "None.",
+                        "nullable": true
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "example": "2026-06-04T12:00:00.000000Z"
+                    },
+                    "updated_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "example": "2026-06-04T12:00:00.000000Z"
+                    }
+                },
+                "type": "object"
+            },
+            "ProjectInvitation": {
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "project_id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "email": {
+                        "type": "string",
+                        "example": "sam@example.com"
+                    },
+                    "role": {
+                        "type": "string",
+                        "example": "member"
+                    },
+                    "token": {
+                        "type": "string",
+                        "example": "abc123token"
+                    },
+                    "created_by_user_id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "example": "2026-06-04T12:00:00.000000Z"
+                    },
+                    "updated_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "example": "2026-06-04T12:00:00.000000Z"
+                    },
+                    "project": {
+                        "$ref": "#/components/schemas/Project"
+                    }
+                },
+                "type": "object"
+            }
+        },
+        "securitySchemes": {
+            "bearerAuth": {
+                "type": "http",
+                "description": "Enter your Sanctum token. Example: Bearer 1|abcdef...",
+                "name": "Authorization",
+                "in": "header",
+                "bearerFormat": "JWT",
+                "scheme": "bearer"
+            }
+        }
+    },
+    "tags": [
+        {
+            "name": "Authentication",
+            "description": "Authentication"
+        },
+        {
+            "name": "Daily Check-ins",
+            "description": "Daily Check-ins"
+        },
+        {
+            "name": "Impediments",
+            "description": "Impediments"
+        },
+        {
+            "name": "Peer Reviews",
+            "description": "Peer Reviews"
+        },
+        {
+            "name": "Backlog Items",
+            "description": "Backlog Items"
+        },
+        {
+            "name": "Projects",
+            "description": "Projects"
+        },
+        {
+            "name": "Definition of Done",
+            "description": "Definition of Done"
+        },
+        {
+            "name": "Invitations",
+            "description": "Invitations"
+        },
+        {
+            "name": "Project Members",
+            "description": "Project Members"
+        },
+        {
+            "name": "Retrospective",
+            "description": "Retrospective"
+        },
+        {
+            "name": "Sprint Board",
+            "description": "Sprint Board"
+        },
+        {
+            "name": "Sprints",
+            "description": "Sprints"
+        },
+        {
+            "name": "Sprint Review",
+            "description": "Sprint Review"
+        }
+    ]
+}

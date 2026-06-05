@@ -5,4 +5,5 @@ plugins {
     id("org.jetbrains.kotlin.plugin.parcelize") version libs.versions.kotlin apply false
     alias(libs.plugins.ksp) apply false
     id("com.google.dagger.hilt.android") version "2.59.2" apply false
+    alias(libs.plugins.openapi.generator) apply false
 }

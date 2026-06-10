@@ -19,3 +19,4 @@ val GreenAmbatu = Color(0xFF2E7D32) // Forest green for success/done/review
 val LightGreenAmbatu = Color(0xFFE8F5E9) // Soft green background for containers
 val BlueAmbatu = Color(0xFF1565C0) // Deep ocean blue for stories/info
 val LightBlueAmbatu = Color(0xFFE3F2FD) // Soft blue background for containers
+val LimeGreenAmbatu = Color(0xFF8CB700) // Lime green for owner role badge

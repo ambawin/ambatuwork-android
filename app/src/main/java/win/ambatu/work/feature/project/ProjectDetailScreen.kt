@@ -74,6 +74,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.graphics.Color
 import coil3.compose.AsyncImage
 import win.ambatu.work.R
 import win.ambatu.work.feature.network.BacklogItemDto
@@ -90,6 +91,7 @@ import win.ambatu.work.ui.theme.RedAmbatu
 import win.ambatu.work.ui.theme.LightChocoAmbatu
 import win.ambatu.work.ui.theme.Typography
 import win.ambatu.work.ui.theme.WhiteAmbatu
+import win.ambatu.work.ui.theme.LimeGreenAmbatu
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 import java.util.Locale
@@ -761,47 +763,70 @@ fun SettingsTab(
 
             Card(
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(12.dp),
+                shape = RoundedCornerShape(40.dp),
                 colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceContainerLow
-                )
+                    containerColor = WhiteAmbatu
+                ),
+                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
             ) {
                 Row(
                     modifier = Modifier
-                        .padding(12.dp)
-                        .fillMaxWidth(),
+                        .fillMaxWidth()
+                        .padding(horizontal = 24.dp, vertical = 20.dp),
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(16.dp)
+                    horizontalArrangement = Arrangement.spacedBy(20.dp)
                 ) {
                     AsyncImage(
                         model = member.user.avatarUrl,
                         contentDescription = "Member avatar",
                         modifier = Modifier
-                            .size(40.dp)
+                            .size(80.dp)
                             .clip(CircleShape),
                         contentScale = ContentScale.Crop,
                         placeholder = painterResource(R.drawable.profile_placeholder),
                         error = painterResource(R.drawable.profile_placeholder)
                     )
-                    Column(modifier = Modifier.weight(1f)) {
+                    Column(
+                        modifier = Modifier.weight(1f),
+                        verticalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
                         Text(
                             text = member.user.name ?: "Unknown",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold
+                            style = MaterialTheme.typography.titleLarge.copy(fontSize = 24.sp),
+                            fontWeight = FontWeight.Bold,
+                            color = ChocoAmbatu
                         )
                         member.user.email?.let { email ->
                             Text(
                                 text = email,
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = Color(0xFF9CA3AF)
                             )
                         }
-                        Text(
-                            text = member.role.lowercase().split(" ").joinToString(" ") { word -> word.replaceFirstChar { it.uppercase() } },
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.padding(top = 4.dp)
-                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        
+                        val roleBadgeText = member.role.lowercase().split(" ").joinToString(" ") { word -> 
+                            word.replaceFirstChar { it.uppercase() } 
+                        }
+                        
+                        val badgeBgColor = when (member.role.lowercase().trim()) {
+                            "owner" -> LimeGreenAmbatu
+                            "supervisor" -> ChocoAmbatu
+                            else -> LightChocoAmbatu
+                        }
+
+                        Surface(
+                            shape = RoundedCornerShape(50),
+                            color = badgeBgColor
+                        ) {
+                            Text(
+                                text = roleBadgeText,
+                                style = MaterialTheme.typography.labelLarge,
+                                fontWeight = FontWeight.Bold,
+                                color = WhiteAmbatu,
+                                modifier = Modifier.padding(horizontal = 20.dp, vertical = 6.dp)
+                            )
+                        }
                     }
                     if (showMenuButton) {
                         Box {

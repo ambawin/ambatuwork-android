@@ -18,6 +18,7 @@ import win.ambatu.work.feature.network.ProjectMemberDto
 import win.ambatu.work.feature.network.SprintDto
 import win.ambatu.work.feature.network.UpdateProjectRequest
 import win.ambatu.work.feature.network.UpdateBacklogItemRequest
+import win.ambatu.work.feature.network.UserDto
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 
@@ -27,6 +28,7 @@ data class HomeUiState(
     val members: List<ProjectMemberDto> = emptyList(),
     val backlogItems: List<BacklogItemDto> = emptyList(),
     val sprints: List<SprintDto> = emptyList(),
+    val sprintAssignees: Map<Long, List<UserDto>> = emptyMap(),
     val user: User? = null,
     val isLoading: Boolean = false,
     val error: String? = null,
@@ -117,6 +119,20 @@ class HomeViewModel @Inject constructor(
                         sprints = sprints
                     )
                 }
+
+                // Fetch sprint board details to retrieve assignee profiles
+                val sprintAssigneesMap = mutableMapOf<Long, List<UserDto>>()
+                sprints.forEach { sprint ->
+                    try {
+                        val board = projectRepository.getSprintBoard(token, projectId, sprint.id)
+                        val allItems = board.columns.selected + board.columns.inProgress + board.columns.inReview + board.columns.done
+                        val assignees = allItems.mapNotNull { it.assignedToUser }.distinctBy { it.id }
+                        sprintAssigneesMap[sprint.id] = assignees
+                    } catch (e: Exception) {
+                        // Ignore individual board fetch failure
+                    }
+                }
+                _uiState.update { it.copy(sprintAssignees = sprintAssigneesMap) }
             } catch (e: Exception) {
                 // Handle detail loading error
             }

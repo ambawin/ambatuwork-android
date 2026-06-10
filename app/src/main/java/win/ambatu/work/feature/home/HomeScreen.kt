@@ -417,6 +417,7 @@ private fun Content(
                     )
                     ProjectTab.SPRINT -> SprintTab(
                         sprints = uiState.sprints,
+                        sprintAssignees = uiState.sprintAssignees,
                         onSprintClick = { sprintId ->
                             uiState.selectedProject?.id?.let { projectId ->
                                 onSprintClick(projectId, sprintId)

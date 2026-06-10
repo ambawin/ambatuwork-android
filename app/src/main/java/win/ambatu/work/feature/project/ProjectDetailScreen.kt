@@ -1,5 +1,6 @@
 package win.ambatu.work.feature.project
 
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -74,10 +75,17 @@ import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
 import win.ambatu.work.R
 import win.ambatu.work.feature.network.BacklogItemDto
+import win.ambatu.work.feature.network.UserDto
 import win.ambatu.work.feature.network.DefinitionOfDoneDto
 import win.ambatu.work.feature.network.SprintDto
 import win.ambatu.work.ui.components.FloatingBottomNavigationBar
+import androidx.compose.ui.text.style.TextOverflow
 import win.ambatu.work.ui.theme.ChocoAmbatu
+import win.ambatu.work.ui.theme.DarkChocoAmbatu
+import win.ambatu.work.ui.theme.GreenAmbatu
+import win.ambatu.work.ui.theme.BlueAmbatu
+import win.ambatu.work.ui.theme.RedAmbatu
+import win.ambatu.work.ui.theme.LightChocoAmbatu
 import win.ambatu.work.ui.theme.Typography
 import win.ambatu.work.ui.theme.WhiteAmbatu
 import java.time.ZonedDateTime
@@ -203,6 +211,7 @@ fun ProjectDetailScreen(
 
                         ProjectTab.SPRINT -> SprintTab(
                             sprints = uiState.sprints,
+                            sprintAssignees = uiState.sprintAssignees,
                             onSprintClick = { sprintId ->
                                 uiState.project?.id?.let { projectId ->
                                     onSprintClick(projectId, sprintId)
@@ -368,6 +377,7 @@ fun BacklogTab(
 @Composable
 fun SprintTab(
     sprints: List<SprintDto>,
+    sprintAssignees: Map<Long, List<UserDto>>,
     onSprintClick: (Long) -> Unit
 ) {
     if (sprints.isEmpty()) {
@@ -394,9 +404,11 @@ fun SprintTab(
                 count = sprints.size,
                 key = { index -> sprints[index].id }
             ) { index ->
+                val sprint = sprints[index]
                 SprintCard(
-                    sprint = sprints[index],
-                    onClick = { onSprintClick(sprints[index].id) }
+                    sprint = sprint,
+                    assignees = sprintAssignees[sprint.id] ?: emptyList(),
+                    onClick = { onSprintClick(sprint.id) }
                 )
             }
         }
@@ -406,16 +418,18 @@ fun SprintTab(
 @Composable
 fun SprintCard(
     sprint: SprintDto,
+    assignees: List<UserDto>,
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Card(
         onClick = onClick,
         modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
+        shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceContainerLow
-        )
+            containerColor = WhiteAmbatu
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column(
             modifier = Modifier
@@ -426,83 +440,118 @@ fun SprintCard(
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.Top
             ) {
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
                         text = sprint.name,
                         style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.Bold,
+                        color = ChocoAmbatu
                     )
                     sprint.sprintGoal?.let { goal ->
+                        if (goal.isNotBlank()) {
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = goal,
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = DarkChocoAmbatu.copy(alpha = 0.8f),
+                                maxLines = 2,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.width(8.dp))
+
+                val statusLabel = when (sprint.status.lowercase()) {
+                    "closed" -> "Finished"
+                    "active" -> "Active"
+                    "planned" -> "Planned"
+                    else -> sprint.status.uppercase()
+                }
+
+                val badgeColor = when (sprint.status.lowercase()) {
+                    "closed" -> GreenAmbatu
+                    "active" -> BlueAmbatu
+                    "planned" -> ChocoAmbatu
+                    else -> MaterialTheme.colorScheme.surfaceVariant
+                }
+
+                Surface(
+                    color = badgeColor,
+                    shape = RoundedCornerShape(50),
+                    modifier = Modifier.height(32.dp)
+                ) {
+                    Box(
+                        contentAlignment = Alignment.Center,
+                        modifier = Modifier.padding(horizontal = 16.dp)
+                    ) {
                         Text(
-                            text = goal,
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            maxLines = 2
+                            text = statusLabel,
+                            style = MaterialTheme.typography.labelMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = WhiteAmbatu
                         )
                     }
                 }
-
-                Badge(
-                    containerColor = when (sprint.status.lowercase()) {
-                        "active" -> MaterialTheme.colorScheme.primary
-                        "planned" -> MaterialTheme.colorScheme.secondaryContainer
-                        "closed" -> MaterialTheme.colorScheme.surfaceVariant
-                        else -> MaterialTheme.colorScheme.surfaceContainerHigh
-                    },
-                    contentColor = when (sprint.status.lowercase()) {
-                        "active" -> MaterialTheme.colorScheme.onPrimary
-                        "planned" -> MaterialTheme.colorScheme.onSecondaryContainer
-                        "closed" -> MaterialTheme.colorScheme.onSurfaceVariant
-                        else -> MaterialTheme.colorScheme.onSurface
-                    }
-                ) {
-                    Text(
-                        text = sprint.status.uppercase(),
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                        style = MaterialTheme.typography.labelSmall
-                    )
-                }
             }
-
-            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Column {
-                    val dateRange = remember(sprint.startDate, sprint.endDate) {
-                        val start = formatDate(sprint.startDate)
-                        val end = formatDate(sprint.endDate)
-                        if (start != null && end != null) "$start - $end" else "Dates not set"
-                    }
-                    Text(
-                        text = "Duration",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.secondary
-                    )
-                    Text(
-                        text = dateRange,
-                        style = MaterialTheme.typography.bodyMedium,
-                        fontWeight = FontWeight.Medium
-                    )
+                val dateRange = remember(sprint.startDate, sprint.endDate) {
+                    val start = formatDate(sprint.startDate)
+                    val end = formatDate(sprint.endDate)
+                    if (start != null && end != null) "$start - $end" else "Dates not set"
                 }
 
-                Column(horizontalAlignment = Alignment.End) {
-                    Text(
-                        text = "Items",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.secondary
-                    )
-                    Text(
-                        text = "${sprint.itemCount ?: 0} Backlog Items",
-                        style = MaterialTheme.typography.bodyMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.primary
-                    )
+                Text(
+                    text = dateRange,
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = DarkChocoAmbatu.copy(alpha = 0.6f)
+                )
+
+                // Avatar Pile
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy((-12).dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    assignees.take(3).forEach { assignee ->
+                        AsyncImage(
+                            model = assignee.avatarUrl,
+                            contentDescription = "Assignee avatar",
+                            modifier = Modifier
+                                .size(36.dp)
+                                .clip(CircleShape)
+                                .border(2.dp, WhiteAmbatu, CircleShape),
+                            contentScale = ContentScale.Crop,
+                            placeholder = painterResource(R.drawable.profile_placeholder),
+                            error = painterResource(R.drawable.profile_placeholder)
+                        )
+                    }
+                    if (assignees.size > 3) {
+                        Surface(
+                            color = ChocoAmbatu,
+                            shape = CircleShape,
+                            modifier = Modifier
+                                .size(36.dp)
+                                .border(2.dp, WhiteAmbatu, CircleShape)
+                        ) {
+                            Box(contentAlignment = Alignment.Center) {
+                                Text(
+                                    text = "+${assignees.size - 3}",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    fontWeight = FontWeight.Bold,
+                                    color = WhiteAmbatu
+                                )
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -748,11 +797,11 @@ fun BacklogItemCard(
     Card(
         onClick = onClick,
         modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
+        shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceContainerLow
+            containerColor = WhiteAmbatu
         ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column(
             modifier = Modifier
@@ -765,82 +814,85 @@ fun BacklogItemCard(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.Top
             ) {
-                Text(
-                    text = item.title,
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.weight(1f)
-                )
-
-                Badge(
-                    containerColor = when (item.type.lowercase()) {
-                        "story" -> MaterialTheme.colorScheme.primaryContainer
-                        "task" -> MaterialTheme.colorScheme.secondaryContainer
-                        "bug" -> MaterialTheme.colorScheme.errorContainer
-                        else -> MaterialTheme.colorScheme.tertiaryContainer
-                    },
-                    contentColor = when (item.type.lowercase()) {
-                        "story" -> MaterialTheme.colorScheme.onPrimaryContainer
-                        "task" -> MaterialTheme.colorScheme.onSecondaryContainer
-                        "bug" -> MaterialTheme.colorScheme.onErrorContainer
-                        else -> MaterialTheme.colorScheme.onTertiaryContainer
-                    }
-                ) {
+                Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = item.type.uppercase(),
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                        style = MaterialTheme.typography.labelSmall
+                        text = item.title,
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = ChocoAmbatu
                     )
+                    if (!item.description.isNullOrBlank()) {
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = item.description,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = DarkChocoAmbatu.copy(alpha = 0.8f),
+                            maxLines = 2,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
                 }
-            }
 
-            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                Spacer(modifier = Modifier.width(8.dp))
+
+                AsyncImage(
+                    model = item.assignedToUser?.avatarUrl,
+                    contentDescription = "Assigned to avatar",
+                    modifier = Modifier
+                        .size(40.dp)
+                        .clip(CircleShape),
+                    contentScale = ContentScale.Crop,
+                    placeholder = painterResource(R.drawable.profile_placeholder),
+                    error = painterResource(R.drawable.profile_placeholder)
+                )
+            }
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                // Points Pill
+                Surface(
+                    color = ChocoAmbatu,
+                    shape = RoundedCornerShape(50),
+                    modifier = Modifier.height(32.dp)
                 ) {
-                    AsyncImage(
-                        model = item.assignedToUser?.avatarUrl,
-                        contentDescription = "Assigned to avatar",
-                        modifier = Modifier
-                            .size(32.dp)
-                            .clip(CircleShape),
-                        contentScale = ContentScale.Crop,
-                        placeholder = painterResource(R.drawable.profile_placeholder),
-                        error = painterResource(R.drawable.profile_placeholder)
-                    )
-                    Column {
+                    Box(
+                        contentAlignment = Alignment.Center,
+                        modifier = Modifier.padding(horizontal = 12.dp)
+                    ) {
                         Text(
-                            text = "Assigned to",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                        Text(
-                            text = item.assignedToUser?.name ?: "Unassigned",
-                            style = MaterialTheme.typography.bodyMedium,
-                            fontWeight = FontWeight.Medium
+                            text = "${item.estimatePoints ?: 0}pts",
+                            style = MaterialTheme.typography.labelMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = WhiteAmbatu
                         )
                     }
                 }
 
-                Column(horizontalAlignment = Alignment.End) {
-                    Text(
-                        text = "Estimate",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    Text(
-                        text = "${item.estimatePoints ?: 0} pts",
-                        style = MaterialTheme.typography.bodyMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.primary
-                    )
+                // Type Pill
+                Surface(
+                    color = when (item.type.lowercase()) {
+                        "story" -> GreenAmbatu
+                        "task" -> BlueAmbatu
+                        "bug" -> RedAmbatu
+                        else -> LightChocoAmbatu
+                    },
+                    shape = RoundedCornerShape(50),
+                    modifier = Modifier.height(32.dp)
+                ) {
+                    Box(
+                        contentAlignment = Alignment.Center,
+                        modifier = Modifier.padding(horizontal = 12.dp)
+                    ) {
+                        Text(
+                            text = item.type.uppercase(),
+                            style = MaterialTheme.typography.labelMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = WhiteAmbatu
+                        )
+                    }
                 }
             }
         }

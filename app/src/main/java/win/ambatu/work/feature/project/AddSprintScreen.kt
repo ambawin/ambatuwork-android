@@ -22,6 +22,8 @@ import win.ambatu.work.data.repository.ProjectRepository
 import win.ambatu.work.data.storage.SessionManager
 import win.ambatu.work.feature.network.BacklogItemDto
 import win.ambatu.work.feature.network.CreateSprintRequest
+import win.ambatu.work.ui.components.AmbatuTextField
+import win.ambatu.work.ui.theme.ChocoAmbatu
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
@@ -140,19 +142,19 @@ fun AddSprintScreen(
                     .verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                OutlinedTextField(
+                AmbatuTextField(
                     value = name,
                     onValueChange = { if (it.length <= 255) name = it },
-                    label = { Text("Sprint Name") },
+                    label = "Sprint Name",
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
                     supportingText = { Text("${name.length}/255") }
                 )
 
-                OutlinedTextField(
+                AmbatuTextField(
                     value = sprintGoal,
                     onValueChange = { if (it.length <= 5000) sprintGoal = it },
-                    label = { Text("Sprint Goal") },
+                    label = "Sprint Goal",
                     modifier = Modifier.fillMaxWidth(),
                     minLines = 3,
                     supportingText = { Text("${sprintGoal.length}/5000") }
@@ -162,27 +164,35 @@ fun AddSprintScreen(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
-                    OutlinedTextField(
+                    AmbatuTextField(
                         value = startDate?.format(DateTimeFormatter.ISO_LOCAL_DATE) ?: "",
                         onValueChange = {},
                         readOnly = true,
-                        label = { Text("Start Date") },
+                        label = "Start Date",
                         modifier = Modifier.weight(1f),
                         trailingIcon = {
                             IconButton(onClick = { showStartDatePicker = true }) {
-                                Icon(Icons.Default.CalendarToday, contentDescription = "Select Start Date")
+                                Icon(
+                                    imageVector = Icons.Default.CalendarToday,
+                                    contentDescription = "Select Start Date",
+                                    tint = ChocoAmbatu
+                                )
                             }
                         }
                     )
-                    OutlinedTextField(
+                    AmbatuTextField(
                         value = endDate?.format(DateTimeFormatter.ISO_LOCAL_DATE) ?: "",
                         onValueChange = {},
                         readOnly = true,
-                        label = { Text("End Date") },
+                        label = "End Date",
                         modifier = Modifier.weight(1f),
                         trailingIcon = {
                             IconButton(onClick = { showEndDatePicker = true }) {
-                                Icon(Icons.Default.CalendarToday, contentDescription = "Select End Date")
+                                Icon(
+                                    imageVector = Icons.Default.CalendarToday,
+                                    contentDescription = "Select End Date",
+                                    tint = ChocoAmbatu
+                                )
                             }
                         }
                     )

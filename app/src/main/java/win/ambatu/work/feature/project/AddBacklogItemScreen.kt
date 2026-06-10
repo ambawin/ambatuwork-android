@@ -21,6 +21,10 @@ import win.ambatu.work.data.repository.ProjectRepository
 import win.ambatu.work.data.storage.SessionManager
 import win.ambatu.work.feature.network.CreateBacklogItemRequest
 import win.ambatu.work.feature.network.ProjectMemberDto
+import win.ambatu.work.ui.components.AmbatuDropdownField
+import win.ambatu.work.ui.components.AmbatuSimpleTextField
+import win.ambatu.work.ui.components.AmbatuTextField
+import win.ambatu.work.ui.theme.ChocoAmbatu
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -91,50 +95,37 @@ fun AddBacklogItemScreen(
                     .verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                OutlinedTextField(
+                AmbatuTextField(
                     value = title,
                     onValueChange = { title = it },
-                    label = { Text("Title") },
+                    label = "Title",
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true
                 )
 
-                OutlinedTextField(
+                AmbatuTextField(
                     value = description,
                     onValueChange = { description = it },
-                    label = { Text("Description") },
+                    label = "Description",
                     modifier = Modifier.fillMaxWidth(),
                     minLines = 3
                 )
 
                 // Type Dropdown
-                ExposedDropdownMenuBox(
+                AmbatuDropdownField(
+                    value = type.uppercase(),
+                    label = "Type",
                     expanded = expandedType,
-                    onExpandedChange = { expandedType = !expandedType }
+                    onExpandedChange = { expandedType = it }
                 ) {
-                    OutlinedTextField(
-                        value = type.uppercase(),
-                        onValueChange = {},
-                        readOnly = true,
-                        label = { Text("Type") },
-                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedType) },
-                        modifier = Modifier
-                            .menuAnchor()
-                            .fillMaxWidth()
-                    )
-                    ExposedDropdownMenu(
-                        expanded = expandedType,
-                        onDismissRequest = { expandedType = false }
-                    ) {
-                        itemTypes.forEach { itemType ->
-                            DropdownMenuItem(
-                                text = { Text(itemType.uppercase()) },
-                                onClick = {
-                                    type = itemType
-                                    expandedType = false
-                                }
-                            )
-                        }
+                    itemTypes.forEach { itemType ->
+                        DropdownMenuItem(
+                            text = { Text(itemType.uppercase()) },
+                            onClick = {
+                                type = itemType
+                                expandedType = false
+                            }
+                        )
                     }
                 }
 
@@ -179,14 +170,14 @@ fun AddBacklogItemScreen(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        OutlinedTextField(
+                        AmbatuSimpleTextField(
                             value = criteria,
                             onValueChange = { newValue ->
                                 val newList = acceptanceCriteria.toMutableList()
                                 newList[index] = newValue
                                 acceptanceCriteria = newList
                             },
-                            placeholder = { Text("e.g. User can toggle dark mode") },
+                            placeholder = "e.g. User can toggle dark mode",
                             modifier = Modifier.weight(1f),
                             singleLine = true
                         )
@@ -210,41 +201,28 @@ fun AddBacklogItemScreen(
                 }
 
                 // Member Dropdown for Assignment
-                ExposedDropdownMenuBox(
+                val selectedMember = members.find { it.user.id == assignedToUserId }
+                AmbatuDropdownField(
+                    value = selectedMember?.user?.name ?: "Unassigned",
+                    label = "Assign To",
                     expanded = expandedMembers,
-                    onExpandedChange = { expandedMembers = !expandedMembers }
+                    onExpandedChange = { expandedMembers = it }
                 ) {
-                    val selectedMember = members.find { it.user.id == assignedToUserId }
-                    OutlinedTextField(
-                        value = selectedMember?.user?.name ?: "Unassigned",
-                        onValueChange = {},
-                        readOnly = true,
-                        label = { Text("Assign To") },
-                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedMembers) },
-                        modifier = Modifier
-                            .menuAnchor()
-                            .fillMaxWidth()
+                    DropdownMenuItem(
+                        text = { Text("Unassigned") },
+                        onClick = {
+                            assignedToUserId = null
+                            expandedMembers = false
+                        }
                     )
-                    ExposedDropdownMenu(
-                        expanded = expandedMembers,
-                        onDismissRequest = { expandedMembers = false }
-                    ) {
+                    members.forEach { member ->
                         DropdownMenuItem(
-                            text = { Text("Unassigned") },
+                            text = { Text(member.user.name ?: "Unknown") },
                             onClick = {
-                                assignedToUserId = null
+                                assignedToUserId = member.user.id
                                 expandedMembers = false
                             }
                         )
-                        members.forEach { member ->
-                            DropdownMenuItem(
-                                text = { Text(member.user.name ?: "Unknown") },
-                                onClick = {
-                                    assignedToUserId = member.user.id
-                                    expandedMembers = false
-                                }
-                            )
-                        }
                     }
                 }
 

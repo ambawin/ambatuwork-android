@@ -107,8 +107,8 @@ fun SprintBoardScreen(
             project = uiState.project!!,
             members = uiState.members,
             onDismiss = { detailItem = null },
-            onUpdate = { id, title, desc, type, est, bv, ac, assigned ->
-                viewModel.updateBacklogItem(id, title, desc, type, est, bv, ac, assigned)
+            onUpdate = { id, title, desc, type, est, priority, ac, assigned ->
+                viewModel.updateBacklogItem(id, title, desc, type, est, priority, ac, assigned)
             },
             onArchive = { id ->
                 viewModel.archiveBacklogItem(id)

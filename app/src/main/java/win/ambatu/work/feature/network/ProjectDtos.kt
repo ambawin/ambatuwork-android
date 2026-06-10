@@ -60,10 +60,7 @@ data class BacklogItemDto(
     val description: String?,
     val type: String,
     val status: String,
-    @Json(name = "priority_rank")
-    val priorityRank: Int,
-    @Json(name = "business_value")
-    val businessValue: Int?,
+    val priority: String,
     @Json(name = "estimate_points")
     val estimatePoints: Int?,
     @Json(name = "acceptance_criteria")
@@ -97,10 +94,7 @@ data class CreateBacklogItemRequest(
     val title: String,
     val description: String? = null,
     val type: String? = "story",
-    @Json(name = "priority_rank")
-    val priorityRank: Int? = null,
-    @Json(name = "business_value")
-    val businessValue: Int? = null,
+    val priority: String? = "medium",
     @Json(name = "estimate_points")
     val estimatePoints: Int? = null,
     @Json(name = "acceptance_criteria")
@@ -114,10 +108,7 @@ data class UpdateBacklogItemRequest(
     val title: String? = null,
     val description: String? = null,
     val type: String? = null,
-    @Json(name = "priority_rank")
-    val priorityRank: Int? = null,
-    @Json(name = "business_value")
-    val businessValue: Int? = null,
+    val priority: String? = null,
     @Json(name = "estimate_points")
     val estimatePoints: Int? = null,
     @Json(name = "acceptance_criteria")

@@ -39,7 +39,7 @@ fun AddBacklogItemScreen(
     var title by remember { mutableStateOf("") }
     var description by remember { mutableStateOf("") }
     var type by remember { mutableStateOf("story") }
-    var businessValue by remember { mutableStateOf(0) }
+    var priority by remember { mutableStateOf("medium") }
     var estimatePoints by remember { mutableStateOf(0) }
     var assignedToUserId by remember { mutableStateOf<Long?>(null) }
     var acceptanceCriteria by remember { mutableStateOf(listOf<String>()) }
@@ -53,7 +53,9 @@ fun AddBacklogItemScreen(
     val snackbarHostState = remember { SnackbarHostState() }
 
     val itemTypes = listOf("story", "task", "bug", "improvements")
+    val priorityOptions = listOf("highest", "high", "medium", "low", "lowest")
     var expandedType by remember { mutableStateOf(false) }
+    var expandedPriority by remember { mutableStateOf(false) }
     var expandedMembers by remember { mutableStateOf(false) }
 
     LaunchedEffect(projectId) {
@@ -154,18 +156,22 @@ fun AddBacklogItemScreen(
                         )
                     }
 
-                    Column(modifier = Modifier.fillMaxWidth()) {
-                        Text(
-                            text = "Business Value: $businessValue",
-                            style = MaterialTheme.typography.bodyMedium,
-                            fontWeight = FontWeight.Medium
-                        )
-                        Slider(
-                            value = businessValue.toFloat(),
-                            onValueChange = { businessValue = it.roundToInt() },
-                            valueRange = 0f..100f,
-                            modifier = Modifier.fillMaxWidth()
-                        )
+                    // Priority Dropdown
+                    AmbatuDropdownField(
+                        value = priority.uppercase(),
+                        label = "Priority",
+                        expanded = expandedPriority,
+                        onExpandedChange = { expandedPriority = it }
+                    ) {
+                        priorityOptions.forEach { opt ->
+                            DropdownMenuItem(
+                                text = { Text(opt.uppercase()) },
+                                onClick = {
+                                    priority = opt
+                                    expandedPriority = false
+                                }
+                            )
+                        }
                     }
                 }
 
@@ -253,7 +259,7 @@ fun AddBacklogItemScreen(
                                         title = title,
                                         description = description.ifBlank { null },
                                         type = type,
-                                        businessValue = businessValue,
+                                        priority = priority,
                                         estimatePoints = estimatePoints,
                                         acceptanceCriteria = acceptanceCriteria.filter { it.isNotBlank() }.ifEmpty { null },
                                         assignedToUserId = assignedToUserId

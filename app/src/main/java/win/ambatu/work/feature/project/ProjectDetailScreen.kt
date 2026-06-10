@@ -1003,7 +1003,7 @@ fun BacklogDetailDialog(
     project: win.ambatu.work.feature.network.ProjectDto,
     members: List<win.ambatu.work.feature.network.ProjectMemberDto>,
     onDismiss: () -> Unit,
-    onUpdate: (id: Long, title: String, description: String?, type: String, estimatePoints: Int?, businessValue: Int?, acceptanceCriteria: List<String>?, assignedToUserId: Long?) -> Unit,
+    onUpdate: (id: Long, title: String, description: String?, type: String, estimatePoints: Int?, priority: String?, acceptanceCriteria: List<String>?, assignedToUserId: Long?) -> Unit,
     onArchive: (id: Long) -> Unit
 ) {
     var isEditing by remember { mutableStateOf(false) }
@@ -1020,12 +1020,14 @@ fun BacklogDetailDialog(
     var description by remember { mutableStateOf(item.description ?: "") }
     var type by remember { mutableStateOf(item.type) }
     var estimatePoints by remember { mutableStateOf(item.estimatePoints ?: 0) }
-    var businessValue by remember { mutableStateOf(item.businessValue ?: 0) }
+    var priority by remember { mutableStateOf(item.priority) }
     var assignedToUserId by remember { mutableStateOf(item.assignedToUserId) }
     val acceptanceCriteria by remember { mutableStateOf(item.acceptanceCriteria ?: emptyList()) }
 
     var memberDropdownExpanded by remember { mutableStateOf(false) }
     var typeDropdownExpanded by remember { mutableStateOf(false) }
+    var priorityDropdownExpanded by remember { mutableStateOf(false) }
+    val priorityOptions = listOf("highest", "high", "medium", "low", "lowest")
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -1039,7 +1041,7 @@ fun BacklogDetailDialog(
                             description.takeIf { it.isNotBlank() },
                             type,
                             estimatePoints,
-                            businessValue,
+                            priority,
                             acceptanceCriteria,
                             assignedToUserId
                         )
@@ -1199,18 +1201,37 @@ fun BacklogDetailDialog(
                             )
                         }
 
-                        Column(modifier = Modifier.fillMaxWidth()) {
-                            Text(
-                                text = "Business Value: $businessValue",
-                                style = MaterialTheme.typography.bodyMedium,
-                                fontWeight = FontWeight.Medium
+                        // Priority Selector Dropdown
+                        ExposedDropdownMenuBox(
+                            expanded = priorityDropdownExpanded,
+                            onExpandedChange = { priorityDropdownExpanded = !priorityDropdownExpanded },
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            OutlinedTextField(
+                                value = priority.uppercase(),
+                                onValueChange = {},
+                                readOnly = true,
+                                label = { Text("Priority") },
+                                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = priorityDropdownExpanded) },
+                                modifier = Modifier
+                                    .menuAnchor(MenuAnchorType.PrimaryNotEditable)
+                                    .fillMaxWidth(),
+                                colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors()
                             )
-                            Slider(
-                                value = businessValue.toFloat(),
-                                onValueChange = { businessValue = it.roundToInt() },
-                                valueRange = 0f..100f,
-                                modifier = Modifier.fillMaxWidth()
-                            )
+                            ExposedDropdownMenu(
+                                expanded = priorityDropdownExpanded,
+                                onDismissRequest = { priorityDropdownExpanded = false }
+                            ) {
+                                priorityOptions.forEach { opt ->
+                                    DropdownMenuItem(
+                                        text = { Text(opt.uppercase()) },
+                                        onClick = {
+                                            priority = opt
+                                            priorityDropdownExpanded = false
+                                        }
+                                    )
+                                }
+                            }
                         }
                     }
 
@@ -1230,20 +1251,15 @@ fun BacklogDetailDialog(
                     ) {
                         DetailChip(label = "Type", value = item.type.uppercase(), modifier = Modifier.weight(1f))
                         DetailChip(label = "Status", value = item.status.uppercase(), modifier = Modifier.weight(1f))
-                        DetailChip(label = "Priority", value = "#${item.priorityRank}", modifier = Modifier.weight(1f))
+                        DetailChip(label = "Priority", value = item.priority.uppercase(), modifier = Modifier.weight(1f))
                     }
 
-                    if (item.estimatePoints != null || item.businessValue != null) {
+                    if (item.estimatePoints != null) {
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.spacedBy(8.dp),
                         ) {
-                            if (item.estimatePoints != null) {
-                                DetailChip(label = "Estimate", value = "${item.estimatePoints} pts", modifier = Modifier.weight(1f))
-                            }
-                            if (item.businessValue != null) {
-                                DetailChip(label = "Value", value = "${item.businessValue}", modifier = Modifier.weight(1f))
-                            }
+                            DetailChip(label = "Estimate", value = "${item.estimatePoints} pts", modifier = Modifier.weight(1f))
                         }
                     }
 

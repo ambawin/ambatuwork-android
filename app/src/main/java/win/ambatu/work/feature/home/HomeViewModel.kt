@@ -224,7 +224,7 @@ class HomeViewModel @Inject constructor(
         description: String?,
         type: String,
         estimatePoints: Int?,
-        businessValue: Int?,
+        priority: String?,
         acceptanceCriteria: List<String>?,
         assignedToUserId: Long?
     ) {
@@ -242,7 +242,7 @@ class HomeViewModel @Inject constructor(
                         description = description,
                         type = type,
                         estimatePoints = estimatePoints,
-                        businessValue = businessValue,
+                        priority = priority,
                         acceptanceCriteria = acceptanceCriteria,
                         assignedToUserId = assignedToUserId
                     )

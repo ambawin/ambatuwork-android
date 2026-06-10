@@ -174,7 +174,7 @@ private fun Content(
     onSprintClick: (Long, Long) -> Unit = { _, _ -> },
     onInvitationsClick: () -> Unit = {},
     onUpdateProject: (name: String?, description: String?, goal: String?, sprintLength: Int?, wipLimit: Int?) -> Unit = { _, _, _, _, _ -> },
-    onUpdateBacklogItem: (id: Long, title: String, description: String?, type: String, estimatePoints: Int?, businessValue: Int?, acceptanceCriteria: List<String>?, assignedToUserId: Long?) -> Unit = { _, _, _, _, _, _, _, _ -> },
+    onUpdateBacklogItem: (id: Long, title: String, description: String?, type: String, estimatePoints: Int?, priority: String?, acceptanceCriteria: List<String>?, assignedToUserId: Long?) -> Unit = { _, _, _, _, _, _, _, _ -> },
     onArchiveBacklogItem: (id: Long) -> Unit = {},
     onUpdateMemberRole: (userId: Long, role: String) -> Unit = { _, _ -> },
     onRemoveMember: (userId: Long) -> Unit = {}
@@ -191,8 +191,8 @@ private fun Content(
             project = uiState.selectedProject!!,
             members = uiState.members,
             onDismiss = { selectedBacklogItem = null },
-            onUpdate = { id, title, desc, type, est, bv, ac, assigned ->
-                onUpdateBacklogItem(id, title, desc, type, est, bv, ac, assigned)
+            onUpdate = { id, title, desc, type, est, priority, ac, assigned ->
+                onUpdateBacklogItem(id, title, desc, type, est, priority, ac, assigned)
             },
             onArchive = { id ->
                 onArchiveBacklogItem(id)

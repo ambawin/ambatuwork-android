@@ -1233,17 +1233,17 @@
                                             "improvement"
                                         ]
                                     },
-                                    "priority_rank": {
-                                        "type": "number",
-                                        "example": 1.5,
-                                        "nullable": true
-                                    },
-                                    "business_value": {
-                                        "type": "integer",
-                                        "example": 80,
-                                        "nullable": true,
-                                        "maximum": 100,
-                                        "minimum": 1
+                                    "priority": {
+                                        "type": "string",
+                                        "example": "medium",
+                                        "default": "medium",
+                                        "enum": [
+                                            "highest",
+                                            "high",
+                                            "medium",
+                                            "low",
+                                            "lowest"
+                                        ]
                                     },
                                     "estimate_points": {
                                         "type": "integer",
@@ -1498,17 +1498,16 @@
                                             "archived"
                                         ]
                                     },
-                                    "priority_rank": {
-                                        "type": "number",
-                                        "example": 2,
-                                        "nullable": true
-                                    },
-                                    "business_value": {
-                                        "type": "integer",
-                                        "example": 90,
-                                        "nullable": true,
-                                        "maximum": 100,
-                                        "minimum": 1
+                                    "priority": {
+                                        "type": "string",
+                                        "example": "medium",
+                                        "enum": [
+                                            "highest",
+                                            "high",
+                                            "medium",
+                                            "low",
+                                            "lowest"
+                                        ]
                                     },
                                     "estimate_points": {
                                         "type": "integer",
@@ -3770,14 +3769,9 @@
                         "type": "string",
                         "example": "in_progress"
                     },
-                    "priority_rank": {
-                        "type": "number",
-                        "example": 1
-                    },
-                    "business_value": {
-                        "type": "integer",
-                        "example": 80,
-                        "nullable": true
+                    "priority": {
+                        "type": "string",
+                        "example": "medium"
                     },
                     "estimate_points": {
                         "type": "integer",

@@ -28,6 +28,7 @@ import androidx.compose.material.icons.filled.Dashboard
 import androidx.compose.material.icons.filled.Groups
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Verified
+import androidx.compose.material.icons.filled.GroupAdd
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Badge
@@ -227,6 +228,9 @@ fun ProjectDetailScreen(
                             },
                             onRemoveMember = { userId ->
                                 viewModel.removeProjectMember(userId)
+                            },
+                            onInviteMember = { email ->
+                                viewModel.inviteUser(email)
                             }
                         )
                     }
@@ -571,9 +575,12 @@ fun SettingsTab(
     members: List<win.ambatu.work.feature.network.ProjectMemberDto>,
     onUpdateProject: (name: String?, description: String?, goal: String?, sprintLength: Int?, wipLimit: Int?) -> Unit,
     onUpdateMemberRole: (userId: Long, role: String) -> Unit,
-    onRemoveMember: (userId: Long) -> Unit
+    onRemoveMember: (userId: Long) -> Unit,
+    onInviteMember: (String) -> Unit
 ) {
     var showEditDialog by remember { mutableStateOf(false) }
+    var showInviteDialog by remember { mutableStateOf(false) }
+    var emailToInvite by remember { mutableStateOf("") }
 
     val role = project.myRole?.lowercase()?.trim()
     val canEdit = role != null && (
@@ -582,6 +589,52 @@ fun SettingsTab(
         role.contains("master") ||
         role.contains("leader")
     )
+
+    if (showInviteDialog) {
+        AlertDialog(
+            onDismissRequest = {
+                showInviteDialog = false
+                emailToInvite = ""
+            },
+            title = { Text("Invite New Member") },
+            text = {
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Text("Enter the email address of the user you want to invite to this project.")
+                    OutlinedTextField(
+                        value = emailToInvite,
+                        onValueChange = { emailToInvite = it },
+                        label = { Text("Email Address") },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true
+                    )
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        onInviteMember(emailToInvite)
+                        showInviteDialog = false
+                        emailToInvite = ""
+                    },
+                    enabled = emailToInvite.isNotBlank()
+                ) {
+                    Text("Invite")
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = {
+                        showInviteDialog = false
+                        emailToInvite = ""
+                    }
+                ) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
 
     if (showEditDialog) {
         EditProjectDialog(
@@ -677,12 +730,25 @@ fun SettingsTab(
         }
 
         item {
-            Text(
-                text = "Team Members",
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.padding(top = 8.dp, bottom = 8.dp)
-            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Team Members",
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(top = 8.dp, bottom = 8.dp)
+                )
+                if (canEdit) {
+                    TextButton(onClick = { showInviteDialog = true }) {
+                        Icon(Icons.Default.GroupAdd, contentDescription = null)
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text("Invite")
+                    }
+                }
+            }
         }
         items(
             count = members.size,

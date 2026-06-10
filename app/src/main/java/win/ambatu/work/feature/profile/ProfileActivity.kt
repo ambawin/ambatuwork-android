@@ -11,6 +11,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import win.ambatu.work.data.model.User
 import win.ambatu.work.feature.auth.LoginActivity
+import win.ambatu.work.feature.scrum.ScrumGuideActivity
 import win.ambatu.work.ui.theme.AmbatuWorkTheme
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -40,7 +41,10 @@ class ProfileActivity : ComponentActivity() {
                     user = user,
                     isLoading = uiState.isLoading,
                     onLogoutClick = { viewModel.logout() },
-                    onBackClick = { finish() }
+                    onBackClick = { finish() },
+                    onScrumGuideClick = {
+                        startActivity(ScrumGuideActivity.createIntent(this))
+                    }
                 )
             }
         }

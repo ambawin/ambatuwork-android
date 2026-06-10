@@ -13,9 +13,11 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material3.Card
+import win.ambatu.work.ui.theme.ChocoAmbatu
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -47,13 +49,15 @@ fun ProfileScreen(
     user: User,
     isLoading: Boolean = false,
     onLogoutClick: () -> Unit,
-    onBackClick: (() -> Unit)? = null
+    onBackClick: (() -> Unit)? = null,
+    onScrumGuideClick: () -> Unit = {}
 ) {
     Content(
         user = user,
         isLoading = isLoading,
         onLogoutClick = onLogoutClick,
-        onBackClick = onBackClick
+        onBackClick = onBackClick,
+        onScrumGuideClick = onScrumGuideClick
     )
 }
 
@@ -63,7 +67,8 @@ private fun Content(
     user: User = UserController.getPlaceholderUser(),
     isLoading: Boolean = false,
     onLogoutClick: () -> Unit = {},
-    onBackClick: (() -> Unit)? = null
+    onBackClick: (() -> Unit)? = null,
+    onScrumGuideClick: () -> Unit = {}
 ) {
     Scaffold(
         topBar = {
@@ -141,6 +146,51 @@ private fun Content(
             item {
                 Spacer(
                     modifier = Modifier.size(32.dp)
+                )
+            }
+
+            item {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                ) {
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth(),
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.surfaceVariant
+                        ),
+                        shape = RoundedCornerShape(20.dp),
+                        onClick = onScrumGuideClick,
+                        enabled = !isLoading
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .padding(8.dp)
+                                .padding(horizontal = 16.dp)
+                                .padding(vertical = 12.dp)
+                                .fillMaxSize(),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Info,
+                                contentDescription = "Scrum Guide icon",
+                                tint = ChocoAmbatu
+                            )
+                            Text(
+                                text = "SCRUM Guide",
+                                color = ChocoAmbatu,
+                                fontWeight = FontWeight.Medium
+                            )
+                        }
+                    }
+                }
+            }
+
+            item {
+                Spacer(
+                    modifier = Modifier.size(16.dp)
                 )
             }
 

@@ -78,6 +78,21 @@ class ProjectDetailViewModel @Inject constructor(
         }
     }
 
+    fun inviteUser(email: String) {
+        val token = sessionManager.getToken() ?: return
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true, error = null) }
+            try {
+                projectRepository.createInvitation(token, projectId, email, "member")
+                loadMembers()
+                _uiState.update { it.copy(isLoading = false) }
+            } catch (e: Exception) {
+                _uiState.update { it.copy(isLoading = false, error = e.message) }
+            }
+        }
+    }
+
+
     fun archiveBacklogItem(backlogId: Long) {
         val token = sessionManager.getToken() ?: return
         viewModelScope.launch {

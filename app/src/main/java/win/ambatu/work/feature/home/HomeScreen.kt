@@ -83,7 +83,6 @@ import win.ambatu.work.feature.project.ProjectTab
 import win.ambatu.work.feature.project.SettingsTab
 import win.ambatu.work.feature.project.SprintBoardActivity
 import win.ambatu.work.feature.project.SprintTab
-import win.ambatu.work.feature.scrum.ScrumGuideActivity
 import win.ambatu.work.ui.components.FloatingBottomNavigationBar
 import win.ambatu.work.ui.theme.AmbatuWorkTheme
 import win.ambatu.work.ui.theme.YellowAmbatu
@@ -146,9 +145,6 @@ fun HomeScreen(
         onInvitationsClick = {
             invitationLauncher.launch(InvitationActivity.createIntent(context))
         },
-        onScrumGuideClick = {
-            context.startActivity(ScrumGuideActivity.createIntent(context))
-        },
         onUpdateProject = viewModel::updateProject,
         onUpdateBacklogItem = viewModel::updateBacklogItem,
         onArchiveBacklogItem = viewModel::archiveBacklogItem,
@@ -171,17 +167,13 @@ private fun Content(
     onAddSprintClick: (Long) -> Unit = {},
     onSprintClick: (Long, Long) -> Unit = { _, _ -> },
     onInvitationsClick: () -> Unit = {},
-    onScrumGuideClick: () -> Unit = {},
     onUpdateProject: (name: String?, description: String?, goal: String?, sprintLength: Int?, wipLimit: Int?) -> Unit = { _, _, _, _, _ -> },
     onUpdateBacklogItem: (id: Long, title: String, description: String?, type: String, estimatePoints: Int?, businessValue: Int?, acceptanceCriteria: List<String>?, assignedToUserId: Long?) -> Unit = { _, _, _, _, _, _, _, _ -> },
     onArchiveBacklogItem: (id: Long) -> Unit = {},
     onUpdateMemberRole: (userId: Long, role: String) -> Unit = { _, _ -> },
     onRemoveMember: (userId: Long) -> Unit = {}
 ) {
-    var showActionSheet by remember { mutableStateOf(false) }
     var showCreateSheet by remember { mutableStateOf(false) }
-    var showInviteSheet by remember { mutableStateOf(false) }
-    var showMenu by remember { mutableStateOf(false) }
     var projectSwitcherExpanded by remember { mutableStateOf(false) }
     var selectedTab by remember { mutableStateOf(ProjectTab.DASHBOARD) }
     var selectedBacklogItem by remember { mutableStateOf<BacklogItemDto?>(null) }
@@ -282,30 +274,6 @@ private fun Content(
                 actions = {
                     IconButton(onClick = onInvitationsClick) {
                         Icon(Icons.Default.Mail, contentDescription = "Invitations")
-                    }
-                    IconButton(onClick = { showMenu = true }) {
-                        Icon(Icons.Default.MoreVert, contentDescription = "More")
-                    }
-                    DropdownMenu(
-                        expanded = showMenu,
-                        onDismissRequest = { showMenu = false }
-                    ) {
-                        DropdownMenuItem(
-                            text = { Text("Invite Member") },
-                            leadingIcon = { Icon(Icons.Default.GroupAdd, null) },
-                            onClick = {
-                                showMenu = false
-                                showInviteSheet = true
-                            }
-                        )
-                        DropdownMenuItem(
-                            text = { Text("SCRUM Guide") },
-                            leadingIcon = { Icon(Icons.Default.Info, null) },
-                            onClick = {
-                                showMenu = false
-                                onScrumGuideClick()
-                            }
-                        )
                     }
                 }
             )
@@ -411,6 +379,9 @@ private fun Content(
                                 },
                                 onRemoveMember = { userId ->
                                     onRemoveMember(userId)
+                                },
+                                onInviteMember = { email ->
+                                    onInviteUser(project.id, email)
                                 }
                             )
                         }
@@ -429,36 +400,6 @@ private fun Content(
             }
         }
 
-        if (showActionSheet) {
-            ModalBottomSheet(
-                onDismissRequest = { showActionSheet = false },
-                sheetState = sheetState
-            ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = 32.dp)
-                ) {
-                    ListItem(
-                        headlineContent = { Text("Create New Project") },
-                        leadingContent = { Icon(Icons.Default.PostAdd, null) },
-                        modifier = Modifier.clickable {
-                            showActionSheet = false
-                            showCreateSheet = true
-                        }
-                    )
-                    ListItem(
-                        headlineContent = { Text("Invite User to Project") },
-                        leadingContent = { Icon(Icons.Default.GroupAdd, null) },
-                        modifier = Modifier.clickable {
-                            showActionSheet = false
-                            showInviteSheet = true
-                        }
-                    )
-                }
-            }
-        }
-
         if (showCreateSheet) {
             ModalBottomSheet(
                 onDismissRequest = { showCreateSheet = false },
@@ -472,24 +413,8 @@ private fun Content(
             )
             }
         }
-
-        if (showInviteSheet) {
-            ModalBottomSheet(
-                onDismissRequest = { showInviteSheet = false },
-                sheetState = sheetState
-            ) {
-                InviteUserForm(
-                projects = uiState.projects,
-                onInvite = { projectId, email ->
-                    onInviteUser(projectId, email)
-                    showInviteSheet = false
-                }
-            )
-            }
-        }
     }
 }
-
 
 @Composable
 fun CreateProjectForm(
@@ -517,7 +442,7 @@ fun CreateProjectForm(
         OutlinedTextField(
             value = description,
             onValueChange = { description = it },
-            label = { Text("Description") },
+            label = { Text("Project Description") },
             modifier = Modifier.fillMaxWidth(),
             minLines = 2
         )
@@ -548,82 +473,6 @@ fun CreateProjectForm(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun InviteUserForm(
-    projects: List<ProjectDto>,
-    onInvite: (Long, String) -> Unit
-) {
-    var expanded by remember { mutableStateOf(false) }
-    var selectedProject by remember { mutableStateOf<ProjectDto?>(null) }
-    var email by remember { mutableStateOf("") }
-
-    Column(
-        modifier = Modifier
-            .padding(16.dp)
-            .padding(bottom = 32.dp)
-            .fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
-    ) {
-        Text(
-            "Invite New User",
-            style = MaterialTheme.typography.headlineSmall,
-            fontWeight = FontWeight.Bold
-        )
-
-        ExposedDropdownMenuBox(
-            expanded = expanded,
-            onExpandedChange = { expanded = !expanded },
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            OutlinedTextField(
-                value = selectedProject?.name ?: "Select Project",
-                onValueChange = {},
-                readOnly = true,
-                label = { Text("Project") },
-                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-                colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors(),
-                modifier = Modifier
-                    .menuAnchor()
-                    .fillMaxWidth()
-            )
-
-            ExposedDropdownMenu(
-                expanded = expanded,
-                onDismissRequest = { expanded = false }
-            ) {
-                projects.forEach { project ->
-                    DropdownMenuItem(
-                        text = { Text(project.name) },
-                        onClick = {
-                            selectedProject = project
-                            expanded = false
-                        }
-                    )
-                }
-            }
-        }
-
-        OutlinedTextField(
-            value = email,
-            onValueChange = { email = it },
-            label = { Text("User Email") },
-            modifier = Modifier.fillMaxWidth(),
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email)
-        )
-
-        Button(
-            onClick = {
-                selectedProject?.id?.let { onInvite(it, email) }
-            },
-            modifier = Modifier.fillMaxWidth(),
-            enabled = selectedProject != null && email.isNotBlank()
-        ) {
-            Text("Invite")
-        }
-    }
-}
-
 @Composable
 @Preview(showBackground = true)
 private fun HomePreview() {
@@ -631,3 +480,4 @@ private fun HomePreview() {
         Content()
     }
 }
+

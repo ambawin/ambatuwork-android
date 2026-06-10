@@ -151,7 +151,12 @@ fun HomeScreen(
         },
         onSwaggerUiClick = {
             context.startActivity(SwaggerUiActivity.createIntent(context))
-        }
+        },
+        onUpdateProject = viewModel::updateProject,
+        onUpdateBacklogItem = viewModel::updateBacklogItem,
+        onArchiveBacklogItem = viewModel::archiveBacklogItem,
+        onUpdateMemberRole = viewModel::updateProjectMemberRole,
+        onRemoveMember = viewModel::removeProjectMember
     )
 }
 
@@ -170,7 +175,12 @@ private fun Content(
     onSprintClick: (Long, Long) -> Unit = { _, _ -> },
     onInvitationsClick: () -> Unit = {},
     onScrumGuideClick: () -> Unit = {},
-    onSwaggerUiClick: () -> Unit = {}
+    onSwaggerUiClick: () -> Unit = {},
+    onUpdateProject: (name: String?, description: String?, goal: String?, sprintLength: Int?, wipLimit: Int?) -> Unit = { _, _, _, _, _ -> },
+    onUpdateBacklogItem: (id: Long, title: String, description: String?, type: String, estimatePoints: Int?, businessValue: Int?, acceptanceCriteria: List<String>?, assignedToUserId: Long?) -> Unit = { _, _, _, _, _, _, _, _ -> },
+    onArchiveBacklogItem: (id: Long) -> Unit = {},
+    onUpdateMemberRole: (userId: Long, role: String) -> Unit = { _, _ -> },
+    onRemoveMember: (userId: Long) -> Unit = {}
 ) {
     var showActionSheet by remember { mutableStateOf(false) }
     var showCreateSheet by remember { mutableStateOf(false) }
@@ -181,10 +191,18 @@ private fun Content(
     var selectedBacklogItem by remember { mutableStateOf<BacklogItemDto?>(null) }
     val sheetState = rememberModalBottomSheetState()
 
-    if (selectedBacklogItem != null) {
+    if (selectedBacklogItem != null && uiState.selectedProject != null) {
         BacklogDetailDialog(
             item = selectedBacklogItem!!,
-            onDismiss = { selectedBacklogItem = null }
+            project = uiState.selectedProject!!,
+            members = uiState.members,
+            onDismiss = { selectedBacklogItem = null },
+            onUpdate = { id, title, desc, type, est, bv, ac, assigned ->
+                onUpdateBacklogItem(id, title, desc, type, est, bv, ac, assigned)
+            },
+            onArchive = { id ->
+                onArchiveBacklogItem(id)
+            }
         )
     }
 
@@ -405,9 +423,23 @@ private fun Content(
                             }
                         }
                     )
-                    ProjectTab.SETTINGS -> SettingsTab(
-                        members = uiState.members
-                    )
+                    ProjectTab.SETTINGS -> {
+                        uiState.selectedProject?.let { project ->
+                            SettingsTab(
+                                project = project,
+                                members = uiState.members,
+                                onUpdateProject = { name, desc, goal, length, wip ->
+                                    onUpdateProject(name, desc, goal, length, wip)
+                                },
+                                onUpdateMemberRole = { userId, role ->
+                                    onUpdateMemberRole(userId, role)
+                                },
+                                onRemoveMember = { userId ->
+                                    onRemoveMember(userId)
+                                }
+                            )
+                        }
+                    }
                 }
             }
 

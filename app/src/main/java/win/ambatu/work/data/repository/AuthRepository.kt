@@ -23,4 +23,8 @@ class AuthRepository @Inject constructor(
         val response = apiService.getMe(token)
         return response.data ?: response.user ?: throw Exception("User data not found in response")
     }
+
+    suspend fun logout(token: String): String {
+        return apiService.logout("Bearer $token").message
+    }
 }

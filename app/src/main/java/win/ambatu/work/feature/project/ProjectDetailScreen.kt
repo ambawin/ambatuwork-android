@@ -27,6 +27,7 @@ import androidx.compose.material.icons.filled.Dashboard
 import androidx.compose.material.icons.filled.Groups
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Verified
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Badge
 import androidx.compose.material3.Button
@@ -44,6 +45,15 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.MenuAnchorType
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -92,10 +102,18 @@ fun ProjectDetailScreen(
     var selectedTab by remember { mutableStateOf(ProjectTab.DASHBOARD) }
     var selectedBacklogItem by remember { mutableStateOf<BacklogItemDto?>(null) }
 
-    if (selectedBacklogItem != null) {
+    if (selectedBacklogItem != null && uiState.project != null) {
         BacklogDetailDialog(
             item = selectedBacklogItem!!,
-            onDismiss = { selectedBacklogItem = null }
+            project = uiState.project!!,
+            members = uiState.members,
+            onDismiss = { selectedBacklogItem = null },
+            onUpdate = { id, title, desc, type, est, value, ac, assignee ->
+                viewModel.updateBacklogItem(id, title, desc, type, est, value, ac, assignee)
+            },
+            onArchive = { id ->
+                viewModel.archiveBacklogItem(id)
+            }
         )
     }
 
@@ -191,7 +209,17 @@ fun ProjectDetailScreen(
                         )
 
                         ProjectTab.SETTINGS -> SettingsTab(
-                            members = uiState.members
+                            project = project,
+                            members = uiState.members,
+                            onUpdateProject = { name, desc, goal, length, wip ->
+                                viewModel.updateProject(name, desc, goal, length, wip)
+                            },
+                            onUpdateMemberRole = { userId, role ->
+                                viewModel.updateProjectMemberRole(userId, role)
+                            },
+                            onRemoveMember = { userId ->
+                                viewModel.removeProjectMember(userId)
+                            }
                         )
                     }
                 }
@@ -491,8 +519,33 @@ private fun formatDate(dateString: String?): String? {
 
 @Composable
 fun SettingsTab(
-    members: List<win.ambatu.work.feature.network.ProjectMemberDto>
+    project: win.ambatu.work.feature.network.ProjectDto,
+    members: List<win.ambatu.work.feature.network.ProjectMemberDto>,
+    onUpdateProject: (name: String?, description: String?, goal: String?, sprintLength: Int?, wipLimit: Int?) -> Unit,
+    onUpdateMemberRole: (userId: Long, role: String) -> Unit,
+    onRemoveMember: (userId: Long) -> Unit
 ) {
+    var showEditDialog by remember { mutableStateOf(false) }
+
+    val role = project.myRole?.lowercase()?.trim()
+    val canEdit = role != null && (
+        role.contains("admin") ||
+        role.contains("owner") ||
+        role.contains("master") ||
+        role.contains("leader")
+    )
+
+    if (showEditDialog) {
+        EditProjectDialog(
+            project = project,
+            onDismiss = { showEditDialog = false },
+            onConfirm = { name, desc, goal, length, wip ->
+                onUpdateProject(name, desc, goal, length, wip)
+                showEditDialog = false
+            }
+        )
+    }
+
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
@@ -500,11 +553,87 @@ fun SettingsTab(
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         item {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(16.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceContainerLow
+                )
+            ) {
+                Column(
+                    modifier = Modifier.padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "Project Configuration",
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.Bold
+                        )
+                        if (canEdit) {
+                            TextButton(onClick = { showEditDialog = true }) {
+                                Text("Modify")
+                            }
+                        }
+                    }
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+
+                    Text(
+                        text = "Goal:",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.secondary
+                    )
+                    Text(
+                        text = project.productGoal ?: "No goal defined",
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.Medium
+                    )
+
+                    Spacer(modifier = Modifier.height(4.dp))
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = "Sprint Duration",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.secondary
+                            )
+                            Text(
+                                text = "${project.defaultSprintLengthDays ?: 14} Days",
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = "WIP Limit",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.secondary
+                            )
+                            Text(
+                                text = project.wipLimitPerMember?.let { "$it items" } ?: "None",
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    }
+                }
+            }
+        }
+
+        item {
             Text(
                 text = "Team Members",
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold,
-                modifier = Modifier.padding(bottom = 8.dp)
+                modifier = Modifier.padding(top = 8.dp, bottom = 8.dp)
             )
         }
         items(
@@ -512,6 +641,10 @@ fun SettingsTab(
             key = { index -> members[index].user.id ?: index.toLong() }
         ) { index ->
             val member = members[index]
+            var menuExpanded by remember { mutableStateOf(false) }
+            val isMemberOwner = member.role.lowercase().contains("owner")
+            val showMenuButton = canEdit && !isMemberOwner
+
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(12.dp),
@@ -555,6 +688,47 @@ fun SettingsTab(
                             color = MaterialTheme.colorScheme.primary,
                             modifier = Modifier.padding(top = 4.dp)
                         )
+                    }
+                    if (showMenuButton) {
+                        Box {
+                            IconButton(onClick = { menuExpanded = true }) {
+                                Icon(
+                                    imageVector = Icons.Default.MoreVert,
+                                    contentDescription = "Member options"
+                                )
+                            }
+                            DropdownMenu(
+                                expanded = menuExpanded,
+                                onDismissRequest = { menuExpanded = false }
+                            ) {
+                                val currentRole = member.role.lowercase()
+                                if (currentRole != "supervisor") {
+                                    DropdownMenuItem(
+                                        text = { Text("Promote to Supervisor") },
+                                        onClick = {
+                                            menuExpanded = false
+                                            member.user.id?.let { onUpdateMemberRole(it, "supervisor") }
+                                        }
+                                    )
+                                }
+                                if (currentRole != "member") {
+                                    DropdownMenuItem(
+                                        text = { Text("Demote to Member") },
+                                        onClick = {
+                                            menuExpanded = false
+                                            member.user.id?.let { onUpdateMemberRole(it, "member") }
+                                        }
+                                    )
+                                }
+                                DropdownMenuItem(
+                                    text = { Text("Remove Member", color = MaterialTheme.colorScheme.error) },
+                                    onClick = {
+                                        menuExpanded = false
+                                        member.user.id?.let { onRemoveMember(it) }
+                                    }
+                                )
+                            }
+                        }
                     }
                 }
             }
@@ -671,24 +845,93 @@ fun BacklogItemCard(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun BacklogDetailDialog(
     item: BacklogItemDto,
-    onDismiss: () -> Unit
+    project: win.ambatu.work.feature.network.ProjectDto,
+    members: List<win.ambatu.work.feature.network.ProjectMemberDto>,
+    onDismiss: () -> Unit,
+    onUpdate: (id: Long, title: String, description: String?, type: String, estimatePoints: Int?, businessValue: Int?, acceptanceCriteria: List<String>?, assignedToUserId: Long?) -> Unit,
+    onArchive: (id: Long) -> Unit
 ) {
+    var isEditing by remember { mutableStateOf(false) }
+
+    val role = project.myRole?.lowercase()?.trim()
+    val canEdit = role != null && (
+        role.contains("admin") ||
+        role.contains("owner") ||
+        role.contains("master") ||
+        role.contains("leader")
+    )
+
+    var title by remember { mutableStateOf(item.title) }
+    var description by remember { mutableStateOf(item.description ?: "") }
+    var type by remember { mutableStateOf(item.type) }
+    var estimatePoints by remember { mutableStateOf(item.estimatePoints?.toString() ?: "") }
+    var businessValue by remember { mutableStateOf(item.businessValue?.toString() ?: "") }
+    var assignedToUserId by remember { mutableStateOf(item.assignedToUserId) }
+    val acceptanceCriteria by remember { mutableStateOf(item.acceptanceCriteria ?: emptyList()) }
+
+    var memberDropdownExpanded by remember { mutableStateOf(false) }
+    var typeDropdownExpanded by remember { mutableStateOf(false) }
+
     AlertDialog(
         onDismissRequest = onDismiss,
         confirmButton = {
-            TextButton(onClick = onDismiss) {
-                Text("Close")
+            if (isEditing) {
+                Button(
+                    onClick = {
+                        onUpdate(
+                            item.id,
+                            title,
+                            description.takeIf { it.isNotBlank() },
+                            type,
+                            estimatePoints.toIntOrNull(),
+                            businessValue.toIntOrNull(),
+                            acceptanceCriteria,
+                            assignedToUserId
+                        )
+                        onDismiss()
+                    },
+                    enabled = title.isNotBlank()
+                ) {
+                    Text("Save")
+                }
+            } else {
+                TextButton(onClick = onDismiss) {
+                    Text("Close")
+                }
+            }
+        },
+        dismissButton = {
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                if (isEditing) {
+                    TextButton(
+                        onClick = { onArchive(item.id); onDismiss() },
+                        colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error)
+                    ) {
+                        Text("Archive")
+                    }
+                    TextButton(onClick = { isEditing = false }) {
+                        Text("Cancel")
+                    }
+                } else if (canEdit) {
+                    TextButton(onClick = { isEditing = true }) {
+                        Text("Edit")
+                    }
+                }
             }
         },
         title = {
-            Text(
-                text = item.title,
-                style = MaterialTheme.typography.headlineSmall,
-                fontWeight = FontWeight.Bold
-            )
+            if (isEditing) {
+                Text(text = "Edit Backlog Item", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+            } else {
+                Text(text = item.title, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
+            }
         },
         text = {
             Column(
@@ -697,95 +940,204 @@ fun BacklogDetailDialog(
                     .verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                // Description
-                if (!item.description.isNullOrBlank()) {
-                    Text(
-                        text = item.description,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                if (isEditing) {
+                    OutlinedTextField(
+                        value = title,
+                        onValueChange = { title = it },
+                        label = { Text("Title") },
+                        modifier = Modifier.fillMaxWidth()
                     )
-                }
 
-                // Metadata chips
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                ) {
-                    DetailChip(label = "Type", value = item.type.uppercase(), modifier = Modifier.weight(1f))
-                    DetailChip(label = "Status", value = item.status.uppercase(), modifier = Modifier.weight(1f))
-                    DetailChip(label = "Priority", value = "#${item.priorityRank}", modifier = Modifier.weight(1f))
-                }
-                if (item.estimatePoints != null || item.businessValue != null) {
+                    OutlinedTextField(
+                        value = description,
+                        onValueChange = { description = it },
+                        label = { Text("Description") },
+                        modifier = Modifier.fillMaxWidth(),
+                        minLines = 2
+                    )
+
+                    // Type Selector Dropdown
+                    ExposedDropdownMenuBox(
+                        expanded = typeDropdownExpanded,
+                        onExpandedChange = { typeDropdownExpanded = !typeDropdownExpanded },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        OutlinedTextField(
+                            value = type.uppercase(),
+                            onValueChange = {},
+                            readOnly = true,
+                            label = { Text("Type") },
+                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = typeDropdownExpanded) },
+                            modifier = Modifier
+                                .menuAnchor(MenuAnchorType.PrimaryNotEditable)
+                                .fillMaxWidth(),
+                            colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors()
+                        )
+                        ExposedDropdownMenu(
+                            expanded = typeDropdownExpanded,
+                            onDismissRequest = { typeDropdownExpanded = false }
+                        ) {
+                            listOf("story", "task", "bug", "improvement").forEach { t ->
+                                DropdownMenuItem(
+                                    text = { Text(t.uppercase()) },
+                                    onClick = {
+                                        type = t
+                                        typeDropdownExpanded = false
+                                    }
+                                )
+                            }
+                        }
+                    }
+
+                    // Member Selector Dropdown
+                    ExposedDropdownMenuBox(
+                        expanded = memberDropdownExpanded,
+                        onExpandedChange = { memberDropdownExpanded = !memberDropdownExpanded },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        val currentMember = members.find { it.user.id == assignedToUserId }
+                        OutlinedTextField(
+                            value = currentMember?.user?.name ?: "Unassigned",
+                            onValueChange = {},
+                            readOnly = true,
+                            label = { Text("Assigned To") },
+                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = memberDropdownExpanded) },
+                            modifier = Modifier
+                                .menuAnchor(MenuAnchorType.PrimaryNotEditable)
+                                .fillMaxWidth(),
+                            colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors()
+                        )
+                        ExposedDropdownMenu(
+                            expanded = memberDropdownExpanded,
+                            onDismissRequest = { memberDropdownExpanded = false }
+                        ) {
+                            DropdownMenuItem(
+                                text = { Text("Unassigned") },
+                                onClick = {
+                                    assignedToUserId = null
+                                    memberDropdownExpanded = false
+                                }
+                            )
+                            members.forEach { m ->
+                                DropdownMenuItem(
+                                    text = { Text(m.user.name ?: "") },
+                                    onClick = {
+                                        assignedToUserId = m.user.id
+                                        memberDropdownExpanded = false
+                                    }
+                                )
+                            }
+                        }
+                    }
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        OutlinedTextField(
+                            value = estimatePoints,
+                            onValueChange = { estimatePoints = it },
+                            label = { Text("Estimate") },
+                            modifier = Modifier.weight(1f),
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                        )
+                        OutlinedTextField(
+                            value = businessValue,
+                            onValueChange = { businessValue = it },
+                            label = { Text("Value (1-100)") },
+                            modifier = Modifier.weight(1f),
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                        )
+                    }
+
+                } else {
+                    // Read-only Mode (original UI layout)
+                    if (!item.description.isNullOrBlank()) {
+                        Text(
+                            text = item.description,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
-                        if (item.estimatePoints != null) {
-                            DetailChip(label = "Estimate", value = "${item.estimatePoints} pts", modifier = Modifier.weight(1f))
-                        }
-                        if (item.businessValue != null) {
-                            DetailChip(label = "Value", value = "${item.businessValue}", modifier = Modifier.weight(1f))
+                        DetailChip(label = "Type", value = item.type.uppercase(), modifier = Modifier.weight(1f))
+                        DetailChip(label = "Status", value = item.status.uppercase(), modifier = Modifier.weight(1f))
+                        DetailChip(label = "Priority", value = "#${item.priorityRank}", modifier = Modifier.weight(1f))
+                    }
+
+                    if (item.estimatePoints != null || item.businessValue != null) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        ) {
+                            if (item.estimatePoints != null) {
+                                DetailChip(label = "Estimate", value = "${item.estimatePoints} pts", modifier = Modifier.weight(1f))
+                            }
+                            if (item.businessValue != null) {
+                                DetailChip(label = "Value", value = "${item.businessValue}", modifier = Modifier.weight(1f))
+                            }
                         }
                     }
-                }
 
-                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
 
-                // Acceptance Criteria
-                if (!item.acceptanceCriteria.isNullOrEmpty()) {
-                    Text(
-                        text = "Acceptance Criteria",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold
-                    )
-                    item.acceptanceCriteria.forEach { criteria ->
-                        Row(
-                            verticalAlignment = Alignment.Top,
-                            horizontalArrangement = Arrangement.spacedBy(12.dp),
-                            modifier = Modifier.padding(start = 4.dp)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.CheckCircleOutline,
-                                contentDescription = null,
-                                modifier = Modifier.size(20.dp),
-                                tint = MaterialTheme.colorScheme.primary
+                    if (!item.acceptanceCriteria.isNullOrEmpty()) {
+                        Text(
+                            text = "Acceptance Criteria",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold
+                        )
+                        item.acceptanceCriteria.forEach { criteria ->
+                            Row(
+                                verticalAlignment = Alignment.Top,
+                                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                                modifier = Modifier.padding(start = 4.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.CheckCircleOutline,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(20.dp),
+                                    tint = MaterialTheme.colorScheme.primary
+                                )
+                                Text(
+                                    text = criteria,
+                                    style = MaterialTheme.typography.bodyMedium
+                                )
+                            }
+                        }
+                        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                    }
+
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        AsyncImage(
+                            model = item.assignedToUser?.avatarUrl,
+                            contentDescription = "Assigned user avatar",
+                            modifier = Modifier
+                                .size(44.dp)
+                                .clip(CircleShape),
+                            contentScale = ContentScale.Crop,
+                            placeholder = painterResource(R.drawable.profile_placeholder),
+                            error = painterResource(R.drawable.profile_placeholder)
+                        )
+                        Column {
+                            Text(
+                                text = "Assigned To",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.secondary
                             )
                             Text(
-                                text = criteria,
-                                style = MaterialTheme.typography.bodyMedium
+                                text = item.assignedToUser?.name ?: "Unassigned",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.SemiBold
                             )
                         }
-                    }
-                }
-
-                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-
-                // Assignment info
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    AsyncImage(
-                        model = item.assignedToUser?.avatarUrl,
-                        contentDescription = "Assigned user avatar",
-                        modifier = Modifier
-                            .size(44.dp)
-                            .clip(CircleShape),
-                        contentScale = ContentScale.Crop,
-                        placeholder = painterResource(R.drawable.profile_placeholder),
-                        error = painterResource(R.drawable.profile_placeholder)
-                    )
-                    Column {
-                        Text(
-                            text = "Assigned To",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.secondary
-                        )
-                        Text(
-                            text = item.assignedToUser?.name ?: "Unassigned",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.SemiBold
-                        )
                     }
                 }
             }
@@ -920,4 +1272,92 @@ fun InfoCard(
             )
         }
     }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun EditProjectDialog(
+    project: win.ambatu.work.feature.network.ProjectDto,
+    onDismiss: () -> Unit,
+    onConfirm: (name: String, description: String?, goal: String, sprintLength: Int, wipLimit: Int?) -> Unit
+) {
+    var name by remember { mutableStateOf(project.name) }
+    var description by remember { mutableStateOf(project.description ?: "") }
+    var goal by remember { mutableStateOf(project.productGoal ?: "") }
+    var sprintLength by remember { mutableStateOf(project.defaultSprintLengthDays?.toString() ?: "14") }
+    var wipLimit by remember { mutableStateOf(project.wipLimitPerMember?.toString() ?: "") }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Text(
+                text = "Edit Project Settings",
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold
+            )
+        },
+        text = {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                OutlinedTextField(
+                    value = name,
+                    onValueChange = { name = it },
+                    label = { Text("Project Name") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+                OutlinedTextField(
+                    value = description,
+                    onValueChange = { description = it },
+                    label = { Text("Description") },
+                    modifier = Modifier.fillMaxWidth(),
+                    minLines = 2
+                )
+                OutlinedTextField(
+                    value = goal,
+                    onValueChange = { goal = it },
+                    label = { Text("Product Goal") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+                OutlinedTextField(
+                    value = sprintLength,
+                    onValueChange = { sprintLength = it },
+                    label = { Text("Sprint Length (days)") },
+                    modifier = Modifier.fillMaxWidth(),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                )
+                OutlinedTextField(
+                    value = wipLimit,
+                    onValueChange = { wipLimit = it },
+                    label = { Text("WIP Limit (optional)") },
+                    modifier = Modifier.fillMaxWidth(),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                )
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = {
+                    onConfirm(
+                        name,
+                        description.takeIf { it.isNotBlank() },
+                        goal,
+                        sprintLength.toIntOrNull() ?: 14,
+                        wipLimit.toIntOrNull()
+                    )
+                },
+                enabled = name.isNotBlank() && goal.isNotBlank()
+            ) {
+                Text("Save")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancel")
+            }
+        }
+    )
 }

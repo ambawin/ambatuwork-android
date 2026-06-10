@@ -96,6 +96,10 @@ class ProjectRepository @Inject constructor(
         return apiService.updateBacklogItem(getAuthHeader(token), projectId, backlogId, request).data
     }
 
+    suspend fun archiveBacklogItem(token: String, projectId: Long, backlogId: Long): BacklogItemDto {
+        return apiService.archiveBacklogItem(getAuthHeader(token), projectId, backlogId).data
+    }
+
     suspend fun getProjectSprints(token: String, projectId: Long): List<SprintDto> {
         return apiService.getProjectSprints(getAuthHeader(token), projectId).data
     }

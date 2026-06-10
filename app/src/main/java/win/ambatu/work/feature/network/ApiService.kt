@@ -19,6 +19,11 @@ interface ApiService {
         @Header("Authorization") authorization: String
     ): UserResponse
 
+    @POST("api/v1/auth/logout")
+    suspend fun logout(
+        @Header("Authorization") authorization: String
+    ): MessageResponse
+
     @GET("api/v1/projects")
     suspend fun getProjects(
         @Header("Authorization") authorization: String
@@ -108,6 +113,13 @@ interface ApiService {
         @Path("project_id") projectId: Long,
         @Path("backlog_id") backlogId: Long,
         @Body request: UpdateBacklogItemRequest
+    ): BacklogItemResponse
+
+    @DELETE("api/v1/projects/{project_id}/backlog-items/{backlog_id}")
+    suspend fun archiveBacklogItem(
+        @Header("Authorization") authorization: String,
+        @Path("project_id") projectId: Long,
+        @Path("backlog_id") backlogId: Long
     ): BacklogItemResponse
 
     @GET("api/v1/projects/{project_id}/sprints")

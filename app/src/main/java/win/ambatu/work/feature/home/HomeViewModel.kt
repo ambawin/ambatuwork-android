@@ -16,6 +16,8 @@ import win.ambatu.work.feature.network.BacklogItemDto
 import win.ambatu.work.feature.network.ProjectDto
 import win.ambatu.work.feature.network.ProjectMemberDto
 import win.ambatu.work.feature.network.SprintDto
+import win.ambatu.work.feature.network.UpdateProjectRequest
+import win.ambatu.work.feature.network.UpdateBacklogItemRequest
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 
@@ -150,6 +152,119 @@ class HomeViewModel @Inject constructor(
                 _uiState.update { it.copy(isInvitingUser = false) }
             } catch (e: Exception) {
                 _uiState.update { it.copy(isInvitingUser = false, error = e.message) }
+            }
+        }
+    }
+
+    fun updateProject(
+        name: String?,
+        description: String?,
+        productGoal: String?,
+        sprintLength: Int?,
+        wipLimit: Int?
+    ) {
+        val token = sessionManager.getToken() ?: return
+        val projectId = _uiState.value.selectedProject?.id ?: return
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true, error = null) }
+            try {
+                val updated = projectRepository.updateProject(
+                    token = token,
+                    projectId = projectId,
+                    request = UpdateProjectRequest(
+                        name = name,
+                        description = description,
+                        productGoal = productGoal,
+                        defaultSprintLengthDays = sprintLength,
+                        wipLimitPerMember = wipLimit
+                    )
+                )
+                _uiState.update { it.copy(selectedProject = updated, isLoading = false) }
+                loadProjects()
+            } catch (e: Exception) {
+                _uiState.update { it.copy(isLoading = false, error = e.message) }
+            }
+        }
+    }
+
+    fun archiveBacklogItem(backlogId: Long) {
+        val token = sessionManager.getToken() ?: return
+        val projectId = _uiState.value.selectedProject?.id ?: return
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true, error = null) }
+            try {
+                projectRepository.archiveBacklogItem(token, projectId, backlogId)
+                loadProjectDetails(projectId)
+                _uiState.update { it.copy(isLoading = false) }
+            } catch (e: Exception) {
+                _uiState.update { it.copy(isLoading = false, error = e.message) }
+            }
+        }
+    }
+
+    fun updateBacklogItem(
+        backlogId: Long,
+        title: String,
+        description: String?,
+        type: String,
+        estimatePoints: Int?,
+        businessValue: Int?,
+        acceptanceCriteria: List<String>?,
+        assignedToUserId: Long?
+    ) {
+        val token = sessionManager.getToken() ?: return
+        val projectId = _uiState.value.selectedProject?.id ?: return
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true, error = null) }
+            try {
+                projectRepository.updateBacklogItem(
+                    token = token,
+                    projectId = projectId,
+                    backlogId = backlogId,
+                    request = UpdateBacklogItemRequest(
+                        title = title,
+                        description = description,
+                        type = type,
+                        estimatePoints = estimatePoints,
+                        businessValue = businessValue,
+                        acceptanceCriteria = acceptanceCriteria,
+                        assignedToUserId = assignedToUserId
+                    )
+                )
+                loadProjectDetails(projectId)
+                _uiState.update { it.copy(isLoading = false) }
+            } catch (e: Exception) {
+                _uiState.update { it.copy(isLoading = false, error = e.message) }
+            }
+        }
+    }
+
+    fun updateProjectMemberRole(userId: Long, role: String) {
+        val token = sessionManager.getToken() ?: return
+        val projectId = _uiState.value.selectedProject?.id ?: return
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true, error = null) }
+            try {
+                projectRepository.updateProjectMemberRole(token, projectId, userId, role)
+                loadProjectDetails(projectId)
+                _uiState.update { it.copy(isLoading = false) }
+            } catch (e: Exception) {
+                _uiState.update { it.copy(isLoading = false, error = e.message) }
+            }
+        }
+    }
+
+    fun removeProjectMember(userId: Long) {
+        val token = sessionManager.getToken() ?: return
+        val projectId = _uiState.value.selectedProject?.id ?: return
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true, error = null) }
+            try {
+                projectRepository.removeProjectMember(token, projectId, userId)
+                loadProjectDetails(projectId)
+                _uiState.update { it.copy(isLoading = false) }
+            } catch (e: Exception) {
+                _uiState.update { it.copy(isLoading = false, error = e.message) }
             }
         }
     }

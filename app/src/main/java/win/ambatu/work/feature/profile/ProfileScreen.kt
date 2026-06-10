@@ -40,14 +40,18 @@ import win.ambatu.work.controller.UserController
 import win.ambatu.work.data.model.User
 import win.ambatu.work.ui.theme.AmbatuWorkTheme
 
+import androidx.compose.material3.CircularProgressIndicator
+
 @Composable
 fun ProfileScreen(
     user: User,
+    isLoading: Boolean = false,
     onLogoutClick: () -> Unit,
     onBackClick: (() -> Unit)? = null
 ) {
     Content(
         user = user,
+        isLoading = isLoading,
         onLogoutClick = onLogoutClick,
         onBackClick = onBackClick
     )
@@ -57,6 +61,7 @@ fun ProfileScreen(
 @Composable
 private fun Content(
     user: User = UserController.getPlaceholderUser(),
+    isLoading: Boolean = false,
     onLogoutClick: () -> Unit = {},
     onBackClick: (() -> Unit)? = null
 ) {
@@ -151,7 +156,8 @@ private fun Content(
                             containerColor = MaterialTheme.colorScheme.errorContainer
                         ),
                         shape = RoundedCornerShape(20.dp),
-                        onClick = onLogoutClick
+                        onClick = onLogoutClick,
+                        enabled = !isLoading
                     ) {
                         Row(
                             modifier = Modifier
@@ -162,13 +168,20 @@ private fun Content(
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Filled.Logout,
-                                contentDescription = "Logout icon",
-                                tint = MaterialTheme.colorScheme.error
-                            )
+                            if (isLoading) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(24.dp),
+                                    color = MaterialTheme.colorScheme.error
+                                )
+                            } else {
+                                Icon(
+                                    imageVector = Icons.AutoMirrored.Filled.Logout,
+                                    contentDescription = "Logout icon",
+                                    tint = MaterialTheme.colorScheme.error
+                                )
+                            }
                             Text(
-                                "Logout",
+                                text = if (isLoading) "Logging out..." else "Logout",
                                 color = MaterialTheme.colorScheme.error
                             )
                         }

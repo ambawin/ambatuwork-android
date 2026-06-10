@@ -72,10 +72,18 @@ fun SprintBoardScreen(
     var detailItem by remember { mutableStateOf<BacklogItemDto?>(null) }
     var statusUpdateItem by remember { mutableStateOf<BacklogItemDto?>(null) }
 
-    if (detailItem != null) {
+    if (detailItem != null && uiState.project != null) {
         BacklogDetailDialog(
             item = detailItem!!,
-            onDismiss = { detailItem = null }
+            project = uiState.project!!,
+            members = uiState.members,
+            onDismiss = { detailItem = null },
+            onUpdate = { id, title, desc, type, est, bv, ac, assigned ->
+                viewModel.updateBacklogItem(id, title, desc, type, est, bv, ac, assigned)
+            },
+            onArchive = { id ->
+                viewModel.archiveBacklogItem(id)
+            }
         )
     }
 

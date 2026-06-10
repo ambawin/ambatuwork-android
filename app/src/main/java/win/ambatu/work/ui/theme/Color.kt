@@ -12,3 +12,4 @@ val Pink40 = Color(0xFF7D5260)
 
 val YellowAmbatu = Color(0xFFFDCB40)
 val WhiteAmbatu = Color(0xFFFFFFFF)
+val ChocoAmbatu = Color(0xFF604B10)

@@ -39,8 +39,6 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -66,6 +64,7 @@ import win.ambatu.work.R
 import win.ambatu.work.feature.network.BacklogItemDto
 import win.ambatu.work.feature.network.DefinitionOfDoneDto
 import win.ambatu.work.feature.network.SprintDto
+import win.ambatu.work.ui.components.FloatingBottomNavigationBar
 import win.ambatu.work.ui.theme.Typography
 import win.ambatu.work.ui.theme.WhiteAmbatu
 import java.time.ZonedDateTime
@@ -120,16 +119,10 @@ fun ProjectDetailScreen(
             )
         },
         bottomBar = {
-            NavigationBar {
-                ProjectTab.entries.forEach { tab ->
-                    NavigationBarItem(
-                        selected = selectedTab == tab,
-                        onClick = { selectedTab = tab },
-                        label = { Text(tab.title) },
-                        icon = { Icon(tab.icon, contentDescription = tab.title) }
-                    )
-                }
-            }
+            FloatingBottomNavigationBar(
+                selectedTab = selectedTab,
+                onTabSelected = { selectedTab = it }
+            )
         },
         floatingActionButton = {
             val role = uiState.project?.myRole?.lowercase()?.trim()
@@ -224,7 +217,7 @@ fun DashboardTab(
                     text = "Hello, Dap!",
                     style = Typography.headlineLarge,
                     fontSize = 36.sp,
-                    fontWeight = FontWeight.ExtraBold,
+                    fontWeight = FontWeight.Black,
                     color = WhiteAmbatu
                 )
                 Text(

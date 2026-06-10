@@ -42,8 +42,6 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -86,6 +84,7 @@ import win.ambatu.work.feature.project.SprintBoardActivity
 import win.ambatu.work.feature.project.SprintTab
 import win.ambatu.work.feature.scrum.ScrumGuideActivity
 import win.ambatu.work.feature.swagger.SwaggerUiActivity
+import win.ambatu.work.ui.components.FloatingBottomNavigationBar
 import win.ambatu.work.ui.theme.AmbatuWorkTheme
 import win.ambatu.work.ui.theme.YellowAmbatu
 
@@ -314,16 +313,10 @@ private fun Content(
             )
         },
         bottomBar = {
-            NavigationBar {
-                ProjectTab.entries.forEach { tab ->
-                    NavigationBarItem(
-                        selected = selectedTab == tab,
-                        onClick = { selectedTab = tab },
-                        label = { Text(tab.title) },
-                        icon = { Icon(tab.icon, contentDescription = tab.title) }
-                    )
-                }
-            }
+            FloatingBottomNavigationBar(
+                selectedTab = selectedTab,
+                onTabSelected = { selectedTab = it }
+            )
         },
         floatingActionButton = {
             if (uiState.selectedProject != null) {

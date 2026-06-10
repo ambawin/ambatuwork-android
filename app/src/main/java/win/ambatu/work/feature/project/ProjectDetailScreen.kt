@@ -48,6 +48,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExposedDropdownMenuBox
@@ -92,6 +93,7 @@ import win.ambatu.work.ui.theme.LightChocoAmbatu
 import win.ambatu.work.ui.theme.Typography
 import win.ambatu.work.ui.theme.WhiteAmbatu
 import win.ambatu.work.ui.theme.LimeGreenAmbatu
+import win.ambatu.work.ui.theme.YellowAmbatu
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 import java.util.Locale
@@ -136,19 +138,26 @@ fun ProjectDetailScreen(
             TopAppBar(
                 title = {
                     Text(
-                        when (selectedTab) {
+                        text = when (selectedTab) {
                             ProjectTab.DASHBOARD -> "Project Dashboard"
                             ProjectTab.BACKLOG -> "Product Backlog"
                             ProjectTab.SPRINT -> "Sprint"
                             ProjectTab.SETTINGS -> "Project Settings"
-                        }
+                        },
+                        fontWeight = FontWeight.Bold
                     )
                 },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                     }
-                }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = YellowAmbatu,
+                    titleContentColor = ChocoAmbatu,
+                    navigationIconContentColor = ChocoAmbatu,
+                    actionIconContentColor = ChocoAmbatu
+                )
             )
         },
         bottomBar = {

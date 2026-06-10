@@ -35,6 +35,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.DropdownMenuItem
@@ -146,7 +147,8 @@ fun SprintBoardScreen(
                     Column {
                         Text(
                             text = uiState.board?.sprint?.name ?: "Sprint Board",
-                            style = MaterialTheme.typography.titleMedium
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold
                         )
                         uiState.board?.sprint?.sprintGoal?.let {
                             Text(
@@ -154,7 +156,7 @@ fun SprintBoardScreen(
                                 style = MaterialTheme.typography.labelSmall,
                                 maxLines = 1,
                                 overflow = TextOverflow.Ellipsis,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                color = ChocoAmbatu.copy(alpha = 0.8f)
                             )
                         }
                     }
@@ -164,6 +166,12 @@ fun SprintBoardScreen(
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                     }
                 },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = YellowAmbatu,
+                    titleContentColor = ChocoAmbatu,
+                    navigationIconContentColor = ChocoAmbatu,
+                    actionIconContentColor = ChocoAmbatu
+                ),
                 actions = {
                     val board = uiState.board
                     val role = uiState.currentUserRole?.lowercase()?.trim() ?: ""

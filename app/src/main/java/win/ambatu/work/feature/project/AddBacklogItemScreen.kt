@@ -25,6 +25,7 @@ import win.ambatu.work.ui.components.AmbatuDropdownField
 import win.ambatu.work.ui.components.AmbatuSimpleTextField
 import win.ambatu.work.ui.components.AmbatuTextField
 import win.ambatu.work.ui.theme.ChocoAmbatu
+import win.ambatu.work.ui.theme.YellowAmbatu
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -73,12 +74,18 @@ fun AddBacklogItemScreen(
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         topBar = {
             TopAppBar(
-                title = { Text("Add Backlog Item") },
+                title = { Text("Add Backlog Item", fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                     }
-                }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = YellowAmbatu,
+                    titleContentColor = ChocoAmbatu,
+                    navigationIconContentColor = ChocoAmbatu,
+                    actionIconContentColor = ChocoAmbatu
+                )
             )
         }
     ) { innerPadding ->

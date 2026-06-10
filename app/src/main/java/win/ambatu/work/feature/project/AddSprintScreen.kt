@@ -24,6 +24,7 @@ import win.ambatu.work.feature.network.BacklogItemDto
 import win.ambatu.work.feature.network.CreateSprintRequest
 import win.ambatu.work.ui.components.AmbatuTextField
 import win.ambatu.work.ui.theme.ChocoAmbatu
+import win.ambatu.work.ui.theme.YellowAmbatu
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
@@ -120,12 +121,18 @@ fun AddSprintScreen(
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         topBar = {
             TopAppBar(
-                title = { Text("Create New Sprint") },
+                title = { Text("Create New Sprint", fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                     }
-                }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = YellowAmbatu,
+                    titleContentColor = ChocoAmbatu,
+                    navigationIconContentColor = ChocoAmbatu,
+                    actionIconContentColor = ChocoAmbatu
+                )
             )
         }
     ) { innerPadding ->

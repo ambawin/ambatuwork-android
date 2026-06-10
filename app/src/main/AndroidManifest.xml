@@ -63,11 +63,7 @@
             android:exported="false"
             android:label="Profile"
             android:theme="@style/Theme.AmbatuWork" />
-        <activity
-            android:name=".feature.swagger.SwaggerUiActivity"
-            android:exported="false"
-            android:label="API Documentation"
-            android:theme="@style/Theme.AmbatuWork" />
+
 
         <meta-data
             android:name="preloaded_fonts"

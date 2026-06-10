@@ -84,7 +84,6 @@ import win.ambatu.work.feature.project.SettingsTab
 import win.ambatu.work.feature.project.SprintBoardActivity
 import win.ambatu.work.feature.project.SprintTab
 import win.ambatu.work.feature.scrum.ScrumGuideActivity
-import win.ambatu.work.feature.swagger.SwaggerUiActivity
 import win.ambatu.work.ui.components.FloatingBottomNavigationBar
 import win.ambatu.work.ui.theme.AmbatuWorkTheme
 import win.ambatu.work.ui.theme.YellowAmbatu
@@ -150,9 +149,6 @@ fun HomeScreen(
         onScrumGuideClick = {
             context.startActivity(ScrumGuideActivity.createIntent(context))
         },
-        onSwaggerUiClick = {
-            context.startActivity(SwaggerUiActivity.createIntent(context))
-        },
         onUpdateProject = viewModel::updateProject,
         onUpdateBacklogItem = viewModel::updateBacklogItem,
         onArchiveBacklogItem = viewModel::archiveBacklogItem,
@@ -176,7 +172,6 @@ private fun Content(
     onSprintClick: (Long, Long) -> Unit = { _, _ -> },
     onInvitationsClick: () -> Unit = {},
     onScrumGuideClick: () -> Unit = {},
-    onSwaggerUiClick: () -> Unit = {},
     onUpdateProject: (name: String?, description: String?, goal: String?, sprintLength: Int?, wipLimit: Int?) -> Unit = { _, _, _, _, _ -> },
     onUpdateBacklogItem: (id: Long, title: String, description: String?, type: String, estimatePoints: Int?, businessValue: Int?, acceptanceCriteria: List<String>?, assignedToUserId: Long?) -> Unit = { _, _, _, _, _, _, _, _ -> },
     onArchiveBacklogItem: (id: Long) -> Unit = {},
@@ -304,27 +299,11 @@ private fun Content(
                             }
                         )
                         DropdownMenuItem(
-                            text = { Text("Project Settings") },
-                            leadingIcon = { Icon(Icons.Default.Settings, null) },
-                            onClick = {
-                                showMenu = false
-                                // Handle project settings
-                            }
-                        )
-                        DropdownMenuItem(
                             text = { Text("SCRUM Guide") },
                             leadingIcon = { Icon(Icons.Default.Info, null) },
                             onClick = {
                                 showMenu = false
                                 onScrumGuideClick()
-                            }
-                        )
-                        DropdownMenuItem(
-                            text = { Text("API Documentation") },
-                            leadingIcon = { Icon(Icons.Default.Book, null) },
-                            onClick = {
-                                showMenu = false
-                                onSwaggerUiClick()
                             }
                         )
                     }

@@ -115,4 +115,29 @@ class ProjectRepository @Inject constructor(
     suspend fun getSprintBoard(token: String, projectId: Long, sprintId: Long): SprintBoardDto {
         return apiService.getSprintBoard(getAuthHeader(token), projectId, sprintId).data
     }
+
+    suspend fun getSprint(token: String, projectId: Long, sprintId: Long): SprintDto {
+        return apiService.getSprint(getAuthHeader(token), projectId, sprintId).data
+    }
+
+    suspend fun startSprint(token: String, projectId: Long, sprintId: Long): SprintDto {
+        return apiService.startSprint(getAuthHeader(token), projectId, sprintId).data
+    }
+
+    suspend fun closeSprint(token: String, projectId: Long, sprintId: Long): SprintDto {
+        return apiService.closeSprint(getAuthHeader(token), projectId, sprintId).data
+    }
+
+    suspend fun getSprintReview(token: String, projectId: Long, sprintId: Long): SprintReviewDto {
+        return apiService.getSprintReview(getAuthHeader(token), projectId, sprintId).data
+    }
+
+    suspend fun submitSprintReview(
+        token: String,
+        projectId: Long,
+        sprintId: Long,
+        request: SubmitSprintReviewRequest
+    ): SprintReviewDto {
+        return apiService.submitSprintReview(getAuthHeader(token), projectId, sprintId, request).data
+    }
 }

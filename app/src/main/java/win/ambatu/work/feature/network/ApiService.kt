@@ -141,4 +141,40 @@ interface ApiService {
         @Path("project_id") projectId: Long,
         @Path("sprint_id") sprintId: Long
     ): SprintBoardResponse
+
+    @GET("api/v1/projects/{project_id}/sprints/{sprint_id}")
+    suspend fun getSprint(
+        @Header("Authorization") authorization: String,
+        @Path("project_id") projectId: Long,
+        @Path("sprint_id") sprintId: Long
+    ): SprintResponse
+
+    @POST("api/v1/projects/{project_id}/sprints/{sprint_id}/start")
+    suspend fun startSprint(
+        @Header("Authorization") authorization: String,
+        @Path("project_id") projectId: Long,
+        @Path("sprint_id") sprintId: Long
+    ): SprintResponse
+
+    @POST("api/v1/projects/{project_id}/sprints/{sprint_id}/close")
+    suspend fun closeSprint(
+        @Header("Authorization") authorization: String,
+        @Path("project_id") projectId: Long,
+        @Path("sprint_id") sprintId: Long
+    ): CloseSprintResponse
+
+    @GET("api/v1/projects/{project_id}/sprints/{sprint_id}/review")
+    suspend fun getSprintReview(
+        @Header("Authorization") authorization: String,
+        @Path("project_id") projectId: Long,
+        @Path("sprint_id") sprintId: Long
+    ): SprintReviewResponse
+
+    @POST("api/v1/projects/{project_id}/sprints/{sprint_id}/review")
+    suspend fun submitSprintReview(
+        @Header("Authorization") authorization: String,
+        @Path("project_id") projectId: Long,
+        @Path("sprint_id") sprintId: Long,
+        @Body request: SubmitSprintReviewRequest
+    ): SprintReviewResponse
 }

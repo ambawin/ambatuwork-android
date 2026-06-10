@@ -314,3 +314,60 @@ data class AcceptInvitationResponse(
 data class MessageResponse(
     val message: String
 )
+
+@JsonClass(generateAdapter = true)
+data class CloseSprintResponse(
+    val message: String,
+    val data: SprintDto
+)
+
+@JsonClass(generateAdapter = true)
+data class SprintReviewItemDto(
+    val id: Long,
+    @Json(name = "backlog_item_id")
+    val backlogItemId: Long,
+    val decision: String,
+    val notes: String?,
+    @Json(name = "created_at")
+    val createdAt: String?,
+    @Json(name = "updated_at")
+    val updatedAt: String?
+)
+
+@JsonClass(generateAdapter = true)
+data class SprintReviewDto(
+    val id: Long,
+    @Json(name = "sprint_id")
+    val sprintId: Long,
+    val summary: String,
+    @Json(name = "demo_url")
+    val demoUrl: String?,
+    @Json(name = "created_by_user_id")
+    val createdByUserId: Long,
+    @Json(name = "created_at")
+    val createdAt: String?,
+    @Json(name = "updated_at")
+    val updatedAt: String?,
+    val items: List<SprintReviewItemDto> = emptyList()
+)
+
+@JsonClass(generateAdapter = true)
+data class SprintReviewResponse(
+    val data: SprintReviewDto
+)
+
+@JsonClass(generateAdapter = true)
+data class SprintReviewItemRequest(
+    @Json(name = "backlog_item_id")
+    val backlogItemId: Long,
+    val decision: String,
+    val notes: String? = null
+)
+
+@JsonClass(generateAdapter = true)
+data class SubmitSprintReviewRequest(
+    val summary: String,
+    @Json(name = "demo_url")
+    val demoUrl: String? = null,
+    val items: List<SprintReviewItemRequest>
+)

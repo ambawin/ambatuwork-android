@@ -42,6 +42,13 @@ import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.MenuAnchorType
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.RadioButton
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.foundation.clickable
+import androidx.compose.runtime.mutableStateMapOf
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.text.input.KeyboardType
+import win.ambatu.work.feature.network.SprintReviewItemRequest
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -71,6 +78,18 @@ fun SprintBoardScreen(
     val uiState by viewModel.uiState.collectAsState()
     var detailItem by remember { mutableStateOf<BacklogItemDto?>(null) }
     var statusUpdateItem by remember { mutableStateOf<BacklogItemDto?>(null) }
+    var showCloseSprintDialog by remember { mutableStateOf(false) }
+
+    if (showCloseSprintDialog && uiState.board != null) {
+        CloseSprintDialog(
+            board = uiState.board!!,
+            onDismiss = { showCloseSprintDialog = false },
+            onConfirm = { summary, demoUrl, items ->
+                viewModel.submitSprintReviewAndClose(summary, demoUrl, items)
+                showCloseSprintDialog = false
+            }
+        )
+    }
 
     if (detailItem != null && uiState.project != null) {
         BacklogDetailDialog(
@@ -124,6 +143,24 @@ fun SprintBoardScreen(
                     }
                 },
                 actions = {
+                    val board = uiState.board
+                    val role = uiState.currentUserRole?.lowercase()?.trim() ?: ""
+                    val isAdmin = role.contains("admin") || 
+                                 role.contains("owner") || 
+                                 role.contains("master") || 
+                                 role.contains("leader")
+
+                    if (board != null && board.sprint.status.lowercase() == "active" && isAdmin) {
+                        TextButton(
+                            onClick = { showCloseSprintDialog = true },
+                            colors = ButtonDefaults.textButtonColors(
+                                contentColor = MaterialTheme.colorScheme.error
+                            )
+                        ) {
+                            Text("Close Sprint", fontWeight = FontWeight.Bold)
+                        }
+                    }
+
                     IconButton(onClick = { viewModel.loadBoard() }) {
                         Icon(Icons.Default.Refresh, contentDescription = "Refresh")
                     }
@@ -152,21 +189,67 @@ fun SprintBoardScreen(
             } else {
                 val board = uiState.board
                 if (board != null) {
-                    BoardContent(
-                        board = board,
-                        onItemClick = { item ->
-                            val role = uiState.currentUserRole?.lowercase()?.trim() ?: ""
-                            val isAdmin = role.contains("admin") || 
-                                         role.contains("owner") || 
-                                         role.contains("master") || 
-                                         role.contains("leader")
-                            val canEdit = isAdmin || item.assignedToUserId == uiState.currentUserId
-                            if (canEdit) {
-                                statusUpdateItem = item
+                    val sprintStatus = board.sprint.status.lowercase()
+                    val role = uiState.currentUserRole?.lowercase()?.trim() ?: ""
+                    val isAdmin = role.contains("admin") || 
+                                 role.contains("owner") || 
+                                 role.contains("master") || 
+                                 role.contains("leader")
+
+                    Column(modifier = Modifier.fillMaxSize()) {
+                        if (sprintStatus == "planned") {
+                            Card(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                                colors = CardDefaults.cardColors(
+                                    containerColor = MaterialTheme.colorScheme.primaryContainer
+                                ),
+                                shape = RoundedCornerShape(12.dp)
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(16.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.SpaceBetween
+                                ) {
+                                    Column(modifier = Modifier.weight(1f)) {
+                                        Text(
+                                            text = "Sprint is Planned",
+                                            style = MaterialTheme.typography.titleMedium,
+                                            fontWeight = FontWeight.Bold,
+                                            color = MaterialTheme.colorScheme.onPrimaryContainer
+                                        )
+                                        Text(
+                                            text = "This sprint has not started yet. Ready to kick off?",
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f)
+                                        )
+                                    }
+                                    if (isAdmin) {
+                                        Button(
+                                            onClick = { viewModel.startSprint() },
+                                            colors = ButtonDefaults.buttonColors(
+                                                containerColor = MaterialTheme.colorScheme.primary
+                                            )
+                                        ) {
+                                            Text("Start Sprint")
+                                        }
+                                    }
+                                }
                             }
-                        },
-                        onInfoClick = { detailItem = it }
-                    )
+                        }
+
+                        BoardContent(
+                            board = board,
+                            onItemClick = { item ->
+                                val canEdit = isAdmin || item.assignedToUserId == uiState.currentUserId
+                                if (canEdit) {
+                                    statusUpdateItem = item
+                                }
+                            },
+                            onInfoClick = { detailItem = it }
+                        )
+                    }
                 }
             }
         }
@@ -430,4 +513,130 @@ fun BoardItemCard(
             }
         }
     }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun CloseSprintDialog(
+    board: SprintBoardDto,
+    onDismiss: () -> Unit,
+    onConfirm: (summary: String, demoUrl: String?, items: List<SprintReviewItemRequest>) -> Unit
+) {
+    var summary by remember { mutableStateOf("") }
+    var demoUrl by remember { mutableStateOf("") }
+
+    val allItems = remember(board) {
+        board.columns.selected + board.columns.inProgress + board.columns.inReview + board.columns.done
+    }
+
+    val itemDecisions = remember(allItems) {
+        mutableStateMapOf<Long, String>().apply {
+            allItems.forEach { item ->
+                val isDone = board.columns.done.any { it.id == item.id }
+                put(item.id, if (isDone) "accepted" else "carry_over")
+            }
+        }
+    }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Close Sprint & Submit Review") },
+        text = {
+            LazyColumn(
+                verticalArrangement = Arrangement.spacedBy(16.dp),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                item {
+                    OutlinedTextField(
+                        value = summary,
+                        onValueChange = { summary = it },
+                        label = { Text("Sprint Review Summary") },
+                        modifier = Modifier.fillMaxWidth(),
+                        minLines = 3
+                    )
+                }
+                item {
+                    OutlinedTextField(
+                        value = demoUrl,
+                        onValueChange = { demoUrl = it },
+                        label = { Text("Demo URL (Optional)") },
+                        modifier = Modifier.fillMaxWidth(),
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri)
+                    )
+                }
+                item {
+                    Text(
+                        text = "Backlog Items Review",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(top = 8.dp)
+                    )
+                }
+                items(
+                    count = allItems.size,
+                    key = { index -> allItems[index].id }
+                ) { index ->
+                    val item = allItems[index]
+                    val currentDecision = itemDecisions[item.id] ?: "carry_over"
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.surfaceContainerLow
+                        )
+                    ) {
+                        Column(modifier = Modifier.padding(12.dp)) {
+                            Text(
+                                text = item.title,
+                                style = MaterialTheme.typography.titleSmall,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Text(
+                                text = "Status: ${item.status.uppercase()}",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.secondary
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(16.dp)
+                            ) {
+                                listOf("accepted" to "Accept", "carry_over" to "Carry Over", "rejected" to "Reject").forEach { (value, label) ->
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        modifier = Modifier.clickable { itemDecisions[item.id] = value }
+                                    ) {
+                                        RadioButton(
+                                            selected = (currentDecision == value),
+                                            onClick = { itemDecisions[item.id] = value }
+                                        )
+                                        Text(text = label, style = MaterialTheme.typography.bodySmall)
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = {
+                    if (summary.isNotBlank()) {
+                        val requests = itemDecisions.map { (id, decision) ->
+                            SprintReviewItemRequest(backlogItemId = id, decision = decision)
+                        }
+                        onConfirm(summary, demoUrl.takeIf { it.isNotBlank() }, requests)
+                    }
+                },
+                enabled = summary.isNotBlank()
+            ) {
+                Text("Submit and Close")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancel")
+            }
+        }
+    )
 }

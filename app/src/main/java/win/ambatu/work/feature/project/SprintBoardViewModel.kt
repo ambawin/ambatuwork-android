@@ -15,6 +15,8 @@ import win.ambatu.work.feature.network.SprintBoardDto
 import win.ambatu.work.feature.network.UpdateBacklogItemRequest
 import win.ambatu.work.feature.network.ProjectDto
 import win.ambatu.work.feature.network.ProjectMemberDto
+import win.ambatu.work.feature.network.SubmitSprintReviewRequest
+import win.ambatu.work.feature.network.SprintReviewItemRequest
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 
@@ -131,6 +133,48 @@ class SprintBoardViewModel @Inject constructor(
                         assignedToUserId = assignedToUserId
                     )
                 )
+                loadBoard()
+            } catch (e: Exception) {
+                _uiState.update { it.copy(isLoading = false, error = e.message) }
+            }
+        }
+    }
+
+    fun startSprint() {
+        val token = sessionManager.getToken() ?: return
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true, error = null) }
+            try {
+                projectRepository.startSprint(token, projectId, sprintId)
+                loadBoard()
+            } catch (e: Exception) {
+                _uiState.update { it.copy(isLoading = false, error = e.message) }
+            }
+        }
+    }
+
+    fun submitSprintReviewAndClose(
+        summary: String,
+        demoUrl: String?,
+        items: List<SprintReviewItemRequest>
+    ) {
+        val token = sessionManager.getToken() ?: return
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true, error = null) }
+            try {
+                // Submit review first
+                projectRepository.submitSprintReview(
+                    token = token,
+                    projectId = projectId,
+                    sprintId = sprintId,
+                    request = SubmitSprintReviewRequest(
+                        summary = summary,
+                        demoUrl = demoUrl,
+                        items = items
+                    )
+                )
+                // Sequentially close the sprint
+                projectRepository.closeSprint(token, projectId, sprintId)
                 loadBoard()
             } catch (e: Exception) {
                 _uiState.update { it.copy(isLoading = false, error = e.message) }

@@ -54,6 +54,8 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.MenuAnchorType
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.material3.Slider
+import kotlin.math.roundToInt
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -868,8 +870,8 @@ fun BacklogDetailDialog(
     var title by remember { mutableStateOf(item.title) }
     var description by remember { mutableStateOf(item.description ?: "") }
     var type by remember { mutableStateOf(item.type) }
-    var estimatePoints by remember { mutableStateOf(item.estimatePoints?.toString() ?: "") }
-    var businessValue by remember { mutableStateOf(item.businessValue?.toString() ?: "") }
+    var estimatePoints by remember { mutableStateOf(item.estimatePoints ?: 0) }
+    var businessValue by remember { mutableStateOf(item.businessValue ?: 0) }
     var assignedToUserId by remember { mutableStateOf(item.assignedToUserId) }
     val acceptanceCriteria by remember { mutableStateOf(item.acceptanceCriteria ?: emptyList()) }
 
@@ -887,8 +889,8 @@ fun BacklogDetailDialog(
                             title,
                             description.takeIf { it.isNotBlank() },
                             type,
-                            estimatePoints.toIntOrNull(),
-                            businessValue.toIntOrNull(),
+                            estimatePoints,
+                            businessValue,
                             acceptanceCriteria,
                             assignedToUserId
                         )
@@ -1030,24 +1032,37 @@ fun BacklogDetailDialog(
                         }
                     }
 
-                    Row(
+                    Column(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
-                        OutlinedTextField(
-                            value = estimatePoints,
-                            onValueChange = { estimatePoints = it },
-                            label = { Text("Estimate") },
-                            modifier = Modifier.weight(1f),
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
-                        )
-                        OutlinedTextField(
-                            value = businessValue,
-                            onValueChange = { businessValue = it },
-                            label = { Text("Value (1-100)") },
-                            modifier = Modifier.weight(1f),
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
-                        )
+                        Column(modifier = Modifier.fillMaxWidth()) {
+                            Text(
+                                text = "Estimate Points: $estimatePoints",
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.Medium
+                            )
+                            Slider(
+                                value = estimatePoints.toFloat(),
+                                onValueChange = { estimatePoints = it.roundToInt() },
+                                valueRange = 0f..100f,
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                        }
+
+                        Column(modifier = Modifier.fillMaxWidth()) {
+                            Text(
+                                text = "Business Value: $businessValue",
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.Medium
+                            )
+                            Slider(
+                                value = businessValue.toFloat(),
+                                onValueChange = { businessValue = it.roundToInt() },
+                                valueRange = 0f..100f,
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                        }
                     }
 
                 } else {

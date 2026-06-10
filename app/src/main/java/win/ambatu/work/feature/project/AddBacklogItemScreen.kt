@@ -13,7 +13,9 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import kotlin.math.roundToInt
 import kotlinx.coroutines.launch
 import win.ambatu.work.data.repository.ProjectRepository
 import win.ambatu.work.data.storage.SessionManager
@@ -32,8 +34,8 @@ fun AddBacklogItemScreen(
     var title by remember { mutableStateOf("") }
     var description by remember { mutableStateOf("") }
     var type by remember { mutableStateOf("story") }
-    var businessValue by remember { mutableStateOf("") }
-    var estimatePoints by remember { mutableStateOf("") }
+    var businessValue by remember { mutableStateOf(0) }
+    var estimatePoints by remember { mutableStateOf(0) }
     var assignedToUserId by remember { mutableStateOf<Long?>(null) }
     var acceptanceCriteria by remember { mutableStateOf(listOf<String>()) }
     
@@ -136,24 +138,37 @@ fun AddBacklogItemScreen(
                     }
                 }
 
-                Row(
+                Column(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(16.dp)
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    OutlinedTextField(
-                        value = businessValue,
-                        onValueChange = { if (it.all { char -> char.isDigit() }) businessValue = it },
-                        label = { Text("Business Value") },
-                        modifier = Modifier.weight(1f),
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
-                    )
-                    OutlinedTextField(
-                        value = estimatePoints,
-                        onValueChange = { if (it.all { char -> char.isDigit() }) estimatePoints = it },
-                        label = { Text("Estimate Points") },
-                        modifier = Modifier.weight(1f),
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
-                    )
+                    Column(modifier = Modifier.fillMaxWidth()) {
+                        Text(
+                            text = "Estimate Points: $estimatePoints",
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.Medium
+                        )
+                        Slider(
+                            value = estimatePoints.toFloat(),
+                            onValueChange = { estimatePoints = it.roundToInt() },
+                            valueRange = 0f..100f,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
+
+                    Column(modifier = Modifier.fillMaxWidth()) {
+                        Text(
+                            text = "Business Value: $businessValue",
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.Medium
+                        )
+                        Slider(
+                            value = businessValue.toFloat(),
+                            onValueChange = { businessValue = it.roundToInt() },
+                            valueRange = 0f..100f,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
                 }
 
                 Text("Acceptance Criteria", style = MaterialTheme.typography.titleMedium)
@@ -253,8 +268,8 @@ fun AddBacklogItemScreen(
                                         title = title,
                                         description = description.ifBlank { null },
                                         type = type,
-                                        businessValue = businessValue.toIntOrNull(),
-                                        estimatePoints = estimatePoints.toIntOrNull(),
+                                        businessValue = businessValue,
+                                        estimatePoints = estimatePoints,
                                         acceptanceCriteria = acceptanceCriteria.filter { it.isNotBlank() }.ifEmpty { null },
                                         assignedToUserId = assignedToUserId
                                     )

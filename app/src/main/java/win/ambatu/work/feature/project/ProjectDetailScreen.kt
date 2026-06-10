@@ -65,6 +65,7 @@ import win.ambatu.work.feature.network.BacklogItemDto
 import win.ambatu.work.feature.network.DefinitionOfDoneDto
 import win.ambatu.work.feature.network.SprintDto
 import win.ambatu.work.ui.components.FloatingBottomNavigationBar
+import win.ambatu.work.ui.theme.ChocoAmbatu
 import win.ambatu.work.ui.theme.Typography
 import win.ambatu.work.ui.theme.WhiteAmbatu
 import java.time.ZonedDateTime
@@ -218,7 +219,7 @@ fun DashboardTab(
                     style = Typography.headlineLarge,
                     fontSize = 36.sp,
                     fontWeight = FontWeight.Black,
-                    color = WhiteAmbatu
+                    color = ChocoAmbatu
                 )
                 Text(
                     text = project.description ?: "No description provided",

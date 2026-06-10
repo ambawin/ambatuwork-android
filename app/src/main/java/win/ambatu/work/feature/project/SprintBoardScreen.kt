@@ -55,6 +55,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import win.ambatu.work.feature.network.BacklogItemDto
+import win.ambatu.work.ui.theme.BlueAmbatu
+import win.ambatu.work.ui.theme.ChocoAmbatu
+import win.ambatu.work.ui.theme.LightGreenAmbatu
+import win.ambatu.work.ui.theme.RedAmbatu
+import win.ambatu.work.ui.theme.YellowAmbatu
 import win.ambatu.work.feature.network.SprintBoardDto
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -201,7 +206,7 @@ fun BoardContent(
             items = board.columns.done,
             onItemClick = onItemClick,
             onInfoClick = onInfoClick,
-            headerColor = Color(0xFFC8E6C9) // Light Green
+            headerColor = LightGreenAmbatu
         )
     }
 }
@@ -387,10 +392,10 @@ fun BoardItemCard(
                         .height(16.dp)
                         .background(
                             color = when (item.type.lowercase()) {
-                                "story" -> Color.Blue
-                                "task" -> Color.Gray
-                                "bug" -> Color.Red
-                                else -> Color.Magenta
+                                "story" -> BlueAmbatu
+                                "task" -> ChocoAmbatu.copy(alpha = 0.6f)
+                                "bug" -> RedAmbatu
+                                else -> YellowAmbatu
                             },
                             shape = RoundedCornerShape(2.dp)
                         )

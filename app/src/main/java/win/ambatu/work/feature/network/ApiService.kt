@@ -177,4 +177,19 @@ interface ApiService {
         @Path("sprint_id") sprintId: Long,
         @Body request: SubmitSprintReviewRequest
     ): SprintReviewResponse
+
+    @GET("api/v1/projects/{project_id}/sprints/{sprint_id}/checkins")
+    suspend fun getDailyCheckins(
+        @Header("Authorization") authorization: String,
+        @Path("project_id") projectId: Long,
+        @Path("sprint_id") sprintId: Long
+    ): DailyCheckinListResponse
+
+    @POST("api/v1/projects/{project_id}/sprints/{sprint_id}/checkins")
+    suspend fun submitDailyCheckin(
+        @Header("Authorization") authorization: String,
+        @Path("project_id") projectId: Long,
+        @Path("sprint_id") sprintId: Long,
+        @Body request: SubmitDailyCheckinRequest
+    ): DailyCheckinResponse
 }

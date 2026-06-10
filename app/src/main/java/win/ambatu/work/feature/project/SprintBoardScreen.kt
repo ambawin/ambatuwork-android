@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -49,6 +50,14 @@ import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.text.input.KeyboardType
 import win.ambatu.work.feature.network.SprintReviewItemRequest
+import win.ambatu.work.feature.network.DailyCheckinDto
+import win.ambatu.work.R
+import coil3.compose.AsyncImage
+import androidx.compose.ui.res.painterResource
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.material.icons.filled.Groups
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -117,6 +126,19 @@ fun SprintBoardScreen(
         )
     }
 
+    var showDailyStandup by remember { mutableStateOf(false) }
+
+    if (showDailyStandup && uiState.project != null) {
+        DailyStandupDialog(
+            checkins = uiState.checkins,
+            currentUserId = uiState.currentUserId ?: -1L,
+            onDismiss = { showDailyStandup = false },
+            onSubmitCheckin = { yesterday, today, blockers, confidence, date ->
+                viewModel.submitDailyCheckin(yesterday, today, blockers, confidence, date)
+            }
+        )
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -158,6 +180,12 @@ fun SprintBoardScreen(
                             )
                         ) {
                             Text("Close Sprint", fontWeight = FontWeight.Bold)
+                        }
+                    }
+
+                    if (board != null && board.sprint.status.lowercase() == "active") {
+                        IconButton(onClick = { showDailyStandup = true }) {
+                            Icon(Icons.Default.Groups, contentDescription = "Daily Standup")
                         }
                     }
 
@@ -513,6 +541,292 @@ fun BoardItemCard(
             }
         }
     }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun DailyStandupDialog(
+    checkins: List<DailyCheckinDto>,
+    currentUserId: Long,
+    onDismiss: () -> Unit,
+    onSubmitCheckin: (yesterday: String?, today: String?, blockers: String?, confidence: Int, date: String) -> Unit
+) {
+    var showSubmitDialog by remember { mutableStateOf(false) }
+    val todayStr = remember { java.time.LocalDate.now().toString() }
+
+    val hasCheckedInToday = remember(checkins, currentUserId, todayStr) {
+        checkins.any { it.user.id == currentUserId && it.checkinDate == todayStr }
+    }
+
+    val checkinsByDate = remember(checkins) {
+        checkins.groupBy { it.checkinDate }.toSortedMap(compareByDescending { it })
+    }
+
+    if (showSubmitDialog) {
+        SubmitCheckinDialog(
+            onDismiss = { showSubmitDialog = false },
+            onSubmit = { yesterday, today, blockers, confidence ->
+                onSubmitCheckin(yesterday, today, blockers, confidence, todayStr)
+                showSubmitDialog = false
+            }
+        )
+    }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text("Daily Standups")
+                if (!hasCheckedInToday) {
+                    Button(onClick = { showSubmitDialog = true }) {
+                        Text("Check in Today")
+                    }
+                }
+            }
+        },
+        text = {
+            if (checkins.isEmpty()) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(150.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "No standup check-ins yet.",
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            } else {
+                LazyColumn(
+                    verticalArrangement = Arrangement.spacedBy(16.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    checkinsByDate.forEach { (date, dailyLogs) ->
+                        item {
+                            Text(
+                                text = date,
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.secondary,
+                                modifier = Modifier.padding(top = 8.dp)
+                            )
+                        }
+                        items(
+                            count = dailyLogs.size,
+                            key = { index -> dailyLogs[index].id }
+                        ) { index ->
+                            val log = dailyLogs[index]
+                            Card(
+                                modifier = Modifier.fillMaxWidth(),
+                                colors = CardDefaults.cardColors(
+                                    containerColor = MaterialTheme.colorScheme.surfaceContainerLow
+                                )
+                            ) {
+                                Column(modifier = Modifier.padding(12.dp)) {
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                                        modifier = Modifier.fillMaxWidth()
+                                    ) {
+                                        AsyncImage(
+                                            model = log.user.avatarUrl,
+                                            contentDescription = "User avatar",
+                                            modifier = Modifier
+                                                .size(36.dp)
+                                                .clip(CircleShape),
+                                            contentScale = ContentScale.Crop,
+                                            placeholder = painterResource(R.drawable.profile_placeholder),
+                                            error = painterResource(R.drawable.profile_placeholder)
+                                        )
+                                        Column(modifier = Modifier.weight(1f)) {
+                                            Text(
+                                                text = log.user.name ?: "Unknown",
+                                                style = MaterialTheme.typography.titleSmall,
+                                                fontWeight = FontWeight.Bold
+                                            )
+                                            Text(
+                                                text = "Confidence: ${log.confidenceScore}/5",
+                                                style = MaterialTheme.typography.bodySmall,
+                                                color = when (log.confidenceScore) {
+                                                    5 -> LightGreenAmbatu
+                                                    4 -> LightGreenAmbatu.copy(alpha = 0.8f)
+                                                    3 -> YellowAmbatu
+                                                    else -> RedAmbatu
+                                                },
+                                                fontWeight = FontWeight.Bold
+                                            )
+                                        }
+                                    }
+                                    Spacer(modifier = Modifier.height(10.dp))
+                                    log.yesterday?.let {
+                                        if (it.isNotBlank()) {
+                                            Text(
+                                                text = "Yesterday",
+                                                style = MaterialTheme.typography.labelSmall,
+                                                fontWeight = FontWeight.Bold,
+                                                color = MaterialTheme.colorScheme.primary
+                                            )
+                                            Text(
+                                                text = it,
+                                                style = MaterialTheme.typography.bodyMedium,
+                                                modifier = Modifier.padding(bottom = 6.dp)
+                                            )
+                                        }
+                                    }
+                                    log.today?.let {
+                                        if (it.isNotBlank()) {
+                                            Text(
+                                                text = "Today",
+                                                style = MaterialTheme.typography.labelSmall,
+                                                fontWeight = FontWeight.Bold,
+                                                color = MaterialTheme.colorScheme.primary
+                                            )
+                                            Text(
+                                                text = it,
+                                                style = MaterialTheme.typography.bodyMedium,
+                                                modifier = Modifier.padding(bottom = 6.dp)
+                                            )
+                                        }
+                                    }
+                                    log.blockers?.let {
+                                        if (it.isNotBlank()) {
+                                            Text(
+                                                text = "Blockers",
+                                                style = MaterialTheme.typography.labelSmall,
+                                                fontWeight = FontWeight.Bold,
+                                                color = MaterialTheme.colorScheme.error
+                                            )
+                                            Text(
+                                                text = it,
+                                                style = MaterialTheme.typography.bodyMedium,
+                                                color = MaterialTheme.colorScheme.error,
+                                                fontWeight = FontWeight.Medium
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Close")
+            }
+        }
+    )
+}
+
+@Composable
+fun SubmitCheckinDialog(
+    onDismiss: () -> Unit,
+    onSubmit: (yesterday: String?, today: String?, blockers: String?, confidence: Int) -> Unit
+) {
+    var yesterday by remember { mutableStateOf("") }
+    var today by remember { mutableStateOf("") }
+    var blockers by remember { mutableStateOf("") }
+    var confidenceScore by remember { mutableStateOf(5) }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Daily Check-in") },
+        text = {
+            LazyColumn(
+                verticalArrangement = Arrangement.spacedBy(16.dp),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                item {
+                    OutlinedTextField(
+                        value = yesterday,
+                        onValueChange = { yesterday = it },
+                        label = { Text("What did you do yesterday?") },
+                        modifier = Modifier.fillMaxWidth(),
+                        minLines = 2
+                    )
+                }
+                item {
+                    OutlinedTextField(
+                        value = today,
+                        onValueChange = { today = it },
+                        label = { Text("What will you do today?") },
+                        modifier = Modifier.fillMaxWidth(),
+                        minLines = 2
+                    )
+                }
+                item {
+                    OutlinedTextField(
+                        value = blockers,
+                        onValueChange = { blockers = it },
+                        label = { Text("Any blockers/impediments? (Optional)") },
+                        modifier = Modifier.fillMaxWidth(),
+                        minLines = 2
+                    )
+                    if (blockers.isNotBlank()) {
+                        Text(
+                            text = "Notice: Submitting blockers will automatically create an impediment for the project.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.error,
+                            modifier = Modifier.padding(top = 4.dp, start = 4.dp)
+                        )
+                    }
+                }
+                item {
+                    Column(modifier = Modifier.fillMaxWidth()) {
+                        Text(
+                            text = "How confident are you about the sprint goal today?",
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            (1..5).forEach { score ->
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    modifier = Modifier.clickable { confidenceScore = score }
+                                ) {
+                                    RadioButton(
+                                        selected = (confidenceScore == score),
+                                        onClick = { confidenceScore = score }
+                                    )
+                                    Text(text = "$score", style = MaterialTheme.typography.bodyMedium)
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = {
+                    onSubmit(
+                        yesterday.takeIf { it.isNotBlank() },
+                        today.takeIf { it.isNotBlank() },
+                        blockers.takeIf { it.isNotBlank() },
+                        confidenceScore
+                    )
+                }
+            ) {
+                Text("Submit Check-in")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancel")
+            }
+        }
+    )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)

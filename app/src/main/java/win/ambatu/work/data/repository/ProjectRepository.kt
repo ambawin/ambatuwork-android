@@ -140,4 +140,17 @@ class ProjectRepository @Inject constructor(
     ): SprintReviewDto {
         return apiService.submitSprintReview(getAuthHeader(token), projectId, sprintId, request).data
     }
+
+    suspend fun getDailyCheckins(token: String, projectId: Long, sprintId: Long): List<DailyCheckinDto> {
+        return apiService.getDailyCheckins(getAuthHeader(token), projectId, sprintId).data
+    }
+
+    suspend fun submitDailyCheckin(
+        token: String,
+        projectId: Long,
+        sprintId: Long,
+        request: SubmitDailyCheckinRequest
+    ): DailyCheckinDto {
+        return apiService.submitDailyCheckin(getAuthHeader(token), projectId, sprintId, request).data
+    }
 }

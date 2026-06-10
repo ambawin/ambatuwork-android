@@ -371,3 +371,47 @@ data class SubmitSprintReviewRequest(
     val demoUrl: String? = null,
     val items: List<SprintReviewItemRequest>
 )
+
+@JsonClass(generateAdapter = true)
+data class DailyCheckinDto(
+    val id: Long,
+    @Json(name = "project_id")
+    val projectId: Long,
+    @Json(name = "sprint_id")
+    val sprintId: Long,
+    @Json(name = "user_id")
+    val userId: Long,
+    val yesterday: String?,
+    val today: String?,
+    val blockers: String?,
+    @Json(name = "confidence_score")
+    val confidenceScore: Int,
+    @Json(name = "checkin_date")
+    val checkinDate: String,
+    val user: UserDto,
+    @Json(name = "created_at")
+    val createdAt: String?,
+    @Json(name = "updated_at")
+    val updatedAt: String?
+)
+
+@JsonClass(generateAdapter = true)
+data class DailyCheckinListResponse(
+    val data: List<DailyCheckinDto>
+)
+
+@JsonClass(generateAdapter = true)
+data class DailyCheckinResponse(
+    val data: DailyCheckinDto
+)
+
+@JsonClass(generateAdapter = true)
+data class SubmitDailyCheckinRequest(
+    val yesterday: String? = null,
+    val today: String? = null,
+    val blockers: String? = null,
+    @Json(name = "confidence_score")
+    val confidenceScore: Int,
+    @Json(name = "checkin_date")
+    val checkinDate: String
+)

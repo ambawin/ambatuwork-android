@@ -17,6 +17,8 @@ import win.ambatu.work.feature.network.ProjectDto
 import win.ambatu.work.feature.network.ProjectMemberDto
 import win.ambatu.work.feature.network.SubmitSprintReviewRequest
 import win.ambatu.work.feature.network.SprintReviewItemRequest
+import win.ambatu.work.feature.network.DailyCheckinDto
+import win.ambatu.work.feature.network.SubmitDailyCheckinRequest
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 
@@ -24,6 +26,7 @@ data class SprintBoardUiState(
     val board: SprintBoardDto? = null,
     val project: ProjectDto? = null,
     val members: List<ProjectMemberDto> = emptyList(),
+    val checkins: List<DailyCheckinDto> = emptyList(),
     val isLoading: Boolean = false,
     val error: String? = null,
     val currentUserId: Long? = null,
@@ -61,10 +64,17 @@ class SprintBoardViewModel @Inject constructor(
                 val project = projectRepository.getProject(token, projectId)
                 val members = projectRepository.getProjectMembers(token, projectId)
                 
+                val checkins = try {
+                    projectRepository.getDailyCheckins(token, projectId, sprintId)
+                } catch (e: Exception) {
+                    emptyList()
+                }
+                
                 _uiState.update { it.copy(
                     board = board, 
                     project = project,
                     members = members,
+                    checkins = checkins,
                     currentUserId = user.id,
                     currentUserRole = project.myRole,
                     isLoading = false
@@ -175,6 +185,36 @@ class SprintBoardViewModel @Inject constructor(
                 )
                 // Sequentially close the sprint
                 projectRepository.closeSprint(token, projectId, sprintId)
+                loadBoard()
+            } catch (e: Exception) {
+                _uiState.update { it.copy(isLoading = false, error = e.message) }
+            }
+        }
+    }
+
+    fun submitDailyCheckin(
+        yesterday: String?,
+        today: String?,
+        blockers: String?,
+        confidenceScore: Int,
+        checkinDate: String
+    ) {
+        val token = sessionManager.getToken() ?: return
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true, error = null) }
+            try {
+                projectRepository.submitDailyCheckin(
+                    token = token,
+                    projectId = projectId,
+                    sprintId = sprintId,
+                    request = SubmitDailyCheckinRequest(
+                        yesterday = yesterday,
+                        today = today,
+                        blockers = blockers,
+                        confidenceScore = confidenceScore,
+                        checkinDate = checkinDate
+                    )
+                )
                 loadBoard()
             } catch (e: Exception) {
                 _uiState.update { it.copy(isLoading = false, error = e.message) }

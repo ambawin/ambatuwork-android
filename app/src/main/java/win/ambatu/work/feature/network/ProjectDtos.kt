@@ -189,7 +189,7 @@ data class SprintDto(
     @Json(name = "end_date")
     val endDate: String?,
     @Json(name = "created_by_user_id")
-    val createdByUserId: Long,
+    val createdByUserId: Long?,
     @Json(name = "closed_by_user_id")
     val closedByUserId: Long?,
     @Json(name = "closed_at")
@@ -334,7 +334,7 @@ data class SprintReviewDto(
     @Json(name = "demo_url")
     val demoUrl: String?,
     @Json(name = "created_by_user_id")
-    val createdByUserId: Long,
+    val createdByUserId: Long?,
     @Json(name = "created_at")
     val createdAt: String?,
     @Json(name = "updated_at")
@@ -371,7 +371,7 @@ data class DailyCheckinDto(
     @Json(name = "sprint_id")
     val sprintId: Long,
     @Json(name = "user_id")
-    val userId: Long,
+    val userId: Long?,
     val yesterday: String?,
     val today: String?,
     val blockers: String?,

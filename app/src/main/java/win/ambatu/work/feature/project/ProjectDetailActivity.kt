@@ -32,6 +32,14 @@ class ProjectDetailActivity : ComponentActivity() {
         }
     }
 
+    private val sprintBoardLauncher = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) {
+        viewModel.loadProject()
+        viewModel.loadBacklogItems()
+        viewModel.loadSprints()
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -54,7 +62,7 @@ class ProjectDetailActivity : ComponentActivity() {
                         addSprintLauncher.launch(AddSprintActivity.createIntent(this, id))
                     },
                     onSprintClick = { projectId, sprintId ->
-                        startActivity(SprintBoardActivity.createIntent(this, projectId, sprintId))
+                        sprintBoardLauncher.launch(SprintBoardActivity.createIntent(this, projectId, sprintId))
                     }
                 )
             }

@@ -30,7 +30,8 @@ data class SprintBoardUiState(
     val isLoading: Boolean = false,
     val error: String? = null,
     val currentUserId: Long? = null,
-    val currentUserRole: String? = null
+    val currentUserRole: String? = null,
+    val isSprintClosedSuccessfully: Boolean = false
 )
 
 @HiltViewModel
@@ -172,24 +173,31 @@ class SprintBoardViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, error = null) }
             try {
-                // Submit review first
-                projectRepository.submitSprintReview(
-                    token = token,
-                    projectId = projectId,
-                    sprintId = sprintId,
-                    request = SubmitSprintReviewRequest(
-                        summary = summary,
-                        demoUrl = demoUrl,
-                        items = items
+                if (items.isNotEmpty()) {
+                    // Submit review first
+                    projectRepository.submitSprintReview(
+                        token = token,
+                        projectId = projectId,
+                        sprintId = sprintId,
+                        request = SubmitSprintReviewRequest(
+                            summary = summary,
+                            demoUrl = demoUrl,
+                            items = items
+                        )
                     )
-                )
+                }
                 // Sequentially close the sprint
                 projectRepository.closeSprint(token, projectId, sprintId)
+                _uiState.update { it.copy(isSprintClosedSuccessfully = true) }
                 loadBoard()
             } catch (e: Exception) {
                 _uiState.update { it.copy(isLoading = false, error = e.message) }
             }
         }
+    }
+
+    fun resetSprintClosedSuccess() {
+        _uiState.update { it.copy(isSprintClosedSuccessfully = false) }
     }
 
     fun submitDailyCheckin(

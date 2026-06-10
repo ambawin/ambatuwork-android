@@ -77,6 +77,13 @@ import win.ambatu.work.ui.theme.ChocoAmbatu
 import win.ambatu.work.ui.theme.LightGreenAmbatu
 import win.ambatu.work.ui.theme.RedAmbatu
 import win.ambatu.work.ui.theme.YellowAmbatu
+import win.ambatu.work.ui.theme.DarkChocoAmbatu
+import win.ambatu.work.ui.theme.LightYellowAmbatu
+import win.ambatu.work.ui.theme.GreenAmbatu
+import win.ambatu.work.ui.theme.WhiteAmbatu
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material3.HorizontalDivider
 import win.ambatu.work.feature.network.SprintBoardDto
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -97,6 +104,15 @@ fun SprintBoardScreen(
             onConfirm = { summary, demoUrl, items ->
                 viewModel.submitSprintReviewAndClose(summary, demoUrl, items)
                 showCloseSprintDialog = false
+            }
+        )
+    }
+
+    if (uiState.isSprintClosedSuccessfully) {
+        SprintClosedSuccessDialog(
+            onDismiss = {
+                viewModel.resetSprintClosedSuccess()
+                onBackClick()
             }
         )
     }
@@ -961,4 +977,138 @@ fun CloseSprintDialog(
             }
         }
     )
+}
+
+@Composable
+fun SprintClosedSuccessDialog(
+    onDismiss: () -> Unit
+) {
+    androidx.compose.ui.window.Dialog(onDismissRequest = onDismiss) {
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            shape = RoundedCornerShape(24.dp),
+            colors = CardDefaults.cardColors(containerColor = WhiteAmbatu),
+            elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+        ) {
+            Column(
+                modifier = Modifier
+                    .padding(24.dp)
+                    .fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                // Celebration Icon
+                Box(
+                    modifier = Modifier
+                        .size(72.dp)
+                        .background(LightYellowAmbatu, CircleShape),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.CheckCircle,
+                        contentDescription = "Success",
+                        tint = GreenAmbatu,
+                        modifier = Modifier.size(48.dp)
+                    )
+                }
+                Spacer(modifier = Modifier.height(16.dp))
+                Text(
+                    text = "Sprint Closed Successfully! 🎉",
+                    style = MaterialTheme.typography.titleLarge,
+                    color = DarkChocoAmbatu,
+                    fontWeight = FontWeight.Bold,
+                    textAlign = TextAlign.Center
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+                HorizontalDivider(color = LightYellowAmbatu, thickness = 1.dp)
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Under the Hood Section
+                Text(
+                    text = "What happened under the hood:",
+                    style = MaterialTheme.typography.titleSmall,
+                    color = DarkChocoAmbatu,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.align(Alignment.Start)
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    BulletPoint("Sprint Review Submitted", "Your sprint review has been saved in the database.", GreenAmbatu)
+                    BulletPoint("Backlog Items Updated", "Done items are completed. Unfinished items are moved back to ready in the backlog.", BlueAmbatu)
+                    BulletPoint("Sprint Finalized", "The sprint status is officially changed to closed.", DarkChocoAmbatu)
+                }
+
+                Spacer(modifier = Modifier.height(20.dp))
+
+                // Next Steps Section
+                Text(
+                    text = "Suggested Next Steps (Scrum Flow):",
+                    style = MaterialTheme.typography.titleSmall,
+                    color = DarkChocoAmbatu,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.align(Alignment.Start)
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    BulletPoint("Sprint Retrospective", "Set team happiness score and create retro items (went well, to improve).", ChocoAmbatu)
+                    BulletPoint("Peer Review Cycle", "Initiate and participate in peer evaluations.", ChocoAmbatu)
+                    BulletPoint("Plan Next Sprint", "Create and start the next sprint to continue development.", ChocoAmbatu)
+                }
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                Button(
+                    onClick = onDismiss,
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = ButtonDefaults.buttonColors(containerColor = YellowAmbatu),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Text(
+                        text = "Back to Project Details",
+                        color = DarkChocoAmbatu,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun BulletPoint(
+    title: String,
+    desc: String,
+    iconColor: Color
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        Box(
+            modifier = Modifier
+                .padding(top = 4.dp)
+                .size(8.dp)
+                .background(iconColor, CircleShape)
+        )
+        Column {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.Bold,
+                color = DarkChocoAmbatu
+            )
+            Text(
+                text = desc,
+                style = MaterialTheme.typography.bodySmall,
+                color = ChocoAmbatu
+            )
+        }
+    }
 }

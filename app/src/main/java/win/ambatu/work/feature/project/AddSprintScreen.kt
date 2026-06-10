@@ -22,6 +22,7 @@ import win.ambatu.work.data.repository.ProjectRepository
 import win.ambatu.work.data.storage.SessionManager
 import win.ambatu.work.feature.network.BacklogItemDto
 import win.ambatu.work.feature.network.CreateSprintRequest
+import win.ambatu.work.feature.network.ProjectDto
 import win.ambatu.work.ui.components.AmbatuTextField
 import win.ambatu.work.ui.theme.ChocoAmbatu
 import win.ambatu.work.ui.theme.YellowAmbatu
@@ -46,6 +47,7 @@ fun AddSprintScreen(
     var selectedBacklogItemIds by remember { mutableStateOf(setOf<Long>()) }
 
     var backlogItems by remember { mutableStateOf<List<BacklogItemDto>>(emptyList()) }
+    var defaultSprintLengthDays by remember { mutableStateOf(14) }
     var isLoading by remember { mutableStateOf(false) }
     var isSubmitting by remember { mutableStateOf(false) }
     
@@ -65,9 +67,13 @@ fun AddSprintScreen(
                 // Filter items that are not already in a sprint or archived if possible
                 // For now, showing all non-done items might be a good start
                 backlogItems = items.filter { it.status.lowercase() != "done" && it.status.lowercase() != "archived" }
+
+                // Fetch project details to get default sprint length
+                val project = projectRepository.getProject(token, projectId)
+                defaultSprintLengthDays = project.defaultSprintLengthDays ?: 14
             }
         } catch (e: Exception) {
-            snackbarHostState.showSnackbar("Failed to load backlog items: ${e.message}")
+            snackbarHostState.showSnackbar("Failed to load screen data: ${e.message}")
         } finally {
             isLoading = false
         }
@@ -269,6 +275,8 @@ fun AddSprintScreen(
                             startDate == null -> "Start date is required"
                             endDate == null -> "End date is required"
                             endDate!!.isBefore(startDate) -> "End date must be on or after start date"
+                            (endDate!!.toEpochDay() - startDate!!.toEpochDay()) > defaultSprintLengthDays ->
+                                "The sprint duration cannot exceed the project limit of $defaultSprintLengthDays days."
                             selectedBacklogItemIds.isEmpty() -> "Select at least one backlog item"
                             else -> null
                         }
@@ -293,6 +301,19 @@ fun AddSprintScreen(
                                     projectRepository.createSprint(token, projectId, request)
                                     onSuccess()
                                 }
+                            } catch (e: retrofit2.HttpException) {
+                                val errorBody = e.response()?.errorBody()?.string()
+                                val errorMsg = if (!errorBody.isNullOrBlank()) {
+                                    try {
+                                        val jsonObject = org.json.JSONObject(errorBody)
+                                        jsonObject.optString("message", e.message())
+                                    } catch (jsonEx: Exception) {
+                                        "Error: ${e.message()}"
+                                    }
+                                } else {
+                                    "Error: ${e.message()}"
+                                }
+                                snackbarHostState.showSnackbar(errorMsg)
                             } catch (e: Exception) {
                                 snackbarHostState.showSnackbar("Error: ${e.message}")
                             } finally {

@@ -949,22 +949,56 @@ fun BacklogItemCard(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                // Points Pill
-                Surface(
-                    color = ChocoAmbatu,
-                    shape = RoundedCornerShape(50),
-                    modifier = Modifier.height(32.dp)
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    Box(
-                        contentAlignment = Alignment.Center,
-                        modifier = Modifier.padding(horizontal = 12.dp)
+                    // Priority Pill
+                    val priorityColor = when (item.priority.lowercase()) {
+                        "highest" -> RedAmbatu
+                        "high" -> Color(0xFFE67E22)
+                        "medium" -> YellowAmbatu
+                        "low" -> BlueAmbatu
+                        "lowest" -> GreenAmbatu
+                        else -> LightChocoAmbatu
+                    }
+                    val priorityTextColor = if (item.priority.lowercase() == "medium") ChocoAmbatu else WhiteAmbatu
+
+                    Surface(
+                        color = priorityColor,
+                        shape = RoundedCornerShape(50),
+                        modifier = Modifier.height(32.dp)
                     ) {
-                        Text(
-                            text = "${item.estimatePoints ?: 0}pts",
-                            style = MaterialTheme.typography.labelMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = WhiteAmbatu
-                        )
+                        Box(
+                            contentAlignment = Alignment.Center,
+                            modifier = Modifier.padding(horizontal = 12.dp)
+                        ) {
+                            Text(
+                                text = item.priority.uppercase(),
+                                style = MaterialTheme.typography.labelMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = priorityTextColor
+                            )
+                        }
+                    }
+
+                    // Points Pill
+                    Surface(
+                        color = ChocoAmbatu,
+                        shape = RoundedCornerShape(50),
+                        modifier = Modifier.height(32.dp)
+                    ) {
+                        Box(
+                            contentAlignment = Alignment.Center,
+                            modifier = Modifier.padding(horizontal = 12.dp)
+                        ) {
+                            Text(
+                                text = "${item.estimatePoints ?: 0}pts",
+                                style = MaterialTheme.typography.labelMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = WhiteAmbatu
+                            )
+                        }
                     }
                 }
 

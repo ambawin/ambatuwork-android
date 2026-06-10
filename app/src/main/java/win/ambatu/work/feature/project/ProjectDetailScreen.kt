@@ -37,6 +37,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
+import win.ambatu.work.ui.components.CircularFloatingActionButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -163,20 +164,16 @@ fun ProjectDetailScreen(
             )
 
             if (selectedTab == ProjectTab.BACKLOG && canAddBacklog) {
-                FloatingActionButton(
-                    onClick = { uiState.project?.id?.let { onAddBacklogClick(it) } },
-                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                CircularFloatingActionButton(
+                    onClick = { uiState.project?.id?.let { onAddBacklogClick(it) } }
                 ) {
                     Icon(Icons.Default.Add, contentDescription = "Add Backlog Item")
                 }
             }
 
             if (selectedTab == ProjectTab.SPRINT && canAddBacklog) {
-                FloatingActionButton(
-                    onClick = { uiState.project?.id?.let { onAddSprintClick(it) } },
-                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                CircularFloatingActionButton(
+                    onClick = { uiState.project?.id?.let { onAddSprintClick(it) } }
                 ) {
                     Icon(Icons.Default.Add, contentDescription = "Add Sprint")
                 }

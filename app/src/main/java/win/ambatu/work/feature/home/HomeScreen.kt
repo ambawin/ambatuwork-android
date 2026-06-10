@@ -36,6 +36,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.FloatingActionButton
+import win.ambatu.work.ui.components.CircularFloatingActionButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -347,29 +348,23 @@ private fun Content(
                         )
 
                 if (selectedTab == ProjectTab.BACKLOG && canEdit) {
-                    FloatingActionButton(
-                        onClick = { onAddBacklogClick(uiState.selectedProject.id) },
-                        containerColor = MaterialTheme.colorScheme.primaryContainer,
-                        contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                    CircularFloatingActionButton(
+                        onClick = { onAddBacklogClick(uiState.selectedProject.id) }
                     ) {
                         Icon(Icons.Default.Add, contentDescription = "Add Backlog Item")
                     }
                 }
 
                 if (selectedTab == ProjectTab.SPRINT && canEdit) {
-                    FloatingActionButton(
-                        onClick = { onAddSprintClick(uiState.selectedProject.id) },
-                        containerColor = MaterialTheme.colorScheme.primaryContainer,
-                        contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                    CircularFloatingActionButton(
+                        onClick = { onAddSprintClick(uiState.selectedProject.id) }
                     ) {
                         Icon(Icons.Default.Add, contentDescription = "Add Sprint")
                     }
                 }
             } else {
-                FloatingActionButton(
-                    onClick = { showCreateSheet = true },
-                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                CircularFloatingActionButton(
+                    onClick = { showCreateSheet = true }
                 ) {
                     Icon(Icons.Default.Add, contentDescription = "Add Project")
                 }

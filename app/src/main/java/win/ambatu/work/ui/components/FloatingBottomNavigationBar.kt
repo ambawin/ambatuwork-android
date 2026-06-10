@@ -26,7 +26,7 @@ fun FloatingBottomNavigationBar(
         modifier = modifier
             .padding(horizontal = 24.dp, vertical = 12.dp)
             .navigationBarsPadding()
-            .shadow(elevation = 8.dp, shape = RoundedCornerShape(50))
+            .shadow(elevation = 1.dp, shape = RoundedCornerShape(50))
             .clip(RoundedCornerShape(24.dp)),
         containerColor = WhiteAmbatu,
         tonalElevation = 0.dp

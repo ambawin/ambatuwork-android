@@ -79,6 +79,16 @@
             android:exported="false"
             android:label="Peer Review"
             android:theme="@style/Theme.AmbatuWork" />
+        <activity
+            android:name=".feature.project.DailyStandupActivity"
+            android:exported="false"
+            android:label="Daily Standups"
+            android:theme="@style/Theme.AmbatuWork" />
+        <activity
+            android:name=".feature.project.AddDailyCheckinActivity"
+            android:exported="false"
+            android:label="Daily Check-in"
+            android:theme="@style/Theme.AmbatuWork" />
 
         <meta-data
             android:name="preloaded_fonts"

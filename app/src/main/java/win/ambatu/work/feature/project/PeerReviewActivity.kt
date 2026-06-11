@@ -210,7 +210,7 @@ fun PeerReviewScreen(
                                 modifier = Modifier.fillMaxWidth(),
                                 colors = CardDefaults.cardColors(containerColor = WhiteAmbatu),
                                 shape = RoundedCornerShape(20.dp),
-                                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
                             ) {
                                 Box(
                                     modifier = Modifier
@@ -228,7 +228,7 @@ fun PeerReviewScreen(
                                 modifier = Modifier.fillMaxWidth(),
                                 colors = CardDefaults.cardColors(containerColor = WhiteAmbatu),
                                 shape = RoundedCornerShape(20.dp),
-                                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
                             ) {
                                 Column(modifier = Modifier.padding(20.dp)) {
                                     reviewableMembers.forEachIndexed { index, member ->
@@ -279,7 +279,7 @@ fun PeerReviewScreen(
                             modifier = Modifier.fillMaxWidth(),
                             colors = CardDefaults.cardColors(containerColor = WhiteAmbatu),
                             shape = RoundedCornerShape(20.dp),
-                            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
                         ) {
                             Column(modifier = Modifier.padding(20.dp)) {
                                 uiState.summary.forEachIndexed { index, item ->
@@ -318,7 +318,7 @@ fun CycleStatusCard(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = WhiteAmbatu),
         shape = RoundedCornerShape(20.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Column(modifier = Modifier.padding(20.dp)) {
             Row(
@@ -472,7 +472,7 @@ fun PersonalSummaryCard(summary: PeerReviewSummaryItemDto) {
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = WhiteAmbatu),
         shape = RoundedCornerShape(20.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Column(modifier = Modifier.padding(20.dp)) {
             Text(

@@ -78,6 +78,7 @@ import win.ambatu.work.ui.theme.RedAmbatu
 import win.ambatu.work.ui.theme.YellowAmbatu
 import win.ambatu.work.ui.theme.DarkChocoAmbatu
 import win.ambatu.work.ui.theme.WhiteAmbatu
+import win.ambatu.work.ui.theme.SecondaryYellowAmbatu
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material3.HorizontalDivider
@@ -253,9 +254,10 @@ fun SprintBoardScreen(
                                     .fillMaxWidth()
                                     .padding(horizontal = 16.dp, vertical = 8.dp),
                                 colors = CardDefaults.cardColors(
-                                    containerColor = MaterialTheme.colorScheme.primaryContainer
+                                    containerColor = WhiteAmbatu
                                 ),
-                                shape = RoundedCornerShape(12.dp)
+                                shape = RoundedCornerShape(12.dp),
+                                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
                             ) {
                                 Row(
                                     modifier = Modifier.padding(16.dp),
@@ -351,8 +353,9 @@ fun PostSprintDashboard(
         // Header
         Card(
             modifier = Modifier.fillMaxWidth(),
-            colors = CardDefaults.cardColors(containerColor = YellowAmbatu.copy(alpha = 0f)),
-            shape = RoundedCornerShape(16.dp)
+            colors = CardDefaults.cardColors(containerColor = Color.Transparent),
+            shape = RoundedCornerShape(16.dp),
+            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
         ) {
             Column(
                 modifier = Modifier.padding(20.dp),
@@ -383,7 +386,7 @@ fun PostSprintDashboard(
             modifier = Modifier.fillMaxWidth(),
             colors = CardDefaults.cardColors(containerColor = WhiteAmbatu),
             shape = RoundedCornerShape(16.dp),
-            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
             onClick = onOpenRetrospective
         ) {
             Row(
@@ -441,7 +444,7 @@ fun PostSprintDashboard(
             modifier = Modifier.fillMaxWidth(),
             colors = CardDefaults.cardColors(containerColor = WhiteAmbatu),
             shape = RoundedCornerShape(16.dp),
-            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
             onClick = {
                 if (uiState.cycleExists) {
                     onOpenPeerReview()
@@ -733,9 +736,9 @@ fun BoardItemCard(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(8.dp),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
+            containerColor = WhiteAmbatu
         ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Column(
             modifier = Modifier.padding(12.dp),
@@ -890,8 +893,9 @@ fun DailyStandupDialog(
                             Card(
                                 modifier = Modifier.fillMaxWidth(),
                                 colors = CardDefaults.cardColors(
-                                    containerColor = MaterialTheme.colorScheme.surfaceContainerLow
-                                )
+                                    containerColor = WhiteAmbatu
+                                ),
+                                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
                             ) {
                                 Column(modifier = Modifier.padding(12.dp)) {
                                     Row(
@@ -1160,8 +1164,9 @@ fun CloseSprintDialog(
                     Card(
                         modifier = Modifier.fillMaxWidth(),
                         colors = CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.surfaceContainerLow
-                        )
+                            containerColor = WhiteAmbatu
+                        ),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
                     ) {
                         Column(modifier = Modifier.padding(12.dp)) {
                             Text(
@@ -1231,7 +1236,7 @@ fun SprintClosedSuccessDialog(
                 .padding(16.dp),
             shape = RoundedCornerShape(24.dp),
             colors = CardDefaults.cardColors(containerColor = WhiteAmbatu),
-            elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
         ) {
             Column(
                 modifier = Modifier

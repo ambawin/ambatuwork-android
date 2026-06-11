@@ -26,6 +26,7 @@ import win.ambatu.work.feature.network.ProjectDto
 import win.ambatu.work.ui.components.AmbatuTextField
 import win.ambatu.work.ui.theme.ChocoAmbatu
 import win.ambatu.work.ui.theme.YellowAmbatu
+import win.ambatu.work.ui.theme.WhiteAmbatu
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
@@ -124,6 +125,7 @@ fun AddSprintScreen(
     }
 
     Scaffold(
+        containerColor = YellowAmbatu,
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         topBar = {
             TopAppBar(
@@ -144,7 +146,7 @@ fun AddSprintScreen(
     ) { innerPadding ->
         if (isLoading) {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator()
+                CircularProgressIndicator(color = ChocoAmbatu)
             }
         } else {
             Column(
@@ -161,7 +163,7 @@ fun AddSprintScreen(
                     label = "Sprint Name",
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
-                    supportingText = { Text("${name.length}/255") }
+                    supportingText = { Text("${name.length}/255", color = ChocoAmbatu.copy(alpha = 0.8f)) }
                 )
 
                 AmbatuTextField(
@@ -170,7 +172,7 @@ fun AddSprintScreen(
                     label = "Sprint Goal",
                     modifier = Modifier.fillMaxWidth(),
                     minLines = 3,
-                    supportingText = { Text("${sprintGoal.length}/5000") }
+                    supportingText = { Text("${sprintGoal.length}/5000", color = ChocoAmbatu.copy(alpha = 0.8f)) }
                 )
 
                 Row(
@@ -214,14 +216,15 @@ fun AddSprintScreen(
                 Text(
                     text = "Select Backlog Items",
                     style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold,
+                    color = ChocoAmbatu
                 )
 
                 if (backlogItems.isEmpty()) {
                     Text(
                         text = "No available backlog items to add to sprint.",
                         style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = ChocoAmbatu.copy(alpha = 0.8f)
                     )
                 } else {
                     Card(
@@ -229,8 +232,9 @@ fun AddSprintScreen(
                             .fillMaxWidth()
                             .heightIn(max = 300.dp),
                         colors = CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.surfaceContainerLow
-                        )
+                            containerColor = WhiteAmbatu
+                        ),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
                     ) {
                         LazyColumn(
                             modifier = Modifier.fillMaxSize()
@@ -238,8 +242,8 @@ fun AddSprintScreen(
                             items(backlogItems) { item ->
                                 val isSelected = selectedBacklogItemIds.contains(item.id)
                                 ListItem(
-                                    headlineContent = { Text(item.title) },
-                                    supportingContent = { Text("${item.type.uppercase()} • ${item.estimatePoints ?: 0} pts") },
+                                    headlineContent = { Text(item.title, color = ChocoAmbatu, fontWeight = FontWeight.SemiBold) },
+                                    supportingContent = { Text("${item.type.uppercase()} • ${item.estimatePoints ?: 0} pts", color = ChocoAmbatu.copy(alpha = 0.7f)) },
                                     trailingContent = {
                                         Checkbox(
                                             checked = isSelected,
@@ -249,9 +253,19 @@ fun AddSprintScreen(
                                                 } else {
                                                     selectedBacklogItemIds - item.id
                                                 }
-                                            }
+                                            },
+                                            colors = CheckboxDefaults.colors(
+                                                checkedColor = ChocoAmbatu,
+                                                uncheckedColor = ChocoAmbatu.copy(alpha = 0.6f),
+                                                checkmarkColor = YellowAmbatu
+                                            )
                                         )
                                     },
+                                    colors = ListItemDefaults.colors(
+                                        containerColor = Color.Transparent,
+                                        headlineColor = ChocoAmbatu,
+                                        supportingColor = ChocoAmbatu.copy(alpha = 0.7f)
+                                    ),
                                     modifier = Modifier.clickable {
                                         selectedBacklogItemIds = if (isSelected) {
                                             selectedBacklogItemIds - item.id
@@ -321,13 +335,19 @@ fun AddSprintScreen(
                             }
                         }
                     },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = ChocoAmbatu,
+                        contentColor = WhiteAmbatu,
+                        disabledContainerColor = ChocoAmbatu.copy(alpha = 0.5f),
+                        disabledContentColor = WhiteAmbatu.copy(alpha = 0.5f)
+                    ),
                     modifier = Modifier.fillMaxWidth(),
                     enabled = !isSubmitting
                 ) {
                     if (isSubmitting) {
                         CircularProgressIndicator(
                             modifier = Modifier.size(24.dp),
-                            color = MaterialTheme.colorScheme.onPrimary,
+                            color = WhiteAmbatu,
                             strokeWidth = 2.dp
                         )
                     } else {

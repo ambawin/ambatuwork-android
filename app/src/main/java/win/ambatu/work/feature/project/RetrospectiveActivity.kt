@@ -218,7 +218,7 @@ fun RetrospectiveScreen(
                             modifier = Modifier.fillMaxWidth(),
                             colors = CardDefaults.cardColors(containerColor = WhiteAmbatu),
                             shape = RoundedCornerShape(20.dp),
-                            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
                         ) {
                             Box(
                                 modifier = Modifier
@@ -240,7 +240,7 @@ fun RetrospectiveScreen(
                             modifier = Modifier.fillMaxWidth(),
                             colors = CardDefaults.cardColors(containerColor = WhiteAmbatu),
                             shape = RoundedCornerShape(20.dp),
-                            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
                         ) {
                             Column(
                                 modifier = Modifier.padding(20.dp),
@@ -281,7 +281,7 @@ fun HappinessScoreCard(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = WhiteAmbatu),
         shape = RoundedCornerShape(20.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Column(
             modifier = Modifier.padding(20.dp),

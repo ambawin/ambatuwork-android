@@ -5,6 +5,8 @@ import androidx.compose.ui.graphics.Color
 val YellowAmbatu = Color(0xFFFDCB40)
 val WhiteAmbatu = Color(0xFFFFFFFF)
 val ChocoAmbatu = Color(0xFF604B10)
+val SecondaryYellowAmbatu = Color(0xFFE4B834)
+
 
 // Helper shades to make the interface feel rich and premium:
 val LightYellowAmbatu = Color(0xFFFFF7D6) // Soft, warm cream background for containers

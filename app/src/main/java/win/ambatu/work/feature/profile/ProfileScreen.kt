@@ -20,6 +20,8 @@ import androidx.compose.material.icons.automirrored.filled.Assignment
 import androidx.compose.material3.Card
 import win.ambatu.work.ui.theme.ChocoAmbatu
 import win.ambatu.work.ui.theme.YellowAmbatu
+import win.ambatu.work.ui.theme.WhiteAmbatu
+import win.ambatu.work.ui.theme.SecondaryYellowAmbatu
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -57,13 +59,6 @@ import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.ui.graphics.Color
 import win.ambatu.work.feature.network.UserStatsDto
-import win.ambatu.work.ui.theme.LightYellowAmbatu
-import win.ambatu.work.ui.theme.LightGreenAmbatu
-import win.ambatu.work.ui.theme.GreenAmbatu
-import win.ambatu.work.ui.theme.LightRedAmbatu
-import win.ambatu.work.ui.theme.RedAmbatu
-import win.ambatu.work.ui.theme.LightBlueAmbatu
-import win.ambatu.work.ui.theme.BlueAmbatu
 import androidx.compose.material3.CircularProgressIndicator
 
 @Composable
@@ -105,6 +100,7 @@ private fun Content(
     onScrumGuideClick: () -> Unit = {}
 ) {
     Scaffold(
+        containerColor = YellowAmbatu,
         topBar = {
             TopAppBar(
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -168,12 +164,12 @@ private fun Content(
                         text = user.name,
                         style = MaterialTheme.typography.headlineLarge,
                         fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.tertiary
+                        color = ChocoAmbatu
                     )
                     Text(
                         text = user.email,
                         style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.secondary
+                        color = ChocoAmbatu.copy(alpha = 0.8f)
                     )
                 }
 
@@ -189,8 +185,9 @@ private fun Content(
                 if (isStatsLoading && stats == null) {
                     Card(
                         modifier = Modifier.fillMaxWidth(),
-                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
-                        shape = RoundedCornerShape(24.dp)
+                        colors = CardDefaults.cardColors(containerColor = WhiteAmbatu),
+                        shape = RoundedCornerShape(24.dp),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
                     ) {
                         Row(
                             modifier = Modifier
@@ -214,8 +211,9 @@ private fun Content(
                 } else if (statsError != null) {
                     Card(
                         modifier = Modifier.fillMaxWidth(),
-                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer),
-                        shape = RoundedCornerShape(24.dp)
+                        colors = CardDefaults.cardColors(containerColor = WhiteAmbatu),
+                        shape = RoundedCornerShape(24.dp),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
                     ) {
                         Column(
                             modifier = Modifier
@@ -227,14 +225,14 @@ private fun Content(
                             Text(
                                 text = "Failed to load stats: $statsError",
                                 style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.error
+                                color = ChocoAmbatu
                             )
                             androidx.compose.material3.TextButton(
                                 onClick = onRetryStatsClick
                             ) {
                                 Text(
                                     text = "Retry",
-                                    color = MaterialTheme.colorScheme.error,
+                                    color = ChocoAmbatu,
                                     fontWeight = FontWeight.Bold
                                 )
                             }
@@ -249,7 +247,7 @@ private fun Content(
                             text = "My Statistics",
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.tertiary
+                            color = ChocoAmbatu
                         )
 
                         Row(
@@ -258,14 +256,14 @@ private fun Content(
                         ) {
                             BentoCard(
                                 modifier = Modifier.weight(1f),
-                                containerColor = LightBlueAmbatu,
-                                contentColor = BlueAmbatu,
+                                containerColor = WhiteAmbatu,
+                                contentColor = ChocoAmbatu,
                                 title = "Projects",
                                 icon = {
                                     Icon(
                                         imageVector = Icons.Default.Folder,
                                         contentDescription = null,
-                                        tint = BlueAmbatu
+                                        tint = ChocoAmbatu
                                     )
                                 }
                             ) {
@@ -274,26 +272,26 @@ private fun Content(
                                         text = "${stats.projects.totalActive}",
                                         style = MaterialTheme.typography.displayLarge.copy(fontSize = 54.sp),
                                         fontWeight = FontWeight.Black,
-                                        color = BlueAmbatu
+                                        color = ChocoAmbatu
                                     )
                                     Text(
                                         text = "Active Workspaces",
                                         style = MaterialTheme.typography.bodySmall,
-                                        color = BlueAmbatu.copy(alpha = 0.7f)
+                                        color = ChocoAmbatu.copy(alpha = 0.7f)
                                     )
                                 }
                             }
 
                             BentoCard(
                                 modifier = Modifier.weight(1f),
-                                containerColor = LightGreenAmbatu,
-                                contentColor = GreenAmbatu,
+                                containerColor = WhiteAmbatu,
+                                contentColor = ChocoAmbatu,
                                 title = "Velocity",
                                 icon = {
                                     Icon(
                                         imageVector = Icons.Default.Star,
                                         contentDescription = null,
-                                        tint = GreenAmbatu
+                                        tint = ChocoAmbatu
                                     )
                                 }
                             ) {
@@ -302,12 +300,12 @@ private fun Content(
                                         text = "${stats.backlogItems.completedPoints}",
                                         style = MaterialTheme.typography.displayLarge.copy(fontSize = 54.sp),
                                         fontWeight = FontWeight.Black,
-                                        color = GreenAmbatu
+                                        color = ChocoAmbatu
                                     )
                                     Text(
                                         text = "Completed Points",
                                         style = MaterialTheme.typography.bodySmall,
-                                        color = GreenAmbatu.copy(alpha = 0.7f)
+                                        color = ChocoAmbatu.copy(alpha = 0.7f)
                                     )
                                 }
                             }
@@ -315,14 +313,14 @@ private fun Content(
 
                         BentoCard(
                             modifier = Modifier.fillMaxWidth(),
-                            containerColor = MaterialTheme.colorScheme.surfaceVariant,
-                            contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                            containerColor = WhiteAmbatu,
+                            contentColor = ChocoAmbatu,
                             title = "My Tasks",
                             icon = {
                                 Icon(
                                     imageVector = Icons.AutoMirrored.Filled.Assignment,
                                     contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                    tint = ChocoAmbatu
                                 )
                             }
                         ) {
@@ -338,12 +336,12 @@ private fun Content(
                                         text = "${stats.backlogItems.assignedTotal}",
                                         style = MaterialTheme.typography.displayLarge.copy(fontSize = 54.sp),
                                         fontWeight = FontWeight.Black,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        color = ChocoAmbatu
                                     )
                                     Text(
                                         text = "Total Assigned Tasks",
                                         style = MaterialTheme.typography.bodyMedium,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+                                        color = ChocoAmbatu.copy(alpha = 0.7f)
                                     )
                                 }
 
@@ -366,7 +364,7 @@ private fun Content(
                                                 modifier = Modifier
                                                     .weight(doneCount.toFloat())
                                                     .fillMaxHeight()
-                                                    .background(GreenAmbatu)
+                                                    .background(ChocoAmbatu)
                                             )
                                         }
                                         if (inReviewCount > 0) {
@@ -374,7 +372,7 @@ private fun Content(
                                                 modifier = Modifier
                                                     .weight(inReviewCount.toFloat())
                                                     .fillMaxHeight()
-                                                    .background(BlueAmbatu)
+                                                    .background(SecondaryYellowAmbatu)
                                             )
                                         }
                                         if (inProgressCount > 0) {
@@ -390,7 +388,7 @@ private fun Content(
                                                 modifier = Modifier
                                                     .weight(todoCount.toFloat())
                                                     .fillMaxHeight()
-                                                    .background(ChocoAmbatu.copy(alpha = 0.3f))
+                                                    .background(ChocoAmbatu.copy(alpha = 0.2f))
                                             )
                                         }
                                     }
@@ -400,16 +398,16 @@ private fun Content(
                                         horizontalArrangement = Arrangement.spacedBy(8.dp),
                                         verticalAlignment = Alignment.CenterVertically
                                     ) {
-                                        StatusLegendItem(label = "Done", count = doneCount, color = GreenAmbatu)
-                                        StatusLegendItem(label = "In Review", count = inReviewCount, color = BlueAmbatu)
+                                        StatusLegendItem(label = "Done", count = doneCount, color = ChocoAmbatu)
+                                        StatusLegendItem(label = "In Review", count = inReviewCount, color = SecondaryYellowAmbatu)
                                         StatusLegendItem(label = "In Progress", count = inProgressCount, color = YellowAmbatu)
-                                        StatusLegendItem(label = "To Do", count = todoCount, color = ChocoAmbatu.copy(alpha = 0.5f))
+                                        StatusLegendItem(label = "To Do", count = todoCount, color = ChocoAmbatu.copy(alpha = 0.4f))
                                     }
                                 } else {
                                     Text(
                                         text = "No tasks assigned currently",
                                         style = MaterialTheme.typography.bodyMedium,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+                                        color = ChocoAmbatu.copy(alpha = 0.5f)
                                     )
                                 }
                             }
@@ -422,14 +420,14 @@ private fun Content(
                             val openImpediments = stats.impediments.reportedByStatus.open + stats.impediments.reportedByStatus.inProgress
                             BentoCard(
                                 modifier = Modifier.weight(1f),
-                                containerColor = LightRedAmbatu,
-                                contentColor = RedAmbatu,
+                                containerColor = WhiteAmbatu,
+                                contentColor = ChocoAmbatu,
                                 title = "Blockers",
                                 icon = {
                                     Icon(
                                         imageVector = Icons.Default.Warning,
                                         contentDescription = null,
-                                        tint = RedAmbatu
+                                        tint = ChocoAmbatu
                                     )
                                 }
                             ) {
@@ -438,17 +436,17 @@ private fun Content(
                                         text = "$openImpediments",
                                         style = MaterialTheme.typography.displayLarge.copy(fontSize = 54.sp),
                                         fontWeight = FontWeight.Black,
-                                        color = RedAmbatu
+                                        color = ChocoAmbatu
                                     )
                                     Text(
                                         text = "Active Impediments",
                                         style = MaterialTheme.typography.bodySmall,
-                                        color = RedAmbatu.copy(alpha = 0.7f)
+                                        color = ChocoAmbatu.copy(alpha = 0.7f)
                                     )
                                     Text(
                                         text = "${stats.impediments.reportedResolved} resolved",
                                         style = MaterialTheme.typography.labelSmall,
-                                        color = GreenAmbatu,
+                                        color = SecondaryYellowAmbatu,
                                         fontWeight = FontWeight.Bold,
                                         modifier = Modifier.padding(top = 4.dp)
                                     )
@@ -457,14 +455,14 @@ private fun Content(
 
                             BentoCard(
                                 modifier = Modifier.weight(1f),
-                                containerColor = MaterialTheme.colorScheme.primaryContainer,
-                                contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                                containerColor = WhiteAmbatu,
+                                contentColor = ChocoAmbatu,
                                 title = "Check-ins",
                                 icon = {
                                     Icon(
                                         imageVector = Icons.Default.CheckCircle,
                                         contentDescription = null,
-                                        tint = MaterialTheme.colorScheme.onPrimaryContainer
+                                        tint = ChocoAmbatu
                                     )
                                 }
                             ) {
@@ -473,12 +471,12 @@ private fun Content(
                                         text = "${stats.dailyCheckins.totalSubmitted}",
                                         style = MaterialTheme.typography.displayLarge.copy(fontSize = 54.sp),
                                         fontWeight = FontWeight.Black,
-                                        color = MaterialTheme.colorScheme.onPrimaryContainer
+                                        color = ChocoAmbatu
                                     )
                                     Text(
                                         text = "Submissions",
                                         style = MaterialTheme.typography.bodySmall,
-                                        color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
+                                        color = ChocoAmbatu.copy(alpha = 0.7f)
                                     )
                                     val avgConf = stats.dailyCheckins.averageConfidence ?: 0f
                                     Text(
@@ -494,7 +492,7 @@ private fun Content(
 
                         BentoCard(
                             modifier = Modifier.fillMaxWidth(),
-                            containerColor = LightYellowAmbatu,
+                            containerColor = WhiteAmbatu,
                             contentColor = ChocoAmbatu,
                             title = "Peer Reviews",
                             icon = {
@@ -555,9 +553,10 @@ private fun Content(
                         modifier = Modifier
                             .fillMaxWidth(),
                         colors = CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.surfaceVariant
+                            containerColor = WhiteAmbatu
                         ),
                         shape = RoundedCornerShape(20.dp),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
                         onClick = onScrumGuideClick,
                         enabled = !isLoading
                     ) {
@@ -600,9 +599,10 @@ private fun Content(
                         modifier = Modifier
                             .fillMaxWidth(),
                         colors = CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.errorContainer
+                            containerColor = WhiteAmbatu
                         ),
                         shape = RoundedCornerShape(20.dp),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
                         onClick = onLogoutClick,
                         enabled = !isLoading
                     ) {
@@ -618,18 +618,18 @@ private fun Content(
                             if (isLoading) {
                                 CircularProgressIndicator(
                                     modifier = Modifier.size(24.dp),
-                                    color = MaterialTheme.colorScheme.error
+                                    color = ChocoAmbatu
                                 )
                             } else {
                                 Icon(
                                     imageVector = Icons.AutoMirrored.Filled.Logout,
                                     contentDescription = "Logout icon",
-                                    tint = MaterialTheme.colorScheme.error
+                                    tint = ChocoAmbatu
                                 )
                             }
                             Text(
                                 text = if (isLoading) "Logging out..." else "Logout",
-                                color = MaterialTheme.colorScheme.error
+                                color = ChocoAmbatu
                             )
                         }
                     }
@@ -706,7 +706,8 @@ fun StatusLegendItem(
             Text(
                 text = "$label ($count)",
                 style = MaterialTheme.typography.labelSmall,
-                fontWeight = FontWeight.Medium
+                fontWeight = FontWeight.Medium,
+                color = ChocoAmbatu
             )
         }
     }

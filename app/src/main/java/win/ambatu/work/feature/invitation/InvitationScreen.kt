@@ -26,6 +26,8 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import win.ambatu.work.ui.theme.YellowAmbatu
 import win.ambatu.work.ui.theme.ChocoAmbatu
+import win.ambatu.work.ui.theme.WhiteAmbatu
+import androidx.compose.material3.CardDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -58,6 +60,7 @@ fun InvitationScreen(
     }
 
     Scaffold(
+        containerColor = YellowAmbatu,
         topBar = {
             TopAppBar(
                 title = { Text("Invitations", fontWeight = FontWeight.Bold) },
@@ -81,16 +84,20 @@ fun InvitationScreen(
                 .padding(padding)
         ) {
             if (uiState.isLoading) {
-                CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+                CircularProgressIndicator(
+                    modifier = Modifier.align(Alignment.Center),
+                    color = ChocoAmbatu
+                )
             } else if (uiState.error != null) {
                 Text(
                     text = uiState.error ?: "Unknown error",
-                    color = MaterialTheme.colorScheme.error,
+                    color = ChocoAmbatu,
                     modifier = Modifier.align(Alignment.Center)
                 )
             } else if (uiState.invitations.isEmpty()) {
                 Text(
                     text = "No invitations found",
+                    color = ChocoAmbatu,
                     modifier = Modifier.align(Alignment.Center)
                 )
             } else {
@@ -113,7 +120,7 @@ fun InvitationScreen(
                         .clickable(enabled = false) {},
                     contentAlignment = Alignment.Center
                 ) {
-                    CircularProgressIndicator()
+                    CircularProgressIndicator(color = ChocoAmbatu)
                 }
             }
         }
@@ -129,7 +136,9 @@ fun InvitationItem(
         modifier = Modifier
             .fillMaxWidth()
             .padding(8.dp)
-            .clickable { onClick() }
+            .clickable { onClick() },
+        colors = CardDefaults.cardColors(containerColor = WhiteAmbatu),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Row(
             modifier = Modifier
@@ -152,16 +161,18 @@ fun InvitationItem(
                 Text(
                     text = invitation.project?.name ?: "Unnamed Project",
                     style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold,
+                    color = ChocoAmbatu
                 )
                 Text(
                     text = "Invited by: ${invitation.project?.owner?.name ?: "Unknown"}",
-                    style = MaterialTheme.typography.bodyMedium
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = ChocoAmbatu.copy(alpha = 0.8f)
                 )
                 Text(
                     text = "Role: ${invitation.role}",
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.secondary
+                    color = ChocoAmbatu.copy(alpha = 0.6f)
                 )
             }
         }

@@ -26,6 +26,7 @@ import win.ambatu.work.ui.components.AmbatuSimpleTextField
 import win.ambatu.work.ui.components.AmbatuTextField
 import win.ambatu.work.ui.theme.ChocoAmbatu
 import win.ambatu.work.ui.theme.YellowAmbatu
+import win.ambatu.work.ui.theme.WhiteAmbatu
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -73,6 +74,7 @@ fun AddBacklogItemScreen(
     }
 
     Scaffold(
+        containerColor = YellowAmbatu,
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         topBar = {
             TopAppBar(
@@ -93,7 +95,7 @@ fun AddBacklogItemScreen(
     ) { innerPadding ->
         if (isLoading) {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator()
+                CircularProgressIndicator(color = ChocoAmbatu)
             }
         } else {
             Column(
@@ -146,12 +148,18 @@ fun AddBacklogItemScreen(
                         Text(
                             text = "Estimate Points: $estimatePoints",
                             style = MaterialTheme.typography.bodyMedium,
-                            fontWeight = FontWeight.Medium
+                            fontWeight = FontWeight.Medium,
+                            color = ChocoAmbatu
                         )
                         Slider(
                             value = estimatePoints.toFloat(),
                             onValueChange = { estimatePoints = it.roundToInt() },
                             valueRange = 0f..100f,
+                            colors = SliderDefaults.colors(
+                                thumbColor = ChocoAmbatu,
+                                activeTrackColor = ChocoAmbatu,
+                                inactiveTrackColor = ChocoAmbatu.copy(alpha = 0.24f)
+                            ),
                             modifier = Modifier.fillMaxWidth()
                         )
                     }
@@ -175,7 +183,7 @@ fun AddBacklogItemScreen(
                     }
                 }
 
-                Text("Acceptance Criteria", style = MaterialTheme.typography.titleMedium)
+                Text("Acceptance Criteria", style = MaterialTheme.typography.titleMedium, color = ChocoAmbatu)
                 
                 acceptanceCriteria.forEachIndexed { index, criteria ->
                     Row(
@@ -199,16 +207,21 @@ fun AddBacklogItemScreen(
                             newList.removeAt(index)
                             acceptanceCriteria = newList
                         }) {
-                            Icon(Icons.Default.Delete, contentDescription = "Remove")
+                            Icon(
+                                imageVector = Icons.Default.Delete,
+                                contentDescription = "Remove",
+                                tint = ChocoAmbatu
+                            )
                         }
                     }
                 }
                 
                 TextButton(
                     onClick = { acceptanceCriteria = acceptanceCriteria + "" },
+                    colors = ButtonDefaults.textButtonColors(contentColor = ChocoAmbatu),
                     modifier = Modifier.align(Alignment.Start)
                 ) {
-                    Icon(Icons.Default.Add, contentDescription = null)
+                    Icon(Icons.Default.Add, contentDescription = null, tint = ChocoAmbatu)
                     Spacer(Modifier.width(8.dp))
                     Text("Add Criteria")
                 }
@@ -274,13 +287,19 @@ fun AddBacklogItemScreen(
                             }
                         }
                     },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = ChocoAmbatu,
+                        contentColor = WhiteAmbatu,
+                        disabledContainerColor = ChocoAmbatu.copy(alpha = 0.5f),
+                        disabledContentColor = WhiteAmbatu.copy(alpha = 0.5f)
+                    ),
                     modifier = Modifier.fillMaxWidth(),
                     enabled = !isSubmitting && title.isNotBlank()
                 ) {
                     if (isSubmitting) {
                         CircularProgressIndicator(
                             modifier = Modifier.size(24.dp),
-                            color = MaterialTheme.colorScheme.onPrimary,
+                            color = WhiteAmbatu,
                             strokeWidth = 2.dp
                         )
                     } else {

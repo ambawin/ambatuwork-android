@@ -94,6 +94,7 @@ import win.ambatu.work.ui.components.FloatingBottomNavigationBar
 import androidx.compose.ui.text.style.TextOverflow
 import win.ambatu.work.ui.theme.ChocoAmbatu
 import win.ambatu.work.ui.theme.DarkChocoAmbatu
+import win.ambatu.work.ui.theme.SecondaryYellowAmbatu
 import win.ambatu.work.ui.theme.GreenAmbatu
 import win.ambatu.work.ui.theme.BlueAmbatu
 import win.ambatu.work.ui.theme.RedAmbatu
@@ -308,8 +309,9 @@ fun DashboardTab(
             if (isStatsLoading && stats == null) {
                 Card(
                     modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
-                    shape = RoundedCornerShape(24.dp)
+                    colors = CardDefaults.cardColors(containerColor = WhiteAmbatu),
+                    shape = RoundedCornerShape(24.dp),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
                 ) {
                     Row(
                         modifier = Modifier
@@ -333,8 +335,9 @@ fun DashboardTab(
             } else if (statsError != null) {
                 Card(
                     modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer),
-                    shape = RoundedCornerShape(24.dp)
+                    colors = CardDefaults.cardColors(containerColor = WhiteAmbatu),
+                    shape = RoundedCornerShape(24.dp),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
                 ) {
                     Column(
                         modifier = Modifier
@@ -371,7 +374,7 @@ fun DashboardTab(
                     ) {
                         BentoCard(
                             modifier = Modifier.weight(1f),
-                            containerColor = LightYellowAmbatu,
+                            containerColor = WhiteAmbatu,
                             contentColor = ChocoAmbatu,
                             title = "Sprints",
                             icon = {
@@ -399,7 +402,7 @@ fun DashboardTab(
 
                         BentoCard(
                             modifier = Modifier.weight(1f),
-                            containerColor = LightYellowAmbatu,
+                            containerColor = WhiteAmbatu,
                             contentColor = ChocoAmbatu,
                             title = "Velocity",
                             icon = {
@@ -430,14 +433,14 @@ fun DashboardTab(
                     // Row 2: Backlog Progress (Success / Green theme)
                     BentoCard(
                         modifier = Modifier.fillMaxWidth(),
-                        containerColor = LightGreenAmbatu,
-                        contentColor = GreenAmbatu,
+                        containerColor = WhiteAmbatu,
+                        contentColor = ChocoAmbatu,
                         title = "Sprint Progress",
                         icon = {
                             Icon(
                                 imageVector = Icons.Default.CheckCircleOutline,
                                 contentDescription = null,
-                                tint = GreenAmbatu
+                                tint = ChocoAmbatu
                             )
                         }
                     ) {
@@ -453,12 +456,12 @@ fun DashboardTab(
                                     text = "${stats.backlogItems.completedPoints} / ${stats.backlogItems.totalPoints}",
                                     style = MaterialTheme.typography.displayMedium,
                                     fontWeight = FontWeight.Black,
-                                    color = GreenAmbatu
+                                    color = ChocoAmbatu
                                 )
                                 Text(
                                     text = "Completed Story Points",
                                     style = MaterialTheme.typography.bodyMedium,
-                                    color = GreenAmbatu.copy(alpha = 0.7f)
+                                    color = ChocoAmbatu.copy(alpha = 0.7f)
                                 )
                             }
 
@@ -476,12 +479,12 @@ fun DashboardTab(
                                         .height(10.dp)
                                         .clip(RoundedCornerShape(5.dp))
                                 ) {
-                                    if (doneCount > 0) {
+                                     if (doneCount > 0) {
                                         Spacer(
                                             modifier = Modifier
                                                 .weight(doneCount.toFloat())
                                                 .fillMaxHeight()
-                                                .background(GreenAmbatu)
+                                                .background(ChocoAmbatu)
                                         )
                                     }
                                     if (inReviewCount > 0) {
@@ -489,7 +492,7 @@ fun DashboardTab(
                                             modifier = Modifier
                                                 .weight(inReviewCount.toFloat())
                                                 .fillMaxHeight()
-                                                .background(BlueAmbatu)
+                                                .background(SecondaryYellowAmbatu)
                                         )
                                     }
                                     if (inProgressCount > 0) {
@@ -515,8 +518,8 @@ fun DashboardTab(
                                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
-                                    StatusLegendItem(label = "Done", count = doneCount, color = GreenAmbatu)
-                                    StatusLegendItem(label = "In Review", count = inReviewCount, color = BlueAmbatu)
+                                    StatusLegendItem(label = "Done", count = doneCount, color = ChocoAmbatu)
+                                    StatusLegendItem(label = "In Review", count = inReviewCount, color = SecondaryYellowAmbatu)
                                     StatusLegendItem(label = "In Progress", count = inProgressCount, color = YellowAmbatu)
                                     StatusLegendItem(label = "To Do", count = todoCount, color = ChocoAmbatu.copy(alpha = 0.5f))
                                 }
@@ -524,7 +527,7 @@ fun DashboardTab(
                                 Text(
                                     text = "No backlog items found",
                                     style = MaterialTheme.typography.bodyMedium,
-                                    color = GreenAmbatu.copy(alpha = 0.5f)
+                                    color = ChocoAmbatu.copy(alpha = 0.5f)
                                 )
                             }
                         }
@@ -539,14 +542,14 @@ fun DashboardTab(
                         val openImpediments = stats.impediments.byStatus.open + stats.impediments.byStatus.inProgress
                         BentoCard(
                             modifier = Modifier.weight(1f),
-                            containerColor = LightRedAmbatu,
-                            contentColor = RedAmbatu,
+                            containerColor = WhiteAmbatu,
+                            contentColor = ChocoAmbatu,
                             title = "Blockers",
                             icon = {
                                 Icon(
                                     imageVector = Icons.Default.Warning,
                                     contentDescription = null,
-                                    tint = RedAmbatu
+                                    tint = ChocoAmbatu
                                 )
                             }
                         ) {
@@ -555,17 +558,17 @@ fun DashboardTab(
                                     text = "$openImpediments",
                                     style = MaterialTheme.typography.displayLarge.copy(fontSize = 54.sp),
                                     fontWeight = FontWeight.Black,
-                                    color = RedAmbatu
+                                    color = ChocoAmbatu
                                 )
                                 Text(
                                     text = "Active Impediments",
                                     style = MaterialTheme.typography.bodySmall,
-                                    color = RedAmbatu.copy(alpha = 0.7f)
+                                    color = ChocoAmbatu.copy(alpha = 0.7f)
                                 )
                                 Text(
                                     text = "${stats.impediments.resolved} resolved",
                                     style = MaterialTheme.typography.labelSmall,
-                                    color = GreenAmbatu,
+                                    color = SecondaryYellowAmbatu,
                                     fontWeight = FontWeight.Bold,
                                     modifier = Modifier.padding(top = 4.dp)
                                 )
@@ -575,7 +578,7 @@ fun DashboardTab(
                         // Daily Check-ins (Normal -> Yellow)
                         BentoCard(
                             modifier = Modifier.weight(1f),
-                            containerColor = LightYellowAmbatu,
+                            containerColor = WhiteAmbatu,
                             contentColor = ChocoAmbatu,
                             title = "Daily Checkins",
                             icon = {
@@ -614,7 +617,7 @@ fun DashboardTab(
                     // Row 4: Peer Reviews & Happiness (Normal -> Yellow)
                     BentoCard(
                         modifier = Modifier.fillMaxWidth(),
-                        containerColor = LightYellowAmbatu,
+                        containerColor = WhiteAmbatu,
                         contentColor = ChocoAmbatu,
                         title = "Team Ratings",
                         icon = {
@@ -765,7 +768,7 @@ fun SprintCard(
         colors = CardDefaults.cardColors(
             containerColor = WhiteAmbatu
         ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Column(
             modifier = Modifier
@@ -809,10 +812,10 @@ fun SprintCard(
                 }
 
                 val badgeColor = when (sprint.status.lowercase()) {
-                    "closed" -> GreenAmbatu
-                    "active" -> BlueAmbatu
-                    "planned" -> ChocoAmbatu
-                    else -> MaterialTheme.colorScheme.surfaceVariant
+                    "closed" -> ChocoAmbatu
+                    "active" -> SecondaryYellowAmbatu
+                    "planned" -> YellowAmbatu
+                    else -> YellowAmbatu
                 }
 
                 Surface(
@@ -1008,7 +1011,7 @@ fun SettingsTab(
                 colors = CardDefaults.cardColors(
                     containerColor = WhiteAmbatu
                 ),
-                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
             ) {
                 Row(
                     modifier = Modifier
@@ -1052,7 +1055,7 @@ fun SettingsTab(
                 colors = CardDefaults.cardColors(
                     containerColor = WhiteAmbatu
                 ),
-                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
             ) {
                 Column(
                     modifier = Modifier
@@ -1252,7 +1255,7 @@ fun SettingsTab(
                 colors = CardDefaults.cardColors(
                     containerColor = WhiteAmbatu
                 ),
-                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
             ) {
                 Row(
                     modifier = Modifier
@@ -1277,9 +1280,12 @@ fun SettingsTab(
                     ) {
                         Text(
                             text = member.user.name ?: "Unknown",
-                            style = MaterialTheme.typography.titleLarge.copy(fontSize = 24.sp),
+                            modifier = Modifier.width(120.dp),
+                            style = MaterialTheme.typography.titleLarge.copy(fontSize = 16.sp),
                             fontWeight = FontWeight.Bold,
-                            color = ChocoAmbatu
+                            color = ChocoAmbatu,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
                         )
                         member.user.email?.let { email ->
                             Text(
@@ -1295,9 +1301,9 @@ fun SettingsTab(
                         }
                         
                         val badgeBgColor = when (member.role.lowercase().trim()) {
-                            "owner" -> LimeGreenAmbatu
-                            "supervisor" -> ChocoAmbatu
-                            else -> LightChocoAmbatu
+                            "owner" -> ChocoAmbatu
+                            "supervisor" -> SecondaryYellowAmbatu
+                            else -> YellowAmbatu
                         }
 
                         Surface(
@@ -1374,7 +1380,7 @@ fun BacklogItemCard(
         colors = CardDefaults.cardColors(
             containerColor = WhiteAmbatu
         ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Column(
             modifier = Modifier
@@ -1431,14 +1437,16 @@ fun BacklogItemCard(
                 ) {
                     // Priority Pill
                     val priorityColor = when (item.priority.lowercase()) {
-                        "highest" -> RedAmbatu
-                        "high" -> Color(0xFFE67E22)
-                        "medium" -> YellowAmbatu
-                        "low" -> BlueAmbatu
-                        "lowest" -> GreenAmbatu
-                        else -> LightChocoAmbatu
+                        "highest", "high" -> ChocoAmbatu
+                        "medium" -> SecondaryYellowAmbatu
+                        "low", "lowest" -> YellowAmbatu
+                        else -> YellowAmbatu
                     }
-                    val priorityTextColor = if (item.priority.lowercase() == "medium") ChocoAmbatu else WhiteAmbatu
+                    val priorityTextColor = when (item.priority.lowercase()) {
+                        "highest", "high" -> WhiteAmbatu
+                        "medium" -> ChocoAmbatu
+                        else -> ChocoAmbatu
+                    }
 
                     Surface(
                         color = priorityColor,
@@ -2085,8 +2093,8 @@ fun InfoCard(
         modifier = modifier,
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
-            disabledContainerColor = MaterialTheme.colorScheme.surfaceContainerLow
+            containerColor = WhiteAmbatu,
+            disabledContainerColor = WhiteAmbatu
         ),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
@@ -2096,19 +2104,20 @@ fun InfoCard(
             Icon(
                 imageVector = icon,
                 contentDescription = null,
-                tint = MaterialTheme.colorScheme.primary,
+                tint = ChocoAmbatu,
                 modifier = Modifier.size(24.dp)
             )
             Spacer(modifier = Modifier.height(8.dp))
             Text(
                 text = label,
                 style = MaterialTheme.typography.labelLarge,
-                color = MaterialTheme.colorScheme.secondary
+                color = ChocoAmbatu.copy(alpha = 0.7f)
             )
             Text(
                 text = value,
                 style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.Bold,
+                color = ChocoAmbatu
             )
         }
     }

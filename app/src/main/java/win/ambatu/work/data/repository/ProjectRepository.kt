@@ -153,4 +153,79 @@ class ProjectRepository @Inject constructor(
     ): DailyCheckinDto {
         return apiService.submitDailyCheckin(getAuthHeader(token), projectId, sprintId, request).data
     }
+
+    // ===================== Retrospective =====================
+
+    suspend fun getRetrospective(token: String, projectId: Long, sprintId: Long): RetrospectiveDto {
+        return apiService.getRetrospective(getAuthHeader(token), projectId, sprintId).data
+    }
+
+    suspend fun submitHappinessScore(
+        token: String,
+        projectId: Long,
+        sprintId: Long,
+        score: Int
+    ): RetrospectiveDto {
+        return apiService.submitHappinessScore(
+            getAuthHeader(token), projectId, sprintId, SubmitHappinessRequest(score)
+        ).data
+    }
+
+    suspend fun createRetroItem(
+        token: String,
+        projectId: Long,
+        sprintId: Long,
+        request: CreateRetroItemRequest
+    ): RetroItemDto {
+        return apiService.createRetroItem(getAuthHeader(token), projectId, sprintId, request).data
+    }
+
+    suspend fun deleteRetroItem(
+        token: String,
+        projectId: Long,
+        sprintId: Long,
+        itemId: Long
+    ): String {
+        return apiService.deleteRetroItem(getAuthHeader(token), projectId, sprintId, itemId).message
+    }
+
+    // ===================== Peer Review =====================
+
+    suspend fun getPeerReviewCycle(token: String, projectId: Long, sprintId: Long): PeerReviewCycleDto {
+        return apiService.getPeerReviewCycle(getAuthHeader(token), projectId, sprintId).data
+    }
+
+    suspend fun openPeerReviewCycle(token: String, projectId: Long, sprintId: Long): PeerReviewCycleDto {
+        return apiService.openPeerReviewCycle(getAuthHeader(token), projectId, sprintId).data
+    }
+
+    suspend fun closePeerReviewCycle(token: String, projectId: Long, cycleId: Long): PeerReviewCycleDto {
+        return apiService.closePeerReviewCycle(getAuthHeader(token), projectId, cycleId).data
+    }
+
+    suspend fun submitPeerReview(
+        token: String,
+        projectId: Long,
+        cycleId: Long,
+        request: SubmitPeerReviewRequest
+    ): PeerReviewDto {
+        return apiService.submitPeerReview(getAuthHeader(token), projectId, cycleId, request).data
+    }
+
+    suspend fun getPeerReviewCycleSummary(
+        token: String,
+        projectId: Long,
+        cycleId: Long
+    ): List<PeerReviewSummaryItemDto> {
+        return apiService.getPeerReviewCycleSummary(getAuthHeader(token), projectId, cycleId).data
+    }
+
+    suspend fun getMyPeerReviewSummary(
+        token: String,
+        projectId: Long,
+        cycleId: Long
+    ): PeerReviewSummaryItemDto {
+        return apiService.getMyPeerReviewSummary(getAuthHeader(token), projectId, cycleId).data
+    }
 }
+

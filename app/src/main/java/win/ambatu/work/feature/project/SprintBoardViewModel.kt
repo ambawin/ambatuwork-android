@@ -19,6 +19,8 @@ import win.ambatu.work.feature.network.SubmitSprintReviewRequest
 import win.ambatu.work.feature.network.SprintReviewItemRequest
 import win.ambatu.work.feature.network.DailyCheckinDto
 import win.ambatu.work.feature.network.SubmitDailyCheckinRequest
+import win.ambatu.work.feature.network.RetrospectiveDto
+import win.ambatu.work.feature.network.PeerReviewCycleDto
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 
@@ -31,7 +33,12 @@ data class SprintBoardUiState(
     val error: String? = null,
     val currentUserId: Long? = null,
     val currentUserRole: String? = null,
-    val isSprintClosedSuccessfully: Boolean = false
+    val isSprintClosedSuccessfully: Boolean = false,
+    // Post-sprint dashboard state
+    val retrospective: RetrospectiveDto? = null,
+    val peerReviewCycle: PeerReviewCycleDto? = null,
+    val retroExists: Boolean = false,
+    val cycleExists: Boolean = false
 )
 
 @HiltViewModel
@@ -70,6 +77,24 @@ class SprintBoardViewModel @Inject constructor(
                 } catch (e: Exception) {
                     emptyList()
                 }
+
+                // If sprint is closed, load post-sprint data
+                var retro: RetrospectiveDto? = null
+                var retroExists = false
+                var cycle: PeerReviewCycleDto? = null
+                var cycleExists = false
+
+                if (board.sprint.status.lowercase() == "closed") {
+                    try {
+                        retro = projectRepository.getRetrospective(token, projectId, sprintId)
+                        retroExists = true
+                    } catch (_: Exception) {}
+
+                    try {
+                        cycle = projectRepository.getPeerReviewCycle(token, projectId, sprintId)
+                        cycleExists = true
+                    } catch (_: Exception) {}
+                }
                 
                 _uiState.update { it.copy(
                     board = board, 
@@ -78,7 +103,11 @@ class SprintBoardViewModel @Inject constructor(
                     checkins = checkins,
                     currentUserId = user.id,
                     currentUserRole = project.myRole,
-                    isLoading = false
+                    isLoading = false,
+                    retrospective = retro,
+                    peerReviewCycle = cycle,
+                    retroExists = retroExists,
+                    cycleExists = cycleExists
                 ) }
             } catch (e: Exception) {
                 _uiState.update { it.copy(isLoading = false, error = e.message) }
@@ -224,6 +253,44 @@ class SprintBoardViewModel @Inject constructor(
                     )
                 )
                 loadBoard()
+            } catch (e: Exception) {
+                _uiState.update { it.copy(isLoading = false, error = e.message) }
+            }
+        }
+    }
+
+    fun openPeerReviewCycle() {
+        val token = sessionManager.getToken() ?: return
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true, error = null) }
+            try {
+                val cycle = projectRepository.openPeerReviewCycle(token, projectId, sprintId)
+                _uiState.update {
+                    it.copy(
+                        peerReviewCycle = cycle,
+                        cycleExists = true,
+                        isLoading = false
+                    )
+                }
+            } catch (e: Exception) {
+                _uiState.update { it.copy(isLoading = false, error = e.message) }
+            }
+        }
+    }
+
+    fun closePeerReviewCycle() {
+        val cycle = _uiState.value.peerReviewCycle ?: return
+        val token = sessionManager.getToken() ?: return
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true, error = null) }
+            try {
+                val updatedCycle = projectRepository.closePeerReviewCycle(token, projectId, cycle.id)
+                _uiState.update {
+                    it.copy(
+                        peerReviewCycle = updatedCycle,
+                        isLoading = false
+                    )
+                }
             } catch (e: Exception) {
                 _uiState.update { it.copy(isLoading = false, error = e.message) }
             }

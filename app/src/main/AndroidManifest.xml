@@ -63,7 +63,16 @@
             android:exported="false"
             android:label="Profile"
             android:theme="@style/Theme.AmbatuWork" />
-
+        <activity
+            android:name=".feature.project.RetrospectiveActivity"
+            android:exported="false"
+            android:label="Retrospective"
+            android:theme="@style/Theme.AmbatuWork" />
+        <activity
+            android:name=".feature.project.PeerReviewActivity"
+            android:exported="false"
+            android:label="Peer Review"
+            android:theme="@style/Theme.AmbatuWork" />
 
         <meta-data
             android:name="preloaded_fonts"

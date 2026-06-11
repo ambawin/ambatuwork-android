@@ -192,4 +192,83 @@ interface ApiService {
         @Path("sprint_id") sprintId: Long,
         @Body request: SubmitDailyCheckinRequest
     ): DailyCheckinResponse
+
+    // ===================== Retrospective API =====================
+
+    @GET("api/v1/projects/{project_id}/sprints/{sprint_id}/retrospective")
+    suspend fun getRetrospective(
+        @Header("Authorization") authorization: String,
+        @Path("project_id") projectId: Long,
+        @Path("sprint_id") sprintId: Long
+    ): RetrospectiveResponse
+
+    @POST("api/v1/projects/{project_id}/sprints/{sprint_id}/retrospective")
+    suspend fun submitHappinessScore(
+        @Header("Authorization") authorization: String,
+        @Path("project_id") projectId: Long,
+        @Path("sprint_id") sprintId: Long,
+        @Body request: SubmitHappinessRequest
+    ): RetrospectiveResponse
+
+    @POST("api/v1/projects/{project_id}/sprints/{sprint_id}/retrospective/items")
+    suspend fun createRetroItem(
+        @Header("Authorization") authorization: String,
+        @Path("project_id") projectId: Long,
+        @Path("sprint_id") sprintId: Long,
+        @Body request: CreateRetroItemRequest
+    ): RetroItemResponse
+
+    @DELETE("api/v1/projects/{project_id}/sprints/{sprint_id}/retrospective/items/{item_id}")
+    suspend fun deleteRetroItem(
+        @Header("Authorization") authorization: String,
+        @Path("project_id") projectId: Long,
+        @Path("sprint_id") sprintId: Long,
+        @Path("item_id") itemId: Long
+    ): MessageResponse
+
+    // ===================== Peer Review API =====================
+
+    @GET("api/v1/projects/{project_id}/sprints/{sprint_id}/peer-review-cycle")
+    suspend fun getPeerReviewCycle(
+        @Header("Authorization") authorization: String,
+        @Path("project_id") projectId: Long,
+        @Path("sprint_id") sprintId: Long
+    ): PeerReviewCycleResponse
+
+    @POST("api/v1/projects/{project_id}/sprints/{sprint_id}/peer-review-cycle")
+    suspend fun openPeerReviewCycle(
+        @Header("Authorization") authorization: String,
+        @Path("project_id") projectId: Long,
+        @Path("sprint_id") sprintId: Long
+    ): PeerReviewCycleResponse
+
+    @POST("api/v1/projects/{project_id}/peer-review-cycles/{cycle_id}/close")
+    suspend fun closePeerReviewCycle(
+        @Header("Authorization") authorization: String,
+        @Path("project_id") projectId: Long,
+        @Path("cycle_id") cycleId: Long
+    ): PeerReviewCycleResponse
+
+    @POST("api/v1/projects/{project_id}/peer-review-cycles/{cycle_id}/reviews")
+    suspend fun submitPeerReview(
+        @Header("Authorization") authorization: String,
+        @Path("project_id") projectId: Long,
+        @Path("cycle_id") cycleId: Long,
+        @Body request: SubmitPeerReviewRequest
+    ): PeerReviewResponse
+
+    @GET("api/v1/projects/{project_id}/peer-review-cycles/{cycle_id}/summary")
+    suspend fun getPeerReviewCycleSummary(
+        @Header("Authorization") authorization: String,
+        @Path("project_id") projectId: Long,
+        @Path("cycle_id") cycleId: Long
+    ): PeerReviewSummaryResponse
+
+    @GET("api/v1/projects/{project_id}/peer-review-cycles/{cycle_id}/my-summary")
+    suspend fun getMyPeerReviewSummary(
+        @Header("Authorization") authorization: String,
+        @Path("project_id") projectId: Long,
+        @Path("cycle_id") cycleId: Long
+    ): PeerReviewMySummaryResponse
 }
+

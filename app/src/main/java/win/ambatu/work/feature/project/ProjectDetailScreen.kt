@@ -285,7 +285,7 @@ fun DashboardTab(
 ) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(start = 16.dp, top = 96.dp, end = 16.dp, bottom = 100.dp),
+        contentPadding = PaddingValues(start = 16.dp, top = 96.dp, end = 16.dp, bottom = 160.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         item {
@@ -698,7 +698,7 @@ fun BacklogTab(
     } else {
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(start = 16.dp, top = 96.dp, end = 16.dp, bottom = 100.dp),
+            contentPadding = PaddingValues(start = 16.dp, top = 96.dp, end = 16.dp, bottom = 160.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             items(
@@ -736,7 +736,7 @@ fun SprintTab(
     } else {
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(start = 16.dp, top = 96.dp, end = 16.dp, bottom = 100.dp),
+            contentPadding = PaddingValues(start = 16.dp, top = 96.dp, end = 16.dp, bottom = 160.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             items(
@@ -1000,7 +1000,7 @@ fun SettingsTab(
 
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(start = 16.dp, top = 96.dp, end = 16.dp, bottom = 100.dp),
+        contentPadding = PaddingValues(start = 16.dp, top = 96.dp, end = 16.dp, bottom = 160.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         item {

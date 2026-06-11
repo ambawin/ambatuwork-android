@@ -6,6 +6,7 @@ import retrofit2.http.GET
 import retrofit2.http.Header
 import retrofit2.http.PATCH
 import retrofit2.http.POST
+import retrofit2.http.PUT
 import retrofit2.http.Path
 
 interface ApiService {
@@ -22,6 +23,12 @@ interface ApiService {
     @POST("api/v1/auth/logout")
     suspend fun logout(
         @Header("Authorization") authorization: String
+    ): MessageResponse
+
+    @PUT("api/v1/auth/device-token")
+    suspend fun updateDeviceToken(
+        @Header("Authorization") authorization: String,
+        @Body request: DeviceTokenRequest
     ): MessageResponse
 
     @GET("api/v1/projects")

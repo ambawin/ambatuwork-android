@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import win.ambatu.work.data.repository.AuthRepository
 import win.ambatu.work.data.storage.SessionManager
+import com.google.firebase.messaging.FirebaseMessaging
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -94,6 +95,15 @@ class LoginViewModel @Inject constructor(
                 Log.d("Network", "BASE_URL=${BuildConfig.BASE_URL}")
 
                 sessionManager.saveToken(response.token)
+
+                // Upload FCM token now that we have a valid Sanctum token
+                FirebaseMessaging.getInstance().token.addOnSuccessListener { fcmToken ->
+                    viewModelScope.launch {
+                        runCatching {
+                            authRepository.updateDeviceToken(response.token, fcmToken)
+                        }.onFailure { Log.w("FCM", "Token upload failed after login", it) }
+                    }
+                }
 
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,

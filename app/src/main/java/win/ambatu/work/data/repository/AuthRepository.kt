@@ -1,6 +1,7 @@
 package win.ambatu.work.data.repository
 
 import win.ambatu.work.feature.network.ApiService
+import win.ambatu.work.feature.network.DeviceTokenRequest
 import win.ambatu.work.feature.network.GoogleAuthRequest
 import win.ambatu.work.feature.network.GoogleAuthResponse
 import javax.inject.Inject
@@ -30,5 +31,15 @@ class AuthRepository @Inject constructor(
 
     suspend fun getUserStats(token: String): win.ambatu.work.feature.network.UserStatsDto {
         return apiService.getUserStats("Bearer $token").data
+    }
+
+    suspend fun updateDeviceToken(sanctumToken: String, fcmToken: String) {
+        apiService.updateDeviceToken(
+            authorization = "Bearer $sanctumToken",
+            request = DeviceTokenRequest(
+                fcmToken = fcmToken,
+                deviceName = android.os.Build.MODEL
+            )
+        )
     }
 }

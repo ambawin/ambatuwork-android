@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -206,7 +207,7 @@ fun ProjectDetailScreen(
     ) { innerPadding ->
         Box(
             modifier = Modifier
-                .padding(innerPadding)
+                .padding(top = innerPadding.calculateTopPadding())
                 .fillMaxSize()
         ) {
             if (uiState.isLoading) {
@@ -277,9 +278,8 @@ fun DashboardTab(
     onRetryStatsClick: () -> Unit = {}
 ) {
     LazyColumn(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp),
+        modifier = Modifier.fillMaxSize(),
+        contentPadding = PaddingValues(start = 16.dp, top = 16.dp, end = 16.dp, bottom = 100.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         item {
@@ -380,7 +380,7 @@ fun DashboardTab(
                             Column {
                                 Text(
                                     text = "${stats.sprints.total}",
-                                    style = MaterialTheme.typography.displayMedium,
+                                    style = MaterialTheme.typography.displayLarge.copy(fontSize = 54.sp),
                                     fontWeight = FontWeight.Black,
                                     color = ChocoAmbatu
                                 )
@@ -409,7 +409,7 @@ fun DashboardTab(
                                 val velocity = stats.sprints.averageVelocity ?: 0f
                                 Text(
                                     text = String.format(Locale.getDefault(), "%.1f", velocity),
-                                    style = MaterialTheme.typography.displayMedium,
+                                    style = MaterialTheme.typography.displayLarge.copy(fontSize = 54.sp),
                                     fontWeight = FontWeight.Black,
                                     color = ChocoAmbatu
                                 )
@@ -548,7 +548,7 @@ fun DashboardTab(
                             Column {
                                 Text(
                                     text = "$openImpediments",
-                                    style = MaterialTheme.typography.displayMedium,
+                                    style = MaterialTheme.typography.displayLarge.copy(fontSize = 54.sp),
                                     fontWeight = FontWeight.Black,
                                     color = RedAmbatu
                                 )
@@ -584,7 +584,7 @@ fun DashboardTab(
                             Column {
                                 Text(
                                     text = "${stats.dailyCheckins.totalSubmitted}",
-                                    style = MaterialTheme.typography.displayMedium,
+                                    style = MaterialTheme.typography.displayLarge.copy(fontSize = 54.sp),
                                     fontWeight = FontWeight.Black,
                                     color = ChocoAmbatu
                                 )
@@ -689,9 +689,8 @@ fun BacklogTab(
         }
     } else {
         LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(16.dp),
+            modifier = Modifier.fillMaxSize(),
+            contentPadding = PaddingValues(start = 16.dp, top = 16.dp, end = 16.dp, bottom = 100.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             items(
@@ -728,9 +727,8 @@ fun SprintTab(
         }
     } else {
         LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(16.dp),
+            modifier = Modifier.fillMaxSize(),
+            contentPadding = PaddingValues(start = 16.dp, top = 16.dp, end = 16.dp, bottom = 100.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             items(
@@ -980,9 +978,8 @@ fun SettingsTab(
     }
 
     LazyColumn(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp),
+        modifier = Modifier.fillMaxSize(),
+        contentPadding = PaddingValues(start = 16.dp, top = 16.dp, end = 16.dp, bottom = 100.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         item {

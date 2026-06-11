@@ -32,7 +32,7 @@ fun FloatingBottomNavigationBar(
 ) {
     NavigationBar(
         modifier = modifier
-            .padding(horizontal = 24.dp, vertical = 12.dp)
+            .padding(horizontal = 24.dp, vertical = 2.dp)
             .navigationBarsPadding()
             .shadow(elevation = 1.dp, shape = RoundedCornerShape(50))
             .clip(RoundedCornerShape(24.dp)),

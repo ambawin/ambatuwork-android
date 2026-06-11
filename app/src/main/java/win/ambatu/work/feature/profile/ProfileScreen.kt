@@ -38,6 +38,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
 import win.ambatu.work.R
 import win.ambatu.work.controller.UserController
@@ -271,7 +272,7 @@ private fun Content(
                                 Column {
                                     Text(
                                         text = "${stats.projects.totalActive}",
-                                        style = MaterialTheme.typography.displayMedium,
+                                        style = MaterialTheme.typography.displayLarge.copy(fontSize = 54.sp),
                                         fontWeight = FontWeight.Black,
                                         color = BlueAmbatu
                                     )
@@ -299,7 +300,7 @@ private fun Content(
                                 Column {
                                     Text(
                                         text = "${stats.backlogItems.completedPoints}",
-                                        style = MaterialTheme.typography.displayMedium,
+                                        style = MaterialTheme.typography.displayLarge.copy(fontSize = 54.sp),
                                         fontWeight = FontWeight.Black,
                                         color = GreenAmbatu
                                     )
@@ -335,7 +336,7 @@ private fun Content(
                                 ) {
                                     Text(
                                         text = "${stats.backlogItems.assignedTotal}",
-                                        style = MaterialTheme.typography.displayMedium,
+                                        style = MaterialTheme.typography.displayLarge.copy(fontSize = 54.sp),
                                         fontWeight = FontWeight.Black,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
@@ -435,7 +436,7 @@ private fun Content(
                                 Column {
                                     Text(
                                         text = "$openImpediments",
-                                        style = MaterialTheme.typography.displayMedium,
+                                        style = MaterialTheme.typography.displayLarge.copy(fontSize = 54.sp),
                                         fontWeight = FontWeight.Black,
                                         color = RedAmbatu
                                     )
@@ -470,7 +471,7 @@ private fun Content(
                                 Column {
                                     Text(
                                         text = "${stats.dailyCheckins.totalSubmitted}",
-                                        style = MaterialTheme.typography.displayMedium,
+                                        style = MaterialTheme.typography.displayLarge.copy(fontSize = 54.sp),
                                         fontWeight = FontWeight.Black,
                                         color = MaterialTheme.colorScheme.onPrimaryContainer
                                     )

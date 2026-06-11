@@ -344,7 +344,7 @@ private fun Content(
     ) { innerPadding ->
         Box(
             modifier = Modifier
-                .padding(innerPadding)
+                .padding(top = innerPadding.calculateTopPadding())
                 .fillMaxSize()
         ) {
             if (uiState.isLoading && uiState.selectedProject == null) {

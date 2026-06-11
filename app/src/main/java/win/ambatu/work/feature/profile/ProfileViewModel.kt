@@ -14,8 +14,11 @@ import javax.inject.Inject
 
 data class ProfileUiState(
     val isLoading: Boolean = false,
+    val isStatsLoading: Boolean = false,
     val error: String? = null,
-    val isLogoutSuccess: Boolean = false
+    val statsError: String? = null,
+    val isLogoutSuccess: Boolean = false,
+    val stats: win.ambatu.work.feature.network.UserStatsDto? = null
 )
 
 @HiltViewModel
@@ -26,6 +29,27 @@ class ProfileViewModel @Inject constructor(
 
     private val _uiState = MutableStateFlow(ProfileUiState())
     val uiState: StateFlow<ProfileUiState> = _uiState.asStateFlow()
+
+    init {
+        fetchUserStats()
+    }
+
+    fun fetchUserStats() {
+        val token = sessionManager.getToken()
+        if (token == null) {
+            _uiState.update { it.copy(statsError = "No authorization token found") }
+            return
+        }
+        viewModelScope.launch {
+            _uiState.update { it.copy(isStatsLoading = true, statsError = null) }
+            try {
+                val statsDto = authRepository.getUserStats(token)
+                _uiState.update { it.copy(isStatsLoading = false, stats = statsDto) }
+            } catch (e: Exception) {
+                _uiState.update { it.copy(isStatsLoading = false, statsError = e.message ?: "Failed to fetch stats") }
+            }
+        }
+    }
 
     fun logout() {
         val token = sessionManager.getToken()

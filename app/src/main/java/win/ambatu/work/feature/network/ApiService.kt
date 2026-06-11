@@ -270,5 +270,10 @@ interface ApiService {
         @Path("project_id") projectId: Long,
         @Path("cycle_id") cycleId: Long
     ): PeerReviewMySummaryResponse
+
+    @GET("api/v1/users/me/stats")
+    suspend fun getUserStats(
+        @Header("Authorization") authorization: String
+    ): UserStatsResponse
 }
 

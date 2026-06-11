@@ -27,4 +27,8 @@ class AuthRepository @Inject constructor(
     suspend fun logout(token: String): String {
         return apiService.logout("Bearer $token").message
     }
+
+    suspend fun getUserStats(token: String): win.ambatu.work.feature.network.UserStatsDto {
+        return apiService.getUserStats("Bearer $token").data
+    }
 }

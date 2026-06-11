@@ -40,7 +40,11 @@ class ProfileActivity : ComponentActivity() {
                 ProfileScreen(
                     user = user,
                     isLoading = uiState.isLoading,
+                    isStatsLoading = uiState.isStatsLoading,
+                    stats = uiState.stats,
+                    statsError = uiState.statsError,
                     onLogoutClick = { viewModel.logout() },
+                    onRetryStatsClick = { viewModel.fetchUserStats() },
                     onBackClick = { finish() },
                     onScrumGuideClick = {
                         startActivity(ScrumGuideActivity.createIntent(this))

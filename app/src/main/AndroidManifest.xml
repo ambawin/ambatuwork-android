@@ -30,6 +30,11 @@
             android:label="Login"
             android:theme="@style/Theme.AmbatuWork" />
         <activity
+            android:name=".feature.onboarding.OnboardingActivity"
+            android:exported="false"
+            android:label="Onboarding"
+            android:theme="@style/Theme.AmbatuWork" />
+        <activity
             android:name=".feature.project.ProjectDetailActivity"
             android:exported="false"
             android:label="Project Detail"

@@ -17,6 +17,7 @@ import win.ambatu.work.core.ComposeApp
 import win.ambatu.work.data.repository.AuthRepository
 import win.ambatu.work.data.storage.SessionManager
 import win.ambatu.work.feature.auth.LoginActivity
+import win.ambatu.work.feature.onboarding.OnboardingActivity
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -35,6 +36,12 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        if (!sessionManager.hasCompletedOnboarding()) {
+            startActivity(Intent(this, OnboardingActivity::class.java))
+            finish()
+            return
+        }
 
         val token = sessionManager.getToken()
         if (token == null) {

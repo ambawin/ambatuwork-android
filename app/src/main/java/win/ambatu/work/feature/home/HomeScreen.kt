@@ -53,6 +53,7 @@ import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.rememberModalBottomSheetState
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -159,6 +160,9 @@ fun HomeScreen(
         onRemoveMember = viewModel::removeProjectMember,
         onRetryStatsClick = { projectId ->
             viewModel.loadProjectStats(projectId)
+        },
+        onRefresh = {
+            viewModel.loadProjects()
         }
     )
 }
@@ -182,7 +186,8 @@ private fun Content(
     onArchiveBacklogItem: (id: Long) -> Unit = {},
     onUpdateMemberRole: (userId: Long, role: String) -> Unit = { _, _ -> },
     onRemoveMember: (userId: Long) -> Unit = {},
-    onRetryStatsClick: (Long) -> Unit = {}
+    onRetryStatsClick: (Long) -> Unit = {},
+    onRefresh: () -> Unit = {}
 ) {
     var showCreateSheet by remember { mutableStateOf(false) }
     var projectSwitcherExpanded by remember { mutableStateOf(false) }
@@ -243,6 +248,7 @@ private fun Content(
                             contentAlignment = Alignment.Center,
                             modifier = Modifier
                                 .menuAnchor()
+                                .widthIn(min = 200.dp)
                                 .shadow(elevation = 2.dp, shape = RoundedCornerShape(50))
                                 .background(WhiteAmbatu, shape = RoundedCornerShape(50))
                                 .clickable { projectSwitcherExpanded = true }
@@ -258,31 +264,50 @@ private fun Content(
                             )
                         }
 
-                        ExposedDropdownMenu(
-                            expanded = projectSwitcherExpanded,
-                            onDismissRequest = { projectSwitcherExpanded = false },
-                            modifier = Modifier.exposedDropdownSize()
+                        val menuColorScheme = MaterialTheme.colorScheme.copy(
+                            surface = WhiteAmbatu,
+                            surfaceContainer = WhiteAmbatu,
+                            surfaceContainerLow = WhiteAmbatu,
+                            surfaceContainerHigh = WhiteAmbatu,
+                            surfaceVariant = WhiteAmbatu
+                        )
+                        val menuShapes = MaterialTheme.shapes.copy(
+                            extraSmall = RoundedCornerShape(24.dp),
+                            small = RoundedCornerShape(24.dp),
+                            medium = RoundedCornerShape(24.dp),
+                            large = RoundedCornerShape(24.dp)
+                        )
+
+                        MaterialTheme(
+                            colorScheme = menuColorScheme,
+                            shapes = menuShapes
                         ) {
-                            uiState.projects.forEach { project ->
+                            ExposedDropdownMenu(
+                                expanded = projectSwitcherExpanded,
+                                onDismissRequest = { projectSwitcherExpanded = false },
+                                modifier = Modifier.exposedDropdownSize()
+                            ) {
+                                uiState.projects.forEach { project ->
+                                    DropdownMenuItem(
+                                        text = { Text(project.name, color = ChocoAmbatu, fontWeight = FontWeight.Medium) },
+                                        onClick = {
+                                            onSelectProject(project)
+                                            projectSwitcherExpanded = false
+                                        }
+                                    )
+                                }
+                                if (uiState.projects.isNotEmpty()) {
+                                    HorizontalDivider(color = ChocoAmbatu.copy(alpha = 0.15f))
+                                }
                                 DropdownMenuItem(
-                                    text = { Text(project.name) },
+                                    text = { Text("Add New Project", color = ChocoAmbatu, fontWeight = FontWeight.SemiBold) },
+                                    leadingIcon = { Icon(Icons.Default.Add, null, tint = ChocoAmbatu) },
                                     onClick = {
-                                        onSelectProject(project)
                                         projectSwitcherExpanded = false
+                                        showCreateSheet = true
                                     }
                                 )
                             }
-                            if (uiState.projects.isNotEmpty()) {
-                                HorizontalDivider()
-                            }
-                            DropdownMenuItem(
-                                text = { Text("Add New Project") },
-                                leadingIcon = { Icon(Icons.Default.Add, null) },
-                                onClick = {
-                                    projectSwitcherExpanded = false
-                                    showCreateSheet = true
-                                }
-                            )
                         }
                     }
                 },
@@ -376,48 +401,54 @@ private fun Content(
                     }
                 }
             } else {
-                when (selectedTab) {
-                    ProjectTab.DASHBOARD -> DashboardTab(
-                        project = uiState.selectedProject,
-                        members = uiState.members,
-                        stats = uiState.stats,
-                        isStatsLoading = uiState.isStatsLoading,
-                        statsError = uiState.statsError,
-                        onRetryStatsClick = {
-                            uiState.selectedProject?.id?.let { onRetryStatsClick(it) }
-                        }
-                    )
-                    ProjectTab.BACKLOG -> BacklogTab(
-                        backlogItems = uiState.backlogItems,
-                        onItemClick = { item -> selectedBacklogItem = item }
-                    )
-                    ProjectTab.SPRINT -> SprintTab(
-                        sprints = uiState.sprints,
-                        sprintAssignees = uiState.sprintAssignees,
-                        onSprintClick = { sprintId ->
-                            uiState.selectedProject?.id?.let { projectId ->
-                                onSprintClick(projectId, sprintId)
+                PullToRefreshBox(
+                    isRefreshing = uiState.isLoading || uiState.isStatsLoading,
+                    onRefresh = onRefresh,
+                    modifier = Modifier.fillMaxSize()
+                ) {
+                    when (selectedTab) {
+                        ProjectTab.DASHBOARD -> DashboardTab(
+                            project = uiState.selectedProject,
+                            members = uiState.members,
+                            stats = uiState.stats,
+                            isStatsLoading = uiState.isStatsLoading,
+                            statsError = uiState.statsError,
+                            onRetryStatsClick = {
+                                uiState.selectedProject?.id?.let { onRetryStatsClick(it) }
                             }
-                        }
-                    )
-                    ProjectTab.SETTINGS -> {
-                        uiState.selectedProject?.let { project ->
-                            SettingsTab(
-                                project = project,
-                                members = uiState.members,
-                                onUpdateProject = { name, desc, goal, length, wip ->
-                                    onUpdateProject(name, desc, goal, length, wip)
-                                },
-                                onUpdateMemberRole = { userId, role ->
-                                    onUpdateMemberRole(userId, role)
-                                },
-                                onRemoveMember = { userId ->
-                                    onRemoveMember(userId)
-                                },
-                                onInviteMember = { email ->
-                                    onInviteUser(project.id, email)
+                        )
+                        ProjectTab.BACKLOG -> BacklogTab(
+                            backlogItems = uiState.backlogItems,
+                            onItemClick = { item -> selectedBacklogItem = item }
+                        )
+                        ProjectTab.SPRINT -> SprintTab(
+                            sprints = uiState.sprints,
+                            sprintAssignees = uiState.sprintAssignees,
+                            onSprintClick = { sprintId ->
+                                uiState.selectedProject?.id?.let { projectId ->
+                                    onSprintClick(projectId, sprintId)
                                 }
-                            )
+                            }
+                        )
+                        ProjectTab.SETTINGS -> {
+                            uiState.selectedProject?.let { project ->
+                                SettingsTab(
+                                    project = project,
+                                    members = uiState.members,
+                                    onUpdateProject = { name, desc, goal, length, wip ->
+                                        onUpdateProject(name, desc, goal, length, wip)
+                                    },
+                                    onUpdateMemberRole = { userId, role ->
+                                        onUpdateMemberRole(userId, role)
+                                    },
+                                    onRemoveMember = { userId ->
+                                        onRemoveMember(userId)
+                                    },
+                                    onInviteMember = { email ->
+                                        onInviteUser(project.id, email)
+                                    }
+                                )
+                            }
                         }
                     }
                 }

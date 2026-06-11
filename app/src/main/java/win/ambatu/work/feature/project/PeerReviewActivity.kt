@@ -165,14 +165,14 @@ fun PeerReviewScreen(
                     .fillMaxSize(),
                 contentAlignment = Alignment.Center
             ) {
-                CircularProgressIndicator(color = YellowAmbatu)
+                CircularProgressIndicator(color = ChocoAmbatu)
             }
         } else {
             LazyColumn(
                 modifier = Modifier
                     .padding(innerPadding)
                     .fillMaxSize()
-                    .background(LightYellowAmbatu),
+                    .background(YellowAmbatu),
                 contentPadding = PaddingValues(16.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
@@ -198,17 +198,54 @@ fun PeerReviewScreen(
                             text = "Review Your Team Members",
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
-                            color = DarkChocoAmbatu
+                            color = ChocoAmbatu
                         )
                     }
                     val reviewableMembers = uiState.members.filter {
                         it.user.id != uiState.currentUserId
                     }
-                    items(reviewableMembers, key = { it.user.id ?: 0L }) { member ->
-                        ReviewableMemberCard(
-                            member = member,
-                            onClick = { member.user.id?.let { viewModel.showReviewFormFor(it) } }
-                        )
+                    if (reviewableMembers.isEmpty()) {
+                        item {
+                            Card(
+                                modifier = Modifier.fillMaxWidth(),
+                                colors = CardDefaults.cardColors(containerColor = WhiteAmbatu),
+                                shape = RoundedCornerShape(20.dp),
+                                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(32.dp),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Text("No team members to review.", color = ChocoAmbatu.copy(alpha = 0.6f))
+                                }
+                            }
+                        }
+                    } else {
+                        item {
+                            Card(
+                                modifier = Modifier.fillMaxWidth(),
+                                colors = CardDefaults.cardColors(containerColor = WhiteAmbatu),
+                                shape = RoundedCornerShape(20.dp),
+                                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                            ) {
+                                Column(modifier = Modifier.padding(20.dp)) {
+                                    reviewableMembers.forEachIndexed { index, member ->
+                                        ReviewableMemberRow(
+                                            member = member,
+                                            onClick = { member.user.id?.let { viewModel.showReviewFormFor(it) } }
+                                        )
+                                        if (index < reviewableMembers.lastIndex) {
+                                            HorizontalDivider(
+                                                modifier = Modifier.padding(vertical = 16.dp),
+                                                color = ChocoAmbatu.copy(alpha = 0.15f)
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
 
@@ -219,7 +256,7 @@ fun PeerReviewScreen(
                             text = "Your Review Summary",
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
-                            color = DarkChocoAmbatu
+                            color = ChocoAmbatu
                         )
                     }
                     item {
@@ -234,11 +271,28 @@ fun PeerReviewScreen(
                             text = "Team Summary",
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
-                            color = DarkChocoAmbatu
+                            color = ChocoAmbatu
                         )
                     }
-                    items(uiState.summary, key = { it.user.id }) { item ->
-                        TeamSummaryCard(item = item)
+                    item {
+                        Card(
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = CardDefaults.cardColors(containerColor = WhiteAmbatu),
+                            shape = RoundedCornerShape(20.dp),
+                            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                        ) {
+                            Column(modifier = Modifier.padding(20.dp)) {
+                                uiState.summary.forEachIndexed { index, item ->
+                                    TeamSummaryRow(item = item)
+                                    if (index < uiState.summary.lastIndex) {
+                                        HorizontalDivider(
+                                            modifier = Modifier.padding(vertical = 16.dp),
+                                            color = ChocoAmbatu.copy(alpha = 0.15f)
+                                        )
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -254,20 +308,24 @@ fun CycleStatusCard(
     onOpenCycle: () -> Unit,
     onCloseCycle: () -> Unit
 ) {
-    val (statusText, statusColor, statusBgColor) = when (cycleStatus) {
-        "open" -> Triple("Cycle Open — Collecting Reviews", GreenAmbatu, LightGreenAmbatu)
-        "closed" -> Triple("Cycle Closed — Results Available", ChocoAmbatu, MediumYellowAmbatu)
-        else -> Triple("No Review Cycle Yet", ChocoAmbatu.copy(alpha = 0.6f), LightYellowAmbatu)
+    val (statusText, statusBgColor, iconEmoji) = when (cycleStatus) {
+        "open" -> Triple("Cycle Open — Collecting Reviews", YellowAmbatu.copy(alpha = 0.2f), "✅")
+        "closed" -> Triple("Cycle Closed — Results Available", YellowAmbatu.copy(alpha = 0.2f), "🔒")
+        else -> Triple("No Review Cycle Yet", YellowAmbatu.copy(alpha = 0.1f), "💤")
     }
 
     Card(
         modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = WhiteAmbatu),
+        shape = RoundedCornerShape(20.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column(modifier = Modifier.padding(20.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Text(text = iconEmoji, fontSize = 18.sp)
                 Surface(
                     shape = RoundedCornerShape(8.dp),
                     color = statusBgColor
@@ -275,8 +333,8 @@ fun CycleStatusCard(
                     Text(
                         text = statusText,
                         modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
-                        style = MaterialTheme.typography.labelMedium,
-                        color = statusColor,
+                        style = MaterialTheme.typography.labelLarge,
+                        color = ChocoAmbatu,
                         fontWeight = FontWeight.Bold
                     )
                 }
@@ -291,10 +349,10 @@ fun CycleStatusCard(
                             enabled = !isLoading,
                             modifier = Modifier.fillMaxWidth(),
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = GreenAmbatu,
-                                contentColor = Color.White
+                                containerColor = ChocoAmbatu,
+                                contentColor = WhiteAmbatu
                             ),
-                            shape = RoundedCornerShape(10.dp)
+                            shape = RoundedCornerShape(12.dp)
                         ) {
                             Text("Open Peer Review Cycle", fontWeight = FontWeight.Bold)
                         }
@@ -304,8 +362,8 @@ fun CycleStatusCard(
                         if (showConfirm) {
                             AlertDialog(
                                 onDismissRequest = { showConfirm = false },
-                                title = { Text("Close Cycle?", fontWeight = FontWeight.Bold) },
-                                text = { Text("Are you sure? Once closed, no more reviews can be submitted. Results will become visible.") },
+                                title = { Text("Close Cycle?", fontWeight = FontWeight.Bold, color = ChocoAmbatu) },
+                                text = { Text("Are you sure? Once closed, no more reviews can be submitted. Results will become visible.", color = ChocoAmbatu) },
                                 confirmButton = {
                                     Button(
                                         onClick = {
@@ -313,8 +371,8 @@ fun CycleStatusCard(
                                             onCloseCycle()
                                         },
                                         colors = ButtonDefaults.buttonColors(
-                                            containerColor = RedAmbatu,
-                                            contentColor = Color.White
+                                            containerColor = ChocoAmbatu,
+                                            contentColor = WhiteAmbatu
                                         )
                                     ) {
                                         Text("Close Cycle")
@@ -332,10 +390,10 @@ fun CycleStatusCard(
                             enabled = !isLoading,
                             modifier = Modifier.fillMaxWidth(),
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = RedAmbatu,
-                                contentColor = Color.White
+                                containerColor = ChocoAmbatu,
+                                contentColor = WhiteAmbatu
                             ),
-                            shape = RoundedCornerShape(10.dp)
+                            shape = RoundedCornerShape(12.dp)
                         ) {
                             Text("Close Peer Review Cycle", fontWeight = FontWeight.Bold)
                         }
@@ -347,71 +405,63 @@ fun CycleStatusCard(
 }
 
 @Composable
-fun ReviewableMemberCard(
+fun ReviewableMemberRow(
     member: ProjectMemberDto,
     onClick: () -> Unit
 ) {
-    Card(
+    Row(
         modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        shape = RoundedCornerShape(12.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
-        onClick = onClick
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        Row(
-            modifier = Modifier.padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            // Avatar
-            if (member.user.avatarUrl != null) {
-                AsyncImage(
-                    model = member.user.avatarUrl,
-                    contentDescription = member.user.name,
-                    modifier = Modifier
-                        .size(48.dp)
-                        .clip(CircleShape)
-                )
-            } else {
-                Surface(
-                    modifier = Modifier.size(48.dp),
-                    shape = CircleShape,
-                    color = MediumYellowAmbatu
-                ) {
-                    Box(contentAlignment = Alignment.Center) {
-                        Icon(
-                            Icons.Default.Person,
-                            contentDescription = null,
-                            tint = ChocoAmbatu,
-                            modifier = Modifier.size(28.dp)
-                        )
-                    }
+        // Avatar
+        if (member.user.avatarUrl != null) {
+            AsyncImage(
+                model = member.user.avatarUrl,
+                contentDescription = member.user.name,
+                modifier = Modifier
+                    .size(48.dp)
+                    .clip(CircleShape)
+            )
+        } else {
+            Surface(
+                modifier = Modifier.size(48.dp),
+                shape = CircleShape,
+                color = YellowAmbatu.copy(alpha = 0.2f)
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    Icon(
+                        Icons.Default.Person,
+                        contentDescription = null,
+                        tint = ChocoAmbatu,
+                        modifier = Modifier.size(28.dp)
+                    )
                 }
             }
-            Spacer(modifier = Modifier.width(12.dp))
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = member.user.name ?: "Unknown",
-                    style = MaterialTheme.typography.titleSmall,
-                    fontWeight = FontWeight.SemiBold,
-                    color = DarkChocoAmbatu
-                )
-                Text(
-                    text = member.role.replaceFirstChar { it.uppercase() },
-                    style = MaterialTheme.typography.labelSmall,
-                    color = ChocoAmbatu.copy(alpha = 0.6f)
-                )
-            }
-            Button(
-                onClick = onClick,
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = YellowAmbatu,
-                    contentColor = DarkChocoAmbatu
-                ),
-                shape = RoundedCornerShape(8.dp),
-                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
-            ) {
-                Text("Review", fontWeight = FontWeight.Bold, fontSize = 13.sp)
-            }
+        }
+        Spacer(modifier = Modifier.width(16.dp))
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = member.user.name ?: "Unknown",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                color = ChocoAmbatu
+            )
+            Text(
+                text = member.role.replaceFirstChar { it.uppercase() },
+                style = MaterialTheme.typography.bodyMedium,
+                color = ChocoAmbatu.copy(alpha = 0.6f)
+            )
+        }
+        Button(
+            onClick = onClick,
+            colors = ButtonDefaults.buttonColors(
+                containerColor = ChocoAmbatu,
+                contentColor = WhiteAmbatu
+            ),
+            shape = RoundedCornerShape(10.dp),
+            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 10.dp)
+        ) {
+            Text("Review", fontWeight = FontWeight.Bold, fontSize = 13.sp)
         }
     }
 }
@@ -420,8 +470,8 @@ fun ReviewableMemberCard(
 fun PersonalSummaryCard(summary: PeerReviewSummaryItemDto) {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = WhiteAmbatu),
+        shape = RoundedCornerShape(20.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column(modifier = Modifier.padding(20.dp)) {
@@ -436,33 +486,33 @@ fun PersonalSummaryCard(summary: PeerReviewSummaryItemDto) {
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceEvenly
             ) {
-                ScoreCircle("Collab", summary.avgCollaborationScore, BlueAmbatu)
-                ScoreCircle("Delivery", summary.avgDeliveryScore, GreenAmbatu)
-                ScoreCircle("Comms", summary.avgCommunicationScore, YellowAmbatu)
+                ScoreCircle("Collab", summary.avgCollaborationScore)
+                ScoreCircle("Delivery", summary.avgDeliveryScore)
+                ScoreCircle("Comms", summary.avgCommunicationScore)
             }
 
             if (summary.feedbacks.isNotEmpty()) {
                 Spacer(modifier = Modifier.height(16.dp))
-                HorizontalDivider(color = LightYellowAmbatu)
+                HorizontalDivider(color = ChocoAmbatu.copy(alpha = 0.15f))
                 Spacer(modifier = Modifier.height(12.dp))
                 Text(
                     text = "Feedback",
                     style = MaterialTheme.typography.labelMedium,
                     fontWeight = FontWeight.Bold,
-                    color = DarkChocoAmbatu
+                    color = ChocoAmbatu
                 )
                 summary.feedbacks.forEach { fb ->
                     Spacer(modifier = Modifier.height(8.dp))
                     fb.continueFeedback?.let {
                         Row {
                             Text("👍 ", fontSize = 14.sp)
-                            Text(it, style = MaterialTheme.typography.bodySmall, color = DarkChocoAmbatu)
+                            Text(it, style = MaterialTheme.typography.bodyMedium, color = ChocoAmbatu)
                         }
                     }
                     fb.improveFeedback?.let {
                         Row {
                             Text("💡 ", fontSize = 14.sp)
-                            Text(it, style = MaterialTheme.typography.bodySmall, color = DarkChocoAmbatu)
+                            Text(it, style = MaterialTheme.typography.bodyMedium, color = ChocoAmbatu)
                         }
                     }
                 }
@@ -472,113 +522,114 @@ fun PersonalSummaryCard(summary: PeerReviewSummaryItemDto) {
 }
 
 @Composable
-fun ScoreCircle(label: String, score: Double?, color: Color) {
+fun ScoreCircle(label: String, score: Double?) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Surface(
             modifier = Modifier.size(56.dp),
             shape = CircleShape,
-            color = color.copy(alpha = 0.15f)
+            color = YellowAmbatu.copy(alpha = 0.15f)
         ) {
             Box(contentAlignment = Alignment.Center) {
                 Text(
                     text = score?.let { String.format("%.1f", it) } ?: "—",
                     fontWeight = FontWeight.Bold,
                     fontSize = 18.sp,
-                    color = color
+                    color = ChocoAmbatu
                 )
             }
         }
-        Spacer(modifier = Modifier.height(4.dp))
+        Spacer(modifier = Modifier.height(6.dp))
         Text(
             text = label,
             style = MaterialTheme.typography.labelSmall,
-            color = ChocoAmbatu.copy(alpha = 0.7f)
+            color = ChocoAmbatu.copy(alpha = 0.7f),
+            fontWeight = FontWeight.Medium
         )
     }
 }
 
 @Composable
-fun TeamSummaryCard(item: PeerReviewSummaryItemDto) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        shape = RoundedCornerShape(12.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
-    ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                if (item.user.avatarUrl != null) {
-                    AsyncImage(
-                        model = item.user.avatarUrl,
-                        contentDescription = item.user.name,
-                        modifier = Modifier
-                            .size(40.dp)
-                            .clip(CircleShape)
-                    )
-                } else {
-                    Surface(
-                        modifier = Modifier.size(40.dp),
-                        shape = CircleShape,
-                        color = MediumYellowAmbatu
-                    ) {
-                        Box(contentAlignment = Alignment.Center) {
-                            Icon(
-                                Icons.Default.Person,
-                                contentDescription = null,
-                                tint = ChocoAmbatu,
-                                modifier = Modifier.size(24.dp)
-                            )
-                        }
+fun TeamSummaryRow(item: PeerReviewSummaryItemDto) {
+    Column(modifier = Modifier.fillMaxWidth()) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            if (item.user.avatarUrl != null) {
+                AsyncImage(
+                    model = item.user.avatarUrl,
+                    contentDescription = item.user.name,
+                    modifier = Modifier
+                        .size(44.dp)
+                        .clip(CircleShape)
+                )
+            } else {
+                Surface(
+                    modifier = Modifier.size(44.dp),
+                    shape = CircleShape,
+                    color = YellowAmbatu.copy(alpha = 0.2f)
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Icon(
+                            Icons.Default.Person,
+                            contentDescription = null,
+                            tint = ChocoAmbatu,
+                            modifier = Modifier.size(24.dp)
+                        )
                     }
                 }
-                Spacer(modifier = Modifier.width(12.dp))
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = item.user.name,
-                        fontWeight = FontWeight.SemiBold,
-                        style = MaterialTheme.typography.titleSmall,
-                        color = DarkChocoAmbatu
-                    )
-                    Text(
-                        text = "${item.reviewCount} reviews",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = ChocoAmbatu.copy(alpha = 0.6f)
-                    )
-                }
             }
+            Spacer(modifier = Modifier.width(12.dp))
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = item.user.name,
+                    fontWeight = FontWeight.Bold,
+                    style = MaterialTheme.typography.titleMedium,
+                    color = ChocoAmbatu
+                )
+                Text(
+                    text = "${item.reviewCount} reviews received",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = ChocoAmbatu.copy(alpha = 0.6f)
+                )
+            }
+        }
+        Spacer(modifier = Modifier.height(16.dp))
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceEvenly
+        ) {
+            ScoreCircle("Collab", item.avgCollaborationScore)
+            ScoreCircle("Delivery", item.avgDeliveryScore)
+            ScoreCircle("Comms", item.avgCommunicationScore)
+        }
+        if (item.feedbacks.isNotEmpty()) {
+            Spacer(modifier = Modifier.height(16.dp))
+            HorizontalDivider(color = ChocoAmbatu.copy(alpha = 0.1f))
             Spacer(modifier = Modifier.height(12.dp))
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceEvenly
-            ) {
-                ScoreCircle("Collab", item.avgCollaborationScore, BlueAmbatu)
-                ScoreCircle("Delivery", item.avgDeliveryScore, GreenAmbatu)
-                ScoreCircle("Comms", item.avgCommunicationScore, YellowAmbatu)
-            }
-            if (item.feedbacks.isNotEmpty()) {
-                Spacer(modifier = Modifier.height(12.dp))
-                HorizontalDivider(color = LightYellowAmbatu)
+            Text(
+                text = "Written Feedback",
+                style = MaterialTheme.typography.labelMedium,
+                fontWeight = FontWeight.Bold,
+                color = ChocoAmbatu
+            )
+            item.feedbacks.forEach { fb ->
                 Spacer(modifier = Modifier.height(8.dp))
-                item.feedbacks.forEach { fb ->
-                    fb.continueFeedback?.let {
-                        Row {
-                            Text("👍 ", fontSize = 13.sp)
-                            Text(it, style = MaterialTheme.typography.bodySmall, color = DarkChocoAmbatu)
-                        }
+                fb.continueFeedback?.let {
+                    Row(modifier = Modifier.padding(start = 4.dp)) {
+                        Text("👍 ", fontSize = 14.sp)
+                        Text(it, style = MaterialTheme.typography.bodyMedium, color = ChocoAmbatu)
                     }
-                    fb.improveFeedback?.let {
-                        Row {
-                            Text("💡 ", fontSize = 13.sp)
-                            Text(it, style = MaterialTheme.typography.bodySmall, color = DarkChocoAmbatu)
-                        }
+                }
+                fb.improveFeedback?.let {
+                    Row(modifier = Modifier.padding(start = 4.dp, top = 4.dp)) {
+                        Text("💡 ", fontSize = 14.sp)
+                        Text(it, style = MaterialTheme.typography.bodyMedium, color = ChocoAmbatu)
                     }
-                    Spacer(modifier = Modifier.height(4.dp))
                 }
             }
         }
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SubmitReviewDialog(
     revieweeName: String,
@@ -595,7 +646,7 @@ fun SubmitReviewDialog(
         onDismissRequest = onDismiss,
         title = {
             Column {
-                Text("Review $revieweeName", fontWeight = FontWeight.Bold, color = DarkChocoAmbatu)
+                Text("Review $revieweeName", fontWeight = FontWeight.Bold, color = ChocoAmbatu)
                 Text(
                     "Rate 1-5 for each category",
                     style = MaterialTheme.typography.labelSmall,
@@ -612,7 +663,7 @@ fun SubmitReviewDialog(
                 ScoreSlider("📦 Delivery", deliveryScore) { deliveryScore = it }
                 ScoreSlider("💬 Communication", communicationScore) { communicationScore = it }
 
-                HorizontalDivider(color = LightYellowAmbatu)
+                HorizontalDivider(color = ChocoAmbatu.copy(alpha = 0.15f))
 
                 OutlinedTextField(
                     value = continueFeedback,
@@ -620,7 +671,13 @@ fun SubmitReviewDialog(
                     label = { Text("👍 What should they continue?") },
                     modifier = Modifier.fillMaxWidth(),
                     minLines = 2,
-                    maxLines = 3
+                    maxLines = 3,
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = ChocoAmbatu,
+                        unfocusedBorderColor = ChocoAmbatu.copy(alpha = 0.5f),
+                        focusedLabelColor = ChocoAmbatu,
+                        cursorColor = ChocoAmbatu
+                    )
                 )
                 OutlinedTextField(
                     value = improveFeedback,
@@ -628,7 +685,13 @@ fun SubmitReviewDialog(
                     label = { Text("💡 What could they improve?") },
                     modifier = Modifier.fillMaxWidth(),
                     minLines = 2,
-                    maxLines = 3
+                    maxLines = 3,
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = ChocoAmbatu,
+                        unfocusedBorderColor = ChocoAmbatu.copy(alpha = 0.5f),
+                        focusedLabelColor = ChocoAmbatu,
+                        cursorColor = ChocoAmbatu
+                    )
                 )
             }
         },
@@ -644,8 +707,8 @@ fun SubmitReviewDialog(
                     )
                 },
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = YellowAmbatu,
-                    contentColor = DarkChocoAmbatu
+                    containerColor = ChocoAmbatu,
+                    contentColor = WhiteAmbatu
                 )
             ) {
                 Text("Submit Review", fontWeight = FontWeight.Bold)
@@ -667,15 +730,11 @@ fun ScoreSlider(label: String, score: Int, onScoreChange: (Int) -> Unit) {
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(label, style = MaterialTheme.typography.bodyMedium, color = DarkChocoAmbatu)
+            Text(label, style = MaterialTheme.typography.bodyMedium, color = ChocoAmbatu)
             Text(
                 text = "$score/5",
                 fontWeight = FontWeight.Bold,
-                color = when {
-                    score >= 4 -> GreenAmbatu
-                    score >= 3 -> YellowAmbatu
-                    else -> RedAmbatu
-                }
+                color = ChocoAmbatu
             )
         }
         Slider(
@@ -684,9 +743,9 @@ fun ScoreSlider(label: String, score: Int, onScoreChange: (Int) -> Unit) {
             valueRange = 1f..5f,
             steps = 3,
             colors = SliderDefaults.colors(
-                thumbColor = YellowAmbatu,
-                activeTrackColor = YellowAmbatu,
-                inactiveTrackColor = LightYellowAmbatu
+                thumbColor = ChocoAmbatu,
+                activeTrackColor = ChocoAmbatu,
+                inactiveTrackColor = YellowAmbatu.copy(alpha = 0.2f)
             )
         )
     }

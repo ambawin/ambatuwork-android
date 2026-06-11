@@ -74,20 +74,15 @@ import androidx.compose.ui.unit.dp
 import win.ambatu.work.feature.network.BacklogItemDto
 import win.ambatu.work.ui.theme.BlueAmbatu
 import win.ambatu.work.ui.theme.ChocoAmbatu
-import win.ambatu.work.ui.theme.LightGreenAmbatu
 import win.ambatu.work.ui.theme.RedAmbatu
 import win.ambatu.work.ui.theme.YellowAmbatu
 import win.ambatu.work.ui.theme.DarkChocoAmbatu
-import win.ambatu.work.ui.theme.LightYellowAmbatu
-import win.ambatu.work.ui.theme.GreenAmbatu
 import win.ambatu.work.ui.theme.WhiteAmbatu
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material3.HorizontalDivider
 import win.ambatu.work.feature.network.SprintBoardDto
 import androidx.compose.ui.unit.sp
-import win.ambatu.work.ui.theme.MediumYellowAmbatu
-import win.ambatu.work.ui.theme.LightBlueAmbatu
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -349,14 +344,14 @@ fun PostSprintDashboard(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(LightYellowAmbatu)
+            .background(YellowAmbatu)
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         // Header
         Card(
             modifier = Modifier.fillMaxWidth(),
-            colors = CardDefaults.cardColors(containerColor = MediumYellowAmbatu.copy(alpha = 0.4f)),
+            colors = CardDefaults.cardColors(containerColor = YellowAmbatu.copy(alpha = 0f)),
             shape = RoundedCornerShape(16.dp)
         ) {
             Column(
@@ -370,9 +365,9 @@ fun PostSprintDashboard(
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
                     text = "Sprint Completed!",
-                    style = MaterialTheme.typography.titleLarge,
+                    style = MaterialTheme.typography.displayLarge,
                     fontWeight = FontWeight.Bold,
-                    color = DarkChocoAmbatu
+                    color = ChocoAmbatu
                 )
                 Text(
                     text = "Time to reflect and review with your team.",
@@ -386,7 +381,7 @@ fun PostSprintDashboard(
         // Retrospective Card
         Card(
             modifier = Modifier.fillMaxWidth(),
-            colors = CardDefaults.cardColors(containerColor = Color.White),
+            colors = CardDefaults.cardColors(containerColor = WhiteAmbatu),
             shape = RoundedCornerShape(16.dp),
             elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
             onClick = onOpenRetrospective
@@ -398,7 +393,7 @@ fun PostSprintDashboard(
                 Surface(
                     modifier = Modifier.size(52.dp),
                     shape = RoundedCornerShape(14.dp),
-                    color = LightGreenAmbatu
+                    color = YellowAmbatu.copy(alpha = 0.2f)
                 ) {
                     Box(contentAlignment = Alignment.Center) {
                         Text("💭", fontSize = 26.sp)
@@ -428,14 +423,14 @@ fun PostSprintDashboard(
                 }
                 Surface(
                     shape = RoundedCornerShape(8.dp),
-                    color = if (uiState.retroExists) LightGreenAmbatu else LightYellowAmbatu
+                    color = if (uiState.retroExists) YellowAmbatu else YellowAmbatu.copy(alpha = 0.2f)
                 ) {
                     Text(
                         text = if (uiState.retroExists) "View" else "Start",
                         modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
                         style = MaterialTheme.typography.labelMedium,
                         fontWeight = FontWeight.Bold,
-                        color = if (uiState.retroExists) GreenAmbatu else ChocoAmbatu
+                        color = ChocoAmbatu
                     )
                 }
             }
@@ -444,7 +439,7 @@ fun PostSprintDashboard(
         // Peer Review Card
         Card(
             modifier = Modifier.fillMaxWidth(),
-            colors = CardDefaults.cardColors(containerColor = Color.White),
+            colors = CardDefaults.cardColors(containerColor = WhiteAmbatu),
             shape = RoundedCornerShape(16.dp),
             elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
             onClick = {
@@ -462,7 +457,7 @@ fun PostSprintDashboard(
                 Surface(
                     modifier = Modifier.size(52.dp),
                     shape = RoundedCornerShape(14.dp),
-                    color = LightBlueAmbatu
+                    color = YellowAmbatu.copy(alpha = 0.2f)
                 ) {
                     Box(contentAlignment = Alignment.Center) {
                         Text("⭐", fontSize = 26.sp)
@@ -494,21 +489,21 @@ fun PostSprintDashboard(
                     cycleStatus == "open" -> {
                         Surface(
                             shape = RoundedCornerShape(8.dp),
-                            color = LightGreenAmbatu
+                            color = YellowAmbatu.copy(alpha = 0.3f)
                         ) {
                             Text(
                                 text = "Review",
                                 modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
                                 style = MaterialTheme.typography.labelMedium,
                                 fontWeight = FontWeight.Bold,
-                                color = GreenAmbatu
+                                color = ChocoAmbatu
                             )
                         }
                     }
                     cycleStatus == "closed" -> {
                         Surface(
                             shape = RoundedCornerShape(8.dp),
-                            color = MediumYellowAmbatu
+                            color = ChocoAmbatu.copy(alpha = 0.1f)
                         ) {
                             Text(
                                 text = "Results",
@@ -522,21 +517,21 @@ fun PostSprintDashboard(
                     isAdmin -> {
                         Surface(
                             shape = RoundedCornerShape(8.dp),
-                            color = LightBlueAmbatu
+                            color = YellowAmbatu
                         ) {
                             Text(
                                 text = "Open",
                                 modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
                                 style = MaterialTheme.typography.labelMedium,
                                 fontWeight = FontWeight.Bold,
-                                color = BlueAmbatu
+                                color = ChocoAmbatu
                             )
                         }
                     }
                     else -> {
                         Surface(
                             shape = RoundedCornerShape(8.dp),
-                            color = LightYellowAmbatu
+                            color = YellowAmbatu.copy(alpha = 0.1f)
                         ) {
                             Text(
                                 text = "Pending",
@@ -573,28 +568,28 @@ fun BoardContent(
             items = board.columns.selected,
             onItemClick = onItemClick,
             onInfoClick = onInfoClick,
-            headerColor = MaterialTheme.colorScheme.secondaryContainer
+            headerColor = YellowAmbatu.copy(alpha = 0.15f)
         )
         BoardColumn(
             title = "In Progress",
             items = board.columns.inProgress,
             onItemClick = onItemClick,
             onInfoClick = onInfoClick,
-            headerColor = MaterialTheme.colorScheme.tertiaryContainer
+            headerColor = YellowAmbatu.copy(alpha = 0.35f)
         )
         BoardColumn(
             title = "In Review",
             items = board.columns.inReview,
             onItemClick = onItemClick,
             onInfoClick = onInfoClick,
-            headerColor = MaterialTheme.colorScheme.primaryContainer
+            headerColor = YellowAmbatu.copy(alpha = 0.55f)
         )
         BoardColumn(
             title = "Done",
             items = board.columns.done,
             onItemClick = onItemClick,
             onInfoClick = onInfoClick,
-            headerColor = LightGreenAmbatu
+            headerColor = YellowAmbatu
         )
     }
 }
@@ -612,7 +607,7 @@ fun BoardColumn(
             .width(280.dp)
             .fillMaxHeight()
             .background(
-                color = MaterialTheme.colorScheme.surfaceContainerLow,
+                color = WhiteAmbatu.copy(alpha = 0.6f),
                 shape = RoundedCornerShape(12.dp)
             )
             .padding(8.dp)
@@ -630,11 +625,12 @@ fun BoardColumn(
                 Text(
                     text = title,
                     style = MaterialTheme.typography.titleSmall,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold,
+                    color = ChocoAmbatu
                 )
                 Badge(
-                    containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.5f),
-                    contentColor = MaterialTheme.colorScheme.onSurface
+                    containerColor = ChocoAmbatu.copy(alpha = 0.1f),
+                    contentColor = ChocoAmbatu
                 ) {
                     Text(text = items.size.toString())
                 }
@@ -923,8 +919,8 @@ fun DailyStandupDialog(
                                                 text = "Confidence: ${log.confidenceScore}/5",
                                                 style = MaterialTheme.typography.bodySmall,
                                                 color = when (log.confidenceScore) {
-                                                    5 -> LightGreenAmbatu
-                                                    4 -> LightGreenAmbatu.copy(alpha = 0.8f)
+                                                    5 -> ChocoAmbatu
+                                                    4 -> ChocoAmbatu.copy(alpha = 0.8f)
                                                     3 -> YellowAmbatu
                                                     else -> RedAmbatu
                                                 },
@@ -1247,13 +1243,13 @@ fun SprintClosedSuccessDialog(
                 Box(
                     modifier = Modifier
                         .size(72.dp)
-                        .background(LightYellowAmbatu, CircleShape),
+                        .background(YellowAmbatu.copy(alpha = 0.2f), CircleShape),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         imageVector = Icons.Default.CheckCircle,
                         contentDescription = "Success",
-                        tint = GreenAmbatu,
+                        tint = ChocoAmbatu,
                         modifier = Modifier.size(48.dp)
                     )
                 }
@@ -1266,7 +1262,7 @@ fun SprintClosedSuccessDialog(
                     textAlign = TextAlign.Center
                 )
                 Spacer(modifier = Modifier.height(16.dp))
-                HorizontalDivider(color = LightYellowAmbatu, thickness = 1.dp)
+                HorizontalDivider(color = ChocoAmbatu.copy(alpha = 0.15f), thickness = 1.dp)
                 Spacer(modifier = Modifier.height(16.dp))
 
                 // Under the Hood Section
@@ -1282,9 +1278,9 @@ fun SprintClosedSuccessDialog(
                     verticalArrangement = Arrangement.spacedBy(8.dp),
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    BulletPoint("Sprint Review Submitted", "Your sprint review has been saved in the database.", GreenAmbatu)
-                    BulletPoint("Backlog Items Updated", "Done items are completed. Unfinished items are moved back to ready in the backlog.", BlueAmbatu)
-                    BulletPoint("Sprint Finalized", "The sprint status is officially changed to closed.", DarkChocoAmbatu)
+                    BulletPoint("Sprint Review Submitted", "Your sprint review has been saved in the database.", ChocoAmbatu)
+                    BulletPoint("Backlog Items Updated", "Done items are completed. Unfinished items are moved back to ready in the backlog.", ChocoAmbatu)
+                    BulletPoint("Sprint Finalized", "The sprint status is officially changed to closed.", ChocoAmbatu)
                 }
 
                 Spacer(modifier = Modifier.height(20.dp))

@@ -24,7 +24,7 @@ data class RetrospectiveUiState(
     val error: String? = null,
     val successMessage: String? = null,
     val currentUserId: Long? = null,
-    val selectedTab: Int = 0  // 0=went_well, 1=to_improve, 2=action_item
+    val selectedTab: Int = 0  // 0=went_well, 1=problem, 2=action
 )
 
 @HiltViewModel

@@ -37,6 +37,7 @@ import win.ambatu.work.feature.network.ProjectMemberDto
 import win.ambatu.work.feature.network.RetroItemDto
 import win.ambatu.work.ui.theme.*
 import dagger.hilt.android.AndroidEntryPoint
+import win.ambatu.work.ui.components.CircularFloatingActionButton
 
 @AndroidEntryPoint
 class RetrospectiveActivity : ComponentActivity() {
@@ -110,7 +111,7 @@ fun RetrospectiveScreen(
 
     if (showAddDialog) {
         AddFeedbackDialog(
-            tabTypes = listOf("went_well", "to_improve", "action_item"),
+            tabTypes = listOf("went_well", "problem", "action"),
             selectedTab = uiState.selectedTab,
             members = uiState.members,
             onDismiss = { showAddDialog = false },
@@ -158,10 +159,8 @@ fun RetrospectiveScreen(
             )
         },
         floatingActionButton = {
-            FloatingActionButton(
+            CircularFloatingActionButton(
                 onClick = { showAddDialog = true },
-                containerColor = YellowAmbatu,
-                contentColor = DarkChocoAmbatu
             ) {
                 Icon(Icons.Default.Add, contentDescription = "Add Feedback")
             }
@@ -174,14 +173,14 @@ fun RetrospectiveScreen(
                     .fillMaxSize(),
                 contentAlignment = Alignment.Center
             ) {
-                CircularProgressIndicator(color = YellowAmbatu)
+                CircularProgressIndicator(color = ChocoAmbatu)
             }
         } else {
             LazyColumn(
                 modifier = Modifier
                     .padding(innerPadding)
                     .fillMaxSize()
-                    .background(LightYellowAmbatu),
+                    .background(YellowAmbatu),
                 contentPadding = PaddingValues(16.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
@@ -206,8 +205,8 @@ fun RetrospectiveScreen(
                 // Feedback Items
                 val tabType = when (uiState.selectedTab) {
                     0 -> "went_well"
-                    1 -> "to_improve"
-                    2 -> "action_item"
+                    1 -> "problem"
+                    2 -> "action"
                     else -> "went_well"
                 }
                 val filteredItems = (uiState.retrospective?.items ?: emptyList())
@@ -217,8 +216,9 @@ fun RetrospectiveScreen(
                     item {
                         Card(
                             modifier = Modifier.fillMaxWidth(),
-                            colors = CardDefaults.cardColors(containerColor = Color.White),
-                            shape = RoundedCornerShape(12.dp)
+                            colors = CardDefaults.cardColors(containerColor = WhiteAmbatu),
+                            shape = RoundedCornerShape(20.dp),
+                            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
                         ) {
                             Box(
                                 modifier = Modifier
@@ -227,20 +227,39 @@ fun RetrospectiveScreen(
                                 contentAlignment = Alignment.Center
                             ) {
                                 Text(
-                                    text = "No items yet. Tap + to add feedback.",
-                                    color = ChocoAmbatu.copy(alpha = 0.5f),
+                                    text = "No feedback items yet. Tap + to add feedback.",
+                                    color = ChocoAmbatu.copy(alpha = 0.6f),
                                     style = MaterialTheme.typography.bodyMedium
                                 )
                             }
                         }
                     }
                 } else {
-                    items(filteredItems, key = { it.id }) { item ->
-                        RetroFeedbackCard(
-                            item = item,
-                            currentUserId = uiState.currentUserId,
-                            onDelete = { viewModel.deleteFeedbackItem(item.id) }
-                        )
+                    item {
+                        Card(
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = CardDefaults.cardColors(containerColor = WhiteAmbatu),
+                            shape = RoundedCornerShape(20.dp),
+                            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                        ) {
+                            Column(
+                                modifier = Modifier.padding(20.dp),
+                                verticalArrangement = Arrangement.spacedBy(16.dp)
+                            ) {
+                                filteredItems.forEachIndexed { index, item ->
+                                    RetroFeedbackRow(
+                                        item = item,
+                                        currentUserId = uiState.currentUserId,
+                                        onDelete = { viewModel.deleteFeedbackItem(item.id) }
+                                    )
+                                    if (index < filteredItems.lastIndex) {
+                                        HorizontalDivider(
+                                            color = ChocoAmbatu.copy(alpha = 0.15f)
+                                        )
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -260,8 +279,8 @@ fun HappinessScoreCard(
 
     Card(
         modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = WhiteAmbatu),
+        shape = RoundedCornerShape(20.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column(
@@ -272,11 +291,11 @@ fun HappinessScoreCard(
                 text = "Team Happiness",
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
-                color = DarkChocoAmbatu
+                color = ChocoAmbatu
             )
             Spacer(modifier = Modifier.height(4.dp))
             Text(
-                text = if (currentScore != null) "Current score: ${emojis[currentScore - 1]} ${labels[currentScore - 1]}"
+                text = if (currentScore != null) "${labels[currentScore - 1]}"
                        else "How did the team feel about this sprint?",
                 style = MaterialTheme.typography.bodySmall,
                 color = ChocoAmbatu.copy(alpha = 0.7f)
@@ -295,7 +314,7 @@ fun HappinessScoreCard(
                         label = "emoji_scale"
                     )
                     val bgColor by animateColorAsState(
-                        targetValue = if (isSelected) YellowAmbatu else Color.Transparent,
+                        targetValue = if (isSelected) YellowAmbatu.copy(alpha = 0.2f) else Color.Transparent,
                         label = "emoji_bg"
                     )
 
@@ -319,7 +338,7 @@ fun HappinessScoreCard(
                         Text(
                             text = score.toString(),
                             style = MaterialTheme.typography.labelSmall,
-                            color = if (isSelected) DarkChocoAmbatu else ChocoAmbatu.copy(alpha = 0.5f),
+                            color = if (isSelected) ChocoAmbatu else ChocoAmbatu.copy(alpha = 0.5f),
                             fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
                         )
                     }
@@ -335,33 +354,33 @@ fun FeedbackTabBar(
     onTabSelected: (Int) -> Unit,
     retroItems: List<RetroItemDto>
 ) {
-    val tabTitles = listOf("✅ Went Well", "⚠️ To Improve", "🎯 Actions")
-    val tabTypes = listOf("went_well", "to_improve", "action_item")
+    val tabTitles = listOf("✅ Went Well", "⚠️ Problems", "🎯 Actions")
+    val tabTypes = listOf("went_well", "problem", "action")
 
     TabRow(
         selectedTabIndex = selectedTab,
-        containerColor = Color.White,
-        contentColor = DarkChocoAmbatu,
-        indicator = { tabPositions ->
-            if (selectedTab < tabPositions.size) {
-                TabRowDefaults.SecondaryIndicator(
-                    Modifier.tabIndicatorOffset(tabPositions[selectedTab]),
-                    color = YellowAmbatu
-                )
-            }
-        },
+        containerColor = ChocoAmbatu,
+        contentColor = WhiteAmbatu,
+        indicator = {},
+        divider = {},
         modifier = Modifier.clip(RoundedCornerShape(12.dp))
     ) {
         tabTitles.forEachIndexed { index, title ->
             val count = retroItems.count { it.type == tabTypes[index] }
+            val isSelected = selectedTab == index
+
             Tab(
-                selected = selectedTab == index,
+                selected = isSelected,
                 onClick = { onTabSelected(index) },
+                modifier = Modifier
+                    .background(if (isSelected) WhiteAmbatu else ChocoAmbatu)
+                    .clip(RoundedCornerShape(12.dp)),
                 text = {
                     Text(
                         text = if (count > 0) "$title ($count)" else title,
-                        fontWeight = if (selectedTab == index) FontWeight.Bold else FontWeight.Normal,
+                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
                         fontSize = 12.sp,
+                        color = if (isSelected) ChocoAmbatu else WhiteAmbatu,
                         maxLines = 1
                     )
                 }
@@ -371,79 +390,62 @@ fun FeedbackTabBar(
 }
 
 @Composable
-fun RetroFeedbackCard(
+fun RetroFeedbackRow(
     item: RetroItemDto,
     currentUserId: Long?,
     onDelete: () -> Unit
 ) {
-    val typeColor = when (item.type) {
-        "went_well" -> GreenAmbatu
-        "to_improve" -> RedAmbatu
-        "action_item" -> BlueAmbatu
-        else -> ChocoAmbatu
-    }
-    val typeBgColor = when (item.type) {
-        "went_well" -> LightGreenAmbatu
-        "to_improve" -> LightRedAmbatu
-        "action_item" -> LightBlueAmbatu
-        else -> LightYellowAmbatu
-    }
-
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        shape = RoundedCornerShape(12.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
-    ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.fillMaxWidth()
+    Column(modifier = Modifier.fillMaxWidth()) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            // Type badge
+            Surface(
+                shape = RoundedCornerShape(8.dp),
+                color = YellowAmbatu.copy(alpha = 0.2f)
             ) {
-                // Type badge
-                Surface(
-                    shape = RoundedCornerShape(6.dp),
-                    color = typeBgColor
+                Text(
+                    text = (item.type ?: "item").replace("_", " ").replaceFirstChar { it.uppercase() },
+                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+                    style = MaterialTheme.typography.labelMedium,
+                    color = ChocoAmbatu,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+            Spacer(modifier = Modifier.width(12.dp))
+            // Author name
+            item.author?.let { author ->
+                Text(
+                    text = author.name ?: "Unknown",
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.Medium,
+                    color = ChocoAmbatu.copy(alpha = 0.7f)
+                )
+            }
+            Spacer(modifier = Modifier.weight(1f))
+            // Delete button (only for own items)
+            if (currentUserId != null && item.authorUserId == currentUserId) {
+                IconButton(
+                    onClick = onDelete,
+                    modifier = Modifier.size(36.dp)
                 ) {
-                    Text(
-                        text = (item.type ?: "item").replace("_", " ").replaceFirstChar { it.uppercase() },
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                        style = MaterialTheme.typography.labelSmall,
-                        color = typeColor,
-                        fontWeight = FontWeight.SemiBold
+                    Icon(
+                        Icons.Default.Delete,
+                        contentDescription = "Delete",
+                        tint = RedAmbatu,
+                        modifier = Modifier.size(20.dp)
                     )
-                }
-                Spacer(modifier = Modifier.weight(1f))
-                // Author name
-                item.author?.let { author ->
-                    Text(
-                        text = author.name ?: "Unknown",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = ChocoAmbatu.copy(alpha = 0.6f)
-                    )
-                }
-                // Delete button (only for own items)
-                if (currentUserId != null && item.authorUserId == currentUserId) {
-                    IconButton(
-                        onClick = onDelete,
-                        modifier = Modifier.size(32.dp)
-                    ) {
-                        Icon(
-                            Icons.Default.Delete,
-                            contentDescription = "Delete",
-                            tint = RedAmbatu.copy(alpha = 0.7f),
-                            modifier = Modifier.size(18.dp)
-                        )
-                    }
                 }
             }
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(
-                text = item.body ?: "",
-                style = MaterialTheme.typography.bodyMedium,
-                color = DarkChocoAmbatu
-            )
         }
+        Spacer(modifier = Modifier.height(8.dp))
+        Text(
+            text = item.body ?: "",
+            style = MaterialTheme.typography.bodyLarge,
+            color = ChocoAmbatu,
+            modifier = Modifier.padding(horizontal = 4.dp)
+        )
     }
 }
 
@@ -461,13 +463,13 @@ fun AddFeedbackDialog(
     var selectedMemberId by remember { mutableStateOf<Long?>(null) }
     var memberDropdownExpanded by remember { mutableStateOf(false) }
 
-    val typeLabels = listOf("✅ Went Well", "⚠️ To Improve", "🎯 Action Item")
-    val typeValues = listOf("went_well", "to_improve", "action_item")
+    val typeLabels = listOf("✅ Went Well", "⚠️ Problem", "🎯 Action Item")
+    val typeValues = listOf("went_well", "problem", "action")
 
     AlertDialog(
         onDismissRequest = onDismiss,
         title = {
-            Text("Add Feedback", fontWeight = FontWeight.Bold, color = DarkChocoAmbatu)
+            Text("Add Feedback", fontWeight = FontWeight.Bold, color = ChocoAmbatu)
         },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -483,8 +485,10 @@ fun AddFeedbackDialog(
                                 count = typeLabels.size
                             ),
                             colors = SegmentedButtonDefaults.colors(
-                                activeContainerColor = YellowAmbatu,
-                                activeContentColor = DarkChocoAmbatu
+                                activeContainerColor = ChocoAmbatu,
+                                activeContentColor = WhiteAmbatu,
+                                inactiveContainerColor = WhiteAmbatu,
+                                inactiveContentColor = ChocoAmbatu
                             ),
                             label = {
                                 Text(label, fontSize = 11.sp, maxLines = 1)
@@ -500,7 +504,13 @@ fun AddFeedbackDialog(
                     label = { Text("Feedback") },
                     modifier = Modifier.fillMaxWidth(),
                     minLines = 3,
-                    maxLines = 5
+                    maxLines = 5,
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = ChocoAmbatu,
+                        unfocusedBorderColor = ChocoAmbatu.copy(alpha = 0.5f),
+                        focusedLabelColor = ChocoAmbatu,
+                        cursorColor = ChocoAmbatu
+                    )
                 )
 
                 // Assign to member (for Action Items)
@@ -556,8 +566,8 @@ fun AddFeedbackDialog(
                     }
                 },
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = YellowAmbatu,
-                    contentColor = DarkChocoAmbatu
+                    containerColor = ChocoAmbatu,
+                    contentColor = WhiteAmbatu
                 ),
                 enabled = feedbackBody.isNotBlank()
             ) {

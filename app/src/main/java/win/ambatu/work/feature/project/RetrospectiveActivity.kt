@@ -406,7 +406,7 @@ fun RetroFeedbackCard(
                     color = typeBgColor
                 ) {
                     Text(
-                        text = item.type.replace("_", " ").replaceFirstChar { it.uppercase() },
+                        text = (item.type ?: "item").replace("_", " ").replaceFirstChar { it.uppercase() },
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
                         style = MaterialTheme.typography.labelSmall,
                         color = typeColor,
@@ -439,7 +439,7 @@ fun RetroFeedbackCard(
             }
             Spacer(modifier = Modifier.height(8.dp))
             Text(
-                text = item.body,
+                text = item.body ?: "",
                 style = MaterialTheme.typography.bodyMedium,
                 color = DarkChocoAmbatu
             )

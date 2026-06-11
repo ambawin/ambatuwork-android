@@ -412,15 +412,15 @@ data class SubmitDailyCheckinRequest(
 @JsonClass(generateAdapter = true)
 data class RetroItemDto(
     val id: Long,
-    val type: String,
-    val body: String,
+    val type: String? = null,
+    val body: String? = null,
     @Json(name = "author_user_id")
-    val authorUserId: Long,
+    val authorUserId: Long? = null,
     val author: UserDto? = null,
     @Json(name = "created_at")
-    val createdAt: String?,
+    val createdAt: String? = null,
     @Json(name = "updated_at")
-    val updatedAt: String?
+    val updatedAt: String? = null
 )
 
 @JsonClass(generateAdapter = true)
@@ -467,16 +467,16 @@ data class CreateRetroItemRequest(
 data class PeerReviewCycleDto(
     val id: Long,
     @Json(name = "project_id")
-    val projectId: Long,
+    val projectId: Long? = null,
     @Json(name = "sprint_id")
-    val sprintId: Long,
-    val status: String,
+    val sprintId: Long? = null,
+    val status: String? = null,
     @Json(name = "created_by_user_id")
-    val createdByUserId: Long?,
+    val createdByUserId: Long? = null,
     @Json(name = "created_at")
-    val createdAt: String?,
+    val createdAt: String? = null,
     @Json(name = "updated_at")
-    val updatedAt: String?
+    val updatedAt: String? = null
 )
 
 @JsonClass(generateAdapter = true)
@@ -488,25 +488,25 @@ data class PeerReviewCycleResponse(
 data class PeerReviewDto(
     val id: Long,
     @Json(name = "peer_review_cycle_id")
-    val peerReviewCycleId: Long,
+    val peerReviewCycleId: Long? = null,
     @Json(name = "reviewer_user_id")
-    val reviewerUserId: Long,
+    val reviewerUserId: Long? = null,
     @Json(name = "reviewee_user_id")
-    val revieweeUserId: Long,
+    val revieweeUserId: Long? = null,
     @Json(name = "collaboration_score")
-    val collaborationScore: Int,
+    val collaborationScore: Int? = null,
     @Json(name = "delivery_score")
-    val deliveryScore: Int,
+    val deliveryScore: Int? = null,
     @Json(name = "communication_score")
-    val communicationScore: Int,
+    val communicationScore: Int? = null,
     @Json(name = "continue_feedback")
-    val continueFeedback: String?,
+    val continueFeedback: String? = null,
     @Json(name = "improve_feedback")
-    val improveFeedback: String?,
+    val improveFeedback: String? = null,
     @Json(name = "created_at")
-    val createdAt: String?,
+    val createdAt: String? = null,
     @Json(name = "updated_at")
-    val updatedAt: String?
+    val updatedAt: String? = null
 )
 
 @JsonClass(generateAdapter = true)

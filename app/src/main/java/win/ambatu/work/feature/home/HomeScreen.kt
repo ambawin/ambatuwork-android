@@ -62,6 +62,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -209,7 +210,7 @@ private fun Content(
         topBar = {
             CenterAlignedTopAppBar(
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                    containerColor = YellowAmbatu,
+                    containerColor = Color.Transparent,
                     titleContentColor = ChocoAmbatu,
                 ),
                 navigationIcon = {
@@ -218,6 +219,8 @@ private fun Content(
                         modifier = Modifier
                             .padding(start = 16.dp)
                             .size(40.dp)
+                            .shadow(elevation = 2.dp, shape = CircleShape)
+                            .background(Color.White, shape = CircleShape)
                     ) {
                         AsyncImage(
                             model = user.picture,
@@ -240,6 +243,7 @@ private fun Content(
                             contentAlignment = Alignment.Center,
                             modifier = Modifier
                                 .menuAnchor()
+                                .shadow(elevation = 2.dp, shape = RoundedCornerShape(50))
                                 .background(WhiteAmbatu, shape = RoundedCornerShape(50))
                                 .clickable { projectSwitcherExpanded = true }
                                 .padding(horizontal = 24.dp, vertical = 8.dp)
@@ -292,6 +296,7 @@ private fun Content(
                         modifier = Modifier
                             .padding(end = 16.dp)
                             .size(40.dp)
+                            .shadow(elevation = 2.dp, shape = CircleShape)
                             .clip(CircleShape)
                     ) {
                         Icon(
@@ -344,7 +349,6 @@ private fun Content(
     ) { innerPadding ->
         Box(
             modifier = Modifier
-                .padding(top = innerPadding.calculateTopPadding())
                 .fillMaxSize()
         ) {
             if (uiState.isLoading && uiState.selectedProject == null) {

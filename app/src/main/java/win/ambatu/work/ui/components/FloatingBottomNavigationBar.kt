@@ -25,7 +25,7 @@ import win.ambatu.work.ui.theme.ChocoAmbatu
 import win.ambatu.work.ui.theme.WhiteAmbatu
 
 @Composable
-fun FloatingBottomNavigationBar(
+fun FloatingBottomNavigationBar( 
     selectedTab: ProjectTab,
     onTabSelected: (ProjectTab) -> Unit,
     modifier: Modifier = Modifier

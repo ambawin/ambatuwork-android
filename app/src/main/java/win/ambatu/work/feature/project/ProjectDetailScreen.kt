@@ -166,7 +166,7 @@ fun ProjectDetailScreen(
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = YellowAmbatu,
+                    containerColor = Color.Transparent,
                     titleContentColor = ChocoAmbatu,
                     navigationIconContentColor = ChocoAmbatu,
                     actionIconContentColor = ChocoAmbatu
@@ -207,7 +207,6 @@ fun ProjectDetailScreen(
     ) { innerPadding ->
         Box(
             modifier = Modifier
-                .padding(top = innerPadding.calculateTopPadding())
                 .fillMaxSize()
         ) {
             if (uiState.isLoading) {
@@ -279,7 +278,7 @@ fun DashboardTab(
 ) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(start = 16.dp, top = 16.dp, end = 16.dp, bottom = 100.dp),
+        contentPadding = PaddingValues(start = 16.dp, top = 96.dp, end = 16.dp, bottom = 100.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         item {
@@ -690,7 +689,7 @@ fun BacklogTab(
     } else {
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(start = 16.dp, top = 16.dp, end = 16.dp, bottom = 100.dp),
+            contentPadding = PaddingValues(start = 16.dp, top = 96.dp, end = 16.dp, bottom = 100.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             items(
@@ -728,7 +727,7 @@ fun SprintTab(
     } else {
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(start = 16.dp, top = 16.dp, end = 16.dp, bottom = 100.dp),
+            contentPadding = PaddingValues(start = 16.dp, top = 96.dp, end = 16.dp, bottom = 100.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             items(
@@ -979,7 +978,7 @@ fun SettingsTab(
 
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(start = 16.dp, top = 16.dp, end = 16.dp, bottom = 100.dp),
+        contentPadding = PaddingValues(start = 16.dp, top = 96.dp, end = 16.dp, bottom = 100.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         item {

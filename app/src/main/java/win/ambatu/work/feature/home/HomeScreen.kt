@@ -94,6 +94,10 @@ import win.ambatu.work.ui.theme.AmbatuWorkTheme
 import win.ambatu.work.ui.theme.YellowAmbatu
 import win.ambatu.work.ui.theme.ChocoAmbatu
 import win.ambatu.work.ui.theme.WhiteAmbatu
+import dev.chrisbanes.haze.HazeState
+import dev.chrisbanes.haze.hazeSource
+import dev.chrisbanes.haze.hazeEffect
+import dev.chrisbanes.haze.HazeTint
 
 @Composable
 fun HomeScreen(
@@ -189,6 +193,7 @@ private fun Content(
     onRetryStatsClick: (Long) -> Unit = {},
     onRefresh: () -> Unit = {}
 ) {
+    val hazeState = remember { HazeState() }
     var showCreateSheet by remember { mutableStateOf(false) }
     var projectSwitcherExpanded by remember { mutableStateOf(false) }
     var selectedTab by remember { mutableStateOf(ProjectTab.DASHBOARD) }
@@ -250,7 +255,11 @@ private fun Content(
                                 .menuAnchor()
                                 .widthIn(min = 200.dp)
                                 .shadow(elevation = 2.dp, shape = RoundedCornerShape(50))
-                                .background(WhiteAmbatu, shape = RoundedCornerShape(50))
+                                .clip(RoundedCornerShape(50))
+                                .hazeEffect(state = hazeState) {
+                                    blurRadius = 15.dp
+                                    tints = listOf(HazeTint(color = WhiteAmbatu.copy(alpha = 0.50f)))
+                                }
                                 .clickable { projectSwitcherExpanded = true }
                                 .padding(horizontal = 24.dp, vertical = 8.dp)
                         ) {
@@ -285,7 +294,9 @@ private fun Content(
                             ExposedDropdownMenu(
                                 expanded = projectSwitcherExpanded,
                                 onDismissRequest = { projectSwitcherExpanded = false },
-                                modifier = Modifier.exposedDropdownSize()
+                                modifier = Modifier
+                                    .exposedDropdownSize()
+                                    .clip(RoundedCornerShape(24.dp))
                             ) {
                                 uiState.projects.forEach { project ->
                                     DropdownMenuItem(
@@ -315,7 +326,7 @@ private fun Content(
                     IconButton(
                         onClick = onInvitationsClick,
                         colors = IconButtonDefaults.iconButtonColors(
-                            containerColor = WhiteAmbatu,
+                            containerColor = Color.Transparent,
                             contentColor = ChocoAmbatu
                         ),
                         modifier = Modifier
@@ -323,6 +334,10 @@ private fun Content(
                             .size(40.dp)
                             .shadow(elevation = 2.dp, shape = CircleShape)
                             .clip(CircleShape)
+                            .hazeEffect(state = hazeState) {
+                                blurRadius = 15.dp
+                                tints = listOf(HazeTint(color = WhiteAmbatu.copy(alpha = 0.50f)))
+                            }
                     ) {
                         Icon(
                             imageVector = Icons.Default.Notifications,
@@ -335,7 +350,8 @@ private fun Content(
         bottomBar = {
             FloatingBottomNavigationBar(
                 selectedTab = selectedTab,
-                onTabSelected = { selectedTab = it }
+                onTabSelected = { selectedTab = it },
+                hazeState = hazeState
             )
         },
         floatingActionButton = {
@@ -404,7 +420,9 @@ private fun Content(
                 PullToRefreshBox(
                     isRefreshing = uiState.isLoading || uiState.isStatsLoading,
                     onRefresh = onRefresh,
-                    modifier = Modifier.fillMaxSize()
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .hazeSource(state = hazeState)
                 ) {
                     when (selectedTab) {
                         ProjectTab.DASHBOARD -> DashboardTab(

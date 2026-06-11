@@ -23,20 +23,38 @@ import androidx.compose.ui.unit.dp
 import win.ambatu.work.feature.project.ProjectTab
 import win.ambatu.work.ui.theme.ChocoAmbatu
 import win.ambatu.work.ui.theme.WhiteAmbatu
+import dev.chrisbanes.haze.HazeState
+import dev.chrisbanes.haze.hazeEffect
+import dev.chrisbanes.haze.HazeTint
 
 @Composable
 fun FloatingBottomNavigationBar( 
     selectedTab: ProjectTab,
     onTabSelected: (ProjectTab) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    hazeState: HazeState? = null
 ) {
-    NavigationBar(
-        modifier = modifier
+    val barModifier = if (hazeState != null) {
+        modifier
             .padding(horizontal = 24.dp, vertical = 2.dp)
             .navigationBarsPadding()
             .shadow(elevation = 1.dp, shape = RoundedCornerShape(50))
-            .clip(RoundedCornerShape(24.dp)),
-        containerColor = WhiteAmbatu,
+            .clip(RoundedCornerShape(24.dp))
+            .hazeEffect(state = hazeState) {
+                blurRadius = 15.dp
+                tints = listOf(HazeTint(color = WhiteAmbatu.copy(alpha = 0.50f)))
+            }
+    } else {
+        modifier
+            .padding(horizontal = 24.dp, vertical = 2.dp)
+            .navigationBarsPadding()
+            .shadow(elevation = 1.dp, shape = RoundedCornerShape(50))
+            .clip(RoundedCornerShape(24.dp))
+    }
+
+    NavigationBar(
+        modifier = barModifier,
+        containerColor = if (hazeState != null) Color.Transparent else WhiteAmbatu,
         tonalElevation = 0.dp
     ) {
         ProjectTab.entries.forEach { tab ->

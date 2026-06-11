@@ -91,6 +91,8 @@ import win.ambatu.work.feature.network.UserDto
 import win.ambatu.work.feature.network.DefinitionOfDoneDto
 import win.ambatu.work.feature.network.SprintDto
 import win.ambatu.work.ui.components.FloatingBottomNavigationBar
+import dev.chrisbanes.haze.HazeState
+import dev.chrisbanes.haze.hazeSource
 import androidx.compose.ui.text.style.TextOverflow
 import win.ambatu.work.ui.theme.ChocoAmbatu
 import win.ambatu.work.ui.theme.DarkChocoAmbatu
@@ -131,6 +133,7 @@ fun ProjectDetailScreen(
     onAddSprintClick: (projectId: Long) -> Unit,
     onSprintClick: (projectId: Long, sprintId: Long) -> Unit
 ) {
+    val hazeState = remember { HazeState() }
     val uiState by viewModel.uiState.collectAsState()
     var selectedTab by remember { mutableStateOf(ProjectTab.DASHBOARD) }
     var selectedBacklogItem by remember { mutableStateOf<BacklogItemDto?>(null) }
@@ -180,7 +183,8 @@ fun ProjectDetailScreen(
         bottomBar = {
             FloatingBottomNavigationBar(
                 selectedTab = selectedTab,
-                onTabSelected = { selectedTab = it }
+                onTabSelected = { selectedTab = it },
+                hazeState = hazeState
             )
         },
         floatingActionButton = {
@@ -212,6 +216,7 @@ fun ProjectDetailScreen(
         Box(
             modifier = Modifier
                 .fillMaxSize()
+                .hazeSource(state = hazeState)
         ) {
             if (uiState.isLoading) {
                 CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))

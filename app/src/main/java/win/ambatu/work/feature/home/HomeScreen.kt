@@ -181,7 +181,7 @@ private fun Content(
     onAddSprintClick: (Long) -> Unit = {},
     onSprintClick: (Long, Long) -> Unit = { _, _ -> },
     onInvitationsClick: () -> Unit = {},
-    onUpdateProject: (name: String?, description: String?, goal: String?, sprintLength: Int?, wipLimit: Int?) -> Unit = { _, _, _, _, _ -> },
+    onUpdateProject: (name: String?, description: String?, goal: String?, sprintLength: Int?) -> Unit = { _, _, _, _ -> },
     onUpdateBacklogItem: (id: Long, title: String, description: String?, type: String, estimatePoints: Int?, priority: String?, acceptanceCriteria: List<String>?, assignedToUserId: Long?) -> Unit = { _, _, _, _, _, _, _, _ -> },
     onArchiveBacklogItem: (id: Long) -> Unit = {},
     onUpdateMemberRole: (userId: Long, role: String) -> Unit = { _, _ -> },
@@ -435,8 +435,8 @@ private fun Content(
                                 SettingsTab(
                                     project = project,
                                     members = uiState.members,
-                                    onUpdateProject = { name, desc, goal, length, wip ->
-                                        onUpdateProject(name, desc, goal, length, wip)
+                                    onUpdateProject = { name, desc, goal, length ->
+                                        onUpdateProject(name, desc, goal, length)
                                     },
                                     onUpdateMemberRole = { userId, role ->
                                         onUpdateMemberRole(userId, role)

@@ -70,8 +70,7 @@ class ProjectDetailViewModel @Inject constructor(
         name: String?,
         description: String?,
         productGoal: String?,
-        sprintLength: Int?,
-        wipLimit: Int?
+        sprintLength: Int?
     ) {
         val token = sessionManager.getToken() ?: return
         viewModelScope.launch {
@@ -84,8 +83,7 @@ class ProjectDetailViewModel @Inject constructor(
                         name = name,
                         description = description,
                         productGoal = productGoal,
-                        defaultSprintLengthDays = sprintLength,
-                        wipLimitPerMember = wipLimit
+                        defaultSprintLengthDays = sprintLength
                     )
                 )
                 _uiState.update { it.copy(project = updated, isLoading = false) }

@@ -251,8 +251,8 @@ fun ProjectDetailScreen(
                         ProjectTab.SETTINGS -> SettingsTab(
                             project = project,
                             members = uiState.members,
-                            onUpdateProject = { name, desc, goal, length, wip ->
-                                viewModel.updateProject(name, desc, goal, length, wip)
+                            onUpdateProject = { name, desc, goal, length ->
+                                viewModel.updateProject(name, desc, goal, length)
                             },
                             onUpdateMemberRole = { userId, role ->
                                 viewModel.updateProjectMemberRole(userId, role)
@@ -911,7 +911,7 @@ private fun formatDate(dateString: String?): String? {
 fun SettingsTab(
     project: win.ambatu.work.feature.network.ProjectDto,
     members: List<win.ambatu.work.feature.network.ProjectMemberDto>,
-    onUpdateProject: (name: String?, description: String?, goal: String?, sprintLength: Int?, wipLimit: Int?) -> Unit,
+    onUpdateProject: (name: String?, description: String?, goal: String?, sprintLength: Int?) -> Unit,
     onUpdateMemberRole: (userId: Long, role: String) -> Unit,
     onRemoveMember: (userId: Long) -> Unit,
     onInviteMember: (String) -> Unit,
@@ -980,8 +980,8 @@ fun SettingsTab(
         EditProjectDialog(
             project = project,
             onDismiss = { showEditDialog = false },
-            onConfirm = { name, desc, goal, length, wip ->
-                onUpdateProject(name, desc, goal, length, wip)
+            onConfirm = { name, desc, goal, length ->
+                onUpdateProject(name, desc, goal, length)
                 showEditDialog = false
             }
         )
@@ -1118,19 +1118,6 @@ fun SettingsTab(
                                 )
                                 Text(
                                     text = "${project.defaultSprintLengthDays ?: 14} Days",
-                                    style = MaterialTheme.typography.bodyLarge,
-                                    color = DarkChocoAmbatu.copy(alpha = 0.8f)
-                                )
-                            }
-                            Column(modifier = Modifier.weight(1f)) {
-                                Text(
-                                    text = "WIP Limit",
-                                    style = MaterialTheme.typography.titleMedium,
-                                    fontWeight = FontWeight.Bold,
-                                    color = DarkChocoAmbatu
-                                )
-                                Text(
-                                    text = project.wipLimitPerMember?.let { "$it items" } ?: "None",
                                     style = MaterialTheme.typography.bodyLarge,
                                     color = DarkChocoAmbatu.copy(alpha = 0.8f)
                                 )
@@ -2128,13 +2115,12 @@ fun InfoCard(
 fun EditProjectDialog(
     project: win.ambatu.work.feature.network.ProjectDto,
     onDismiss: () -> Unit,
-    onConfirm: (name: String, description: String?, goal: String, sprintLength: Int, wipLimit: Int?) -> Unit
+    onConfirm: (name: String, description: String?, goal: String, sprintLength: Int) -> Unit
 ) {
     var name by remember { mutableStateOf(project.name) }
     var description by remember { mutableStateOf(project.description ?: "") }
     var goal by remember { mutableStateOf(project.productGoal ?: "") }
     var sprintLength by remember { mutableStateOf(project.defaultSprintLengthDays?.toString() ?: "14") }
-    var wipLimit by remember { mutableStateOf(project.wipLimitPerMember?.toString() ?: "") }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -2178,13 +2164,6 @@ fun EditProjectDialog(
                     modifier = Modifier.fillMaxWidth(),
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
                 )
-                OutlinedTextField(
-                    value = wipLimit,
-                    onValueChange = { wipLimit = it },
-                    label = { Text("WIP Limit (optional)") },
-                    modifier = Modifier.fillMaxWidth(),
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
-                )
             }
         },
         confirmButton = {
@@ -2194,8 +2173,7 @@ fun EditProjectDialog(
                         name,
                         description.takeIf { it.isNotBlank() },
                         goal,
-                        sprintLength.toIntOrNull() ?: 14,
-                        wipLimit.toIntOrNull()
+                        sprintLength.toIntOrNull() ?: 14
                     )
                 },
                 enabled = name.isNotBlank() && goal.isNotBlank()

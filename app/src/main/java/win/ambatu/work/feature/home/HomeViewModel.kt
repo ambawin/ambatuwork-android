@@ -195,8 +195,7 @@ class HomeViewModel @Inject constructor(
         name: String?,
         description: String?,
         productGoal: String?,
-        sprintLength: Int?,
-        wipLimit: Int?
+        sprintLength: Int?
     ) {
         val token = sessionManager.getToken() ?: return
         val projectId = _uiState.value.selectedProject?.id ?: return
@@ -210,8 +209,7 @@ class HomeViewModel @Inject constructor(
                         name = name,
                         description = description,
                         productGoal = productGoal,
-                        defaultSprintLengthDays = sprintLength,
-                        wipLimitPerMember = wipLimit
+                        defaultSprintLengthDays = sprintLength
                     )
                 )
                 _uiState.update { it.copy(selectedProject = updated, isLoading = false) }

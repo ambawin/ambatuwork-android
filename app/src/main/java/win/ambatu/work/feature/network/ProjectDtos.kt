@@ -14,8 +14,6 @@ data class ProjectDto(
     val ownerUserId: Long?,
     @Json(name = "default_sprint_length_days")
     val defaultSprintLengthDays: Int?,
-    @Json(name = "wip_limit_per_member")
-    val wipLimitPerMember: Int?,
     val status: String?,
     @Json(name = "my_role")
     val myRole: String?,
@@ -135,9 +133,7 @@ data class CreateProjectRequest(
     @Json(name = "product_goal")
     val productGoal: String,
     @Json(name = "default_sprint_length_days")
-    val defaultSprintLengthDays: Int,
-    @Json(name = "wip_limit_per_member")
-    val wipLimitPerMember: Int? = null
+    val defaultSprintLengthDays: Int
 )
 
 @JsonClass(generateAdapter = true)
@@ -148,8 +144,6 @@ data class UpdateProjectRequest(
     val productGoal: String? = null,
     @Json(name = "default_sprint_length_days")
     val defaultSprintLengthDays: Int? = null,
-    @Json(name = "wip_limit_per_member")
-    val wipLimitPerMember: Int? = null,
     val status: String? = null
 )
 

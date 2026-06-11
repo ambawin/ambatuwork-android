@@ -18,6 +18,9 @@ import win.ambatu.work.data.repository.AuthRepository
 import win.ambatu.work.data.storage.SessionManager
 import win.ambatu.work.feature.auth.LoginActivity
 import win.ambatu.work.feature.onboarding.OnboardingActivity
+import win.ambatu.work.feature.project.ProjectDetailActivity
+import win.ambatu.work.feature.project.SprintBoardActivity
+import win.ambatu.work.feature.project.PeerReviewActivity
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -72,6 +75,8 @@ class MainActivity : ComponentActivity() {
             }
         }
 
+        handleNotificationRouting()
+
         enableEdgeToEdge()
         setContent {
             ComposeApp(
@@ -80,6 +85,65 @@ class MainActivity : ComponentActivity() {
                     finish()
                 }
             )
+        }
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        val token = sessionManager.getToken()
+        if (token != null && sessionManager.hasCompletedOnboarding()) {
+            handleNotificationRouting()
+        }
+    }
+
+    private fun handleNotificationRouting() {
+        val type = intent.getStringExtra("type") ?: return
+        val projectId = intent.getStringExtra("project_id")?.toLongOrNull() ?: -1L
+        if (projectId == -1L) return
+
+        when (type) {
+            "project_invitation_accepted" -> {
+                val nextIntent = Intent(this, ProjectDetailActivity::class.java).apply {
+                    putExtra("extra_project_id", projectId)
+                    putExtra("extra_initial_tab", "SETTINGS")
+                }
+                startActivity(nextIntent)
+            }
+            "backlog_item_assigned" -> {
+                val backlogItemId = intent.getStringExtra("backlog_item_id")?.toLongOrNull() ?: -1L
+                val nextIntent = Intent(this, ProjectDetailActivity::class.java).apply {
+                    putExtra("extra_project_id", projectId)
+                    putExtra("extra_initial_tab", "BACKLOG")
+                    putExtra("extra_initial_backlog_item_id", backlogItemId)
+                }
+                startActivity(nextIntent)
+            }
+            "sprint_started", "sprint_closed" -> {
+                val sprintId = intent.getStringExtra("sprint_id")?.toLongOrNull() ?: -1L
+                if (sprintId != -1L) {
+                    val nextIntent = SprintBoardActivity.createIntent(this, projectId, sprintId)
+                    startActivity(nextIntent)
+                }
+            }
+            "impediment_reported", "impediment_resolved" -> {
+                val nextIntent = Intent(this, ProjectDetailActivity::class.java).apply {
+                    putExtra("extra_project_id", projectId)
+                    putExtra("extra_initial_tab", "DASHBOARD")
+                }
+                startActivity(nextIntent)
+            }
+            "peer_review_cycle_opened", "peer_review_cycle_closed" -> {
+                val cycleId = intent.getStringExtra("cycle_id")?.toLongOrNull() ?: -1L
+                if (cycleId != -1L) {
+                    val nextIntent = Intent(this, PeerReviewActivity::class.java).apply {
+                        putExtra("extra_project_id", projectId)
+                        putExtra("extra_cycle_id", cycleId)
+                        putExtra("extra_sprint_name", "Sprint")
+                    }
+                    startActivity(nextIntent)
+                }
+            }
         }
     }
 }

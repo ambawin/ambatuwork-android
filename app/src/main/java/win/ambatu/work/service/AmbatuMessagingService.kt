@@ -74,7 +74,13 @@ class AmbatuMessagingService : FirebaseMessagingService() {
                          android.content.Intent.FLAG_ACTIVITY_CLEAR_TOP)
             }
         } else {
-            packageManager.getLaunchIntentForPackage(packageName)
+            packageManager.getLaunchIntentForPackage(packageName)?.apply {
+                addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK or
+                         android.content.Intent.FLAG_ACTIVITY_CLEAR_TOP)
+                message.data.forEach { (key, value) ->
+                    putExtra(key, value)
+                }
+            }
         }
 
         val pendingIntent = PendingIntent.getActivity(

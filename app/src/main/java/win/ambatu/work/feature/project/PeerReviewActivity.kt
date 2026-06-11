@@ -46,7 +46,8 @@ class PeerReviewActivity : ComponentActivity() {
 
         val projectId = intent.getLongExtra(EXTRA_PROJECT_ID, -1L)
         val sprintId = intent.getLongExtra(EXTRA_SPRINT_ID, -1L)
-        if (projectId == -1L || sprintId == -1L) {
+        val cycleId = intent.getLongExtra(EXTRA_CYCLE_ID, -1L)
+        if (projectId == -1L || (sprintId == -1L && cycleId == -1L)) {
             finish()
             return
         }
@@ -65,6 +66,7 @@ class PeerReviewActivity : ComponentActivity() {
     companion object {
         private const val EXTRA_PROJECT_ID = "extra_project_id"
         private const val EXTRA_SPRINT_ID = "extra_sprint_id"
+        private const val EXTRA_CYCLE_ID = "extra_cycle_id"
         private const val EXTRA_SPRINT_NAME = "extra_sprint_name"
 
         fun createIntent(

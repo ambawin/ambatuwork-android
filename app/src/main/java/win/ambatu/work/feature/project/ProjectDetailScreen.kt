@@ -69,6 +69,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.material3.Slider
 import kotlin.math.roundToInt
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -131,12 +132,25 @@ fun ProjectDetailScreen(
     onBackClick: () -> Unit,
     onAddBacklogClick: (projectId: Long) -> Unit,
     onAddSprintClick: (projectId: Long) -> Unit,
-    onSprintClick: (projectId: Long, sprintId: Long) -> Unit
+    onSprintClick: (projectId: Long, sprintId: Long) -> Unit,
+    initialTab: ProjectTab = ProjectTab.DASHBOARD,
+    initialBacklogItemId: Long = -1L
 ) {
     val hazeState = remember { HazeState() }
     val uiState by viewModel.uiState.collectAsState()
-    var selectedTab by remember { mutableStateOf(ProjectTab.DASHBOARD) }
+    var selectedTab by remember { mutableStateOf(initialTab) }
     var selectedBacklogItem by remember { mutableStateOf<BacklogItemDto?>(null) }
+    var hasAutoOpenedBacklogItem by remember { mutableStateOf(false) }
+
+    LaunchedEffect(uiState.backlogItems) {
+        if (!hasAutoOpenedBacklogItem && initialBacklogItemId != -1L && uiState.backlogItems.isNotEmpty()) {
+            val item = uiState.backlogItems.find { it.id == initialBacklogItemId }
+            if (item != null) {
+                selectedBacklogItem = item
+                hasAutoOpenedBacklogItem = true
+            }
+        }
+    }
 
     if (selectedBacklogItem != null && uiState.project != null) {
         BacklogDetailDialog(

@@ -42,6 +42,9 @@ class PeerReviewViewModel @Inject constructor(
 
     private val projectId = savedStateHandle.get<Long>("extra_project_id") ?: -1L
     private val sprintId = savedStateHandle.get<Long>("extra_sprint_id") ?: -1L
+    private val cycleId = savedStateHandle.get<Long>("extra_cycle_id") ?: -1L
+
+    private var activeSprintId = sprintId
 
     private val _uiState = MutableStateFlow(PeerReviewUiState())
     val uiState: StateFlow<PeerReviewUiState> = _uiState.asStateFlow()
@@ -59,10 +62,28 @@ class PeerReviewViewModel @Inject constructor(
                 val project = projectRepository.getProject(token, projectId)
                 val members = projectRepository.getProjectMembers(token, projectId)
 
-                val cycle = try {
-                    projectRepository.getPeerReviewCycle(token, projectId, sprintId)
-                } catch (_: Exception) {
-                    null
+                var resolvedSprintId = sprintId
+                var cycle: PeerReviewCycleDto? = null
+
+                if (resolvedSprintId == -1L && cycleId != -1L) {
+                    val sprints = projectRepository.getProjectSprints(token, projectId)
+                    for (sprint in sprints) {
+                        try {
+                            val c = projectRepository.getPeerReviewCycle(token, projectId, sprint.id)
+                            if (c.id == cycleId) {
+                                resolvedSprintId = sprint.id
+                                activeSprintId = sprint.id
+                                cycle = c
+                                break
+                            }
+                        } catch (_: Exception) {}
+                    }
+                } else if (resolvedSprintId != -1L) {
+                    cycle = try {
+                        projectRepository.getPeerReviewCycle(token, projectId, resolvedSprintId)
+                    } catch (_: Exception) {
+                        null
+                    }
                 }
 
                 // Load summary if cycle exists and is closed
@@ -102,10 +123,12 @@ class PeerReviewViewModel @Inject constructor(
 
     fun openCycle() {
         val token = sessionManager.getToken() ?: return
+        val sId = activeSprintId
+        if (sId == -1L) return
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, error = null) }
             try {
-                val cycle = projectRepository.openPeerReviewCycle(token, projectId, sprintId)
+                val cycle = projectRepository.openPeerReviewCycle(token, projectId, sId)
                 _uiState.update {
                     it.copy(cycle = cycle, isLoading = false, successMessage = "Peer review cycle opened!")
                 }

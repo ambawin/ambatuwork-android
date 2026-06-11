@@ -275,5 +275,11 @@ interface ApiService {
     suspend fun getUserStats(
         @Header("Authorization") authorization: String
     ): UserStatsResponse
+
+    @GET("api/v1/projects/{project_id}/stats")
+    suspend fun getProjectStats(
+        @Header("Authorization") authorization: String,
+        @Path("project_id") projectId: Long
+    ): ProjectStatsResponse
 }
 

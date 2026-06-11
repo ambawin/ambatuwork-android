@@ -1,5 +1,6 @@
 package win.ambatu.work.feature.project
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -11,6 +12,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.rememberScrollState
@@ -30,6 +32,8 @@ import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Verified
 import androidx.compose.material.icons.filled.GroupAdd
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Badge
 import androidx.compose.material3.Button
@@ -94,6 +98,14 @@ import win.ambatu.work.ui.theme.Typography
 import win.ambatu.work.ui.theme.WhiteAmbatu
 import win.ambatu.work.ui.theme.LimeGreenAmbatu
 import win.ambatu.work.ui.theme.YellowAmbatu
+import win.ambatu.work.ui.theme.LightYellowAmbatu
+import win.ambatu.work.ui.theme.LightGreenAmbatu
+import win.ambatu.work.ui.theme.LightRedAmbatu
+import win.ambatu.work.ui.theme.LightBlueAmbatu
+import win.ambatu.work.feature.profile.BentoCard
+import win.ambatu.work.feature.profile.RatingBarRow
+import win.ambatu.work.feature.profile.StatusLegendItem
+import win.ambatu.work.feature.network.ProjectStatsDto
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 import java.util.Locale
@@ -210,7 +222,11 @@ fun ProjectDetailScreen(
                     when (selectedTab) {
                         ProjectTab.DASHBOARD -> DashboardTab(
                             project = project,
-                            members = uiState.members
+                            members = uiState.members,
+                            stats = uiState.stats,
+                            isStatsLoading = uiState.isStatsLoading,
+                            statsError = uiState.statsError,
+                            onRetryStatsClick = { viewModel.loadProjectStats() }
                         )
 
                         ProjectTab.BACKLOG -> BacklogTab(
@@ -254,7 +270,11 @@ fun ProjectDetailScreen(
 @Composable
 fun DashboardTab(
     project: win.ambatu.work.feature.network.ProjectDto,
-    members: List<win.ambatu.work.feature.network.ProjectMemberDto>
+    members: List<win.ambatu.work.feature.network.ProjectMemberDto>,
+    stats: win.ambatu.work.feature.network.ProjectStatsDto? = null,
+    isStatsLoading: Boolean = false,
+    statsError: String? = null,
+    onRetryStatsClick: () -> Unit = {}
 ) {
     LazyColumn(
         modifier = Modifier
@@ -263,12 +283,11 @@ fun DashboardTab(
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         item {
-            val owner = members.find { it.user.id == project.ownerUserId }
             Column(modifier = Modifier.fillMaxWidth()) {
                 Text(
-                    text = "Hello, Dap!",
+                    text = project.name,
                     style = Typography.headlineLarge,
-                    fontSize = 36.sp,
+                    fontSize = 32.sp,
                     fontWeight = FontWeight.Black,
                     color = ChocoAmbatu
                 )
@@ -277,72 +296,374 @@ fun DashboardTab(
                     style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
+            }
+        }
 
-                Spacer(modifier = Modifier.height(24.dp))
-
-                // Product Owner Card
+        item {
+            if (isStatsLoading && stats == null) {
                 Card(
                     modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(16.dp),
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceContainerLow
-                    )
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
+                    shape = RoundedCornerShape(24.dp)
                 ) {
                     Row(
                         modifier = Modifier
-                            .padding(16.dp)
-                            .fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween
+                            .fillMaxWidth()
+                            .padding(24.dp),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Column {
-                            Text(
-                                text = "Product Owner",
-                                style = MaterialTheme.typography.labelLarge,
-                                color = MaterialTheme.colorScheme.secondary
-                            )
-                            Text(
-                                text = owner?.user?.name ?: "No Owner Assigned",
-                                style = MaterialTheme.typography.titleLarge,
-                                fontWeight = FontWeight.Bold
-                            )
-                        }
-                        AsyncImage(
-                            model = owner?.user?.avatarUrl,
-                            contentDescription = "Owner avatar",
-                            modifier = Modifier
-                                .size(48.dp)
-                                .clip(CircleShape),
-                            contentScale = ContentScale.Crop,
-                            placeholder = painterResource(R.drawable.profile_placeholder),
-                            error = painterResource(R.drawable.profile_placeholder)
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(24.dp),
+                            color = ChocoAmbatu,
+                            strokeWidth = 2.5.dp
+                        )
+                        Text(
+                            text = "Loading statistics...",
+                            color = ChocoAmbatu,
+                            fontWeight = FontWeight.Medium
                         )
                     }
                 }
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                // Info Cards Row
-                Row(
+            } else if (statsError != null) {
+                Card(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(16.dp)
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer),
+                    shape = RoundedCornerShape(24.dp)
                 ) {
-                    InfoCard(
-                        modifier = Modifier.weight(1f),
-                        icon = Icons.Default.AccessTime,
-                        label = "Sprint Length",
-                        value = "${project.defaultSprintLengthDays ?: 0} days"
-                    )
-                    InfoCard(
-                        modifier = Modifier.weight(1f),
-                        icon = Icons.Default.Groups,
-                        label = "Team Size",
-                        value = "${project.memberCount ?: 0} Members"
-                    )
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(20.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Text(
+                            text = "Failed to load stats: $statsError",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.error
+                        )
+                        androidx.compose.material3.TextButton(
+                            onClick = onRetryStatsClick
+                        ) {
+                            Text(
+                                text = "Retry",
+                                color = MaterialTheme.colorScheme.error,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    }
                 }
+            } else if (stats != null) {
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    // Row 1: Sprints & Velocity (Normal / Choco-Yellow colors)
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        BentoCard(
+                            modifier = Modifier.weight(1f),
+                            containerColor = LightYellowAmbatu,
+                            contentColor = ChocoAmbatu,
+                            title = "Sprints",
+                            icon = {
+                                Icon(
+                                    imageVector = Icons.Default.AccessTime,
+                                    contentDescription = null,
+                                    tint = ChocoAmbatu
+                                )
+                            }
+                        ) {
+                            Column {
+                                Text(
+                                    text = "${stats.sprints.total}",
+                                    style = MaterialTheme.typography.displayMedium,
+                                    fontWeight = FontWeight.Black,
+                                    color = ChocoAmbatu
+                                )
+                                Text(
+                                    text = "${stats.sprints.completed} Completed, ${stats.sprints.active} Active",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = ChocoAmbatu.copy(alpha = 0.7f)
+                                )
+                            }
+                        }
 
-                Spacer(modifier = Modifier.height(16.dp))
-                DefinitionOfDoneCard(definitionOfDone = project.definitionOfDone)
+                        BentoCard(
+                            modifier = Modifier.weight(1f),
+                            containerColor = LightYellowAmbatu,
+                            contentColor = ChocoAmbatu,
+                            title = "Velocity",
+                            icon = {
+                                Icon(
+                                    imageVector = Icons.Default.Verified,
+                                    contentDescription = null,
+                                    tint = ChocoAmbatu
+                                )
+                            }
+                        ) {
+                            Column {
+                                val velocity = stats.sprints.averageVelocity ?: 0f
+                                Text(
+                                    text = String.format(Locale.getDefault(), "%.1f", velocity),
+                                    style = MaterialTheme.typography.displayMedium,
+                                    fontWeight = FontWeight.Black,
+                                    color = ChocoAmbatu
+                                )
+                                Text(
+                                    text = "Avg Points / Sprint",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = ChocoAmbatu.copy(alpha = 0.7f)
+                                )
+                            }
+                        }
+                    }
+
+                    // Row 2: Backlog Progress (Success / Green theme)
+                    BentoCard(
+                        modifier = Modifier.fillMaxWidth(),
+                        containerColor = LightGreenAmbatu,
+                        contentColor = GreenAmbatu,
+                        title = "Sprint Progress",
+                        icon = {
+                            Icon(
+                                imageVector = Icons.Default.CheckCircleOutline,
+                                contentDescription = null,
+                                tint = GreenAmbatu
+                            )
+                        }
+                    ) {
+                        Column(
+                            verticalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.Bottom
+                            ) {
+                                Text(
+                                    text = "${stats.backlogItems.completedPoints} / ${stats.backlogItems.totalPoints}",
+                                    style = MaterialTheme.typography.displayMedium,
+                                    fontWeight = FontWeight.Black,
+                                    color = GreenAmbatu
+                                )
+                                Text(
+                                    text = "Completed Story Points",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = GreenAmbatu.copy(alpha = 0.7f)
+                                )
+                            }
+
+                            val breakdown = stats.backlogItems.byStatus
+                            val total = stats.backlogItems.total
+                            if (total > 0) {
+                                val inProgressCount = breakdown.inProgress
+                                val doneCount = breakdown.done
+                                val inReviewCount = breakdown.inReview
+                                val todoCount = breakdown.backlog + breakdown.ready + breakdown.selected
+
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(10.dp)
+                                        .clip(RoundedCornerShape(5.dp))
+                                ) {
+                                    if (doneCount > 0) {
+                                        Spacer(
+                                            modifier = Modifier
+                                                .weight(doneCount.toFloat())
+                                                .fillMaxHeight()
+                                                .background(GreenAmbatu)
+                                        )
+                                    }
+                                    if (inReviewCount > 0) {
+                                        Spacer(
+                                            modifier = Modifier
+                                                .weight(inReviewCount.toFloat())
+                                                .fillMaxHeight()
+                                                .background(BlueAmbatu)
+                                        )
+                                    }
+                                    if (inProgressCount > 0) {
+                                        Spacer(
+                                            modifier = Modifier
+                                                .weight(inProgressCount.toFloat())
+                                                .fillMaxHeight()
+                                                .background(YellowAmbatu)
+                                        )
+                                    }
+                                    if (todoCount > 0) {
+                                        Spacer(
+                                            modifier = Modifier
+                                                .weight(todoCount.toFloat())
+                                                .fillMaxHeight()
+                                                .background(ChocoAmbatu.copy(alpha = 0.3f))
+                                        )
+                                    }
+                                }
+
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    StatusLegendItem(label = "Done", count = doneCount, color = GreenAmbatu)
+                                    StatusLegendItem(label = "In Review", count = inReviewCount, color = BlueAmbatu)
+                                    StatusLegendItem(label = "In Progress", count = inProgressCount, color = YellowAmbatu)
+                                    StatusLegendItem(label = "To Do", count = todoCount, color = ChocoAmbatu.copy(alpha = 0.5f))
+                                }
+                            } else {
+                                Text(
+                                    text = "No backlog items found",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = GreenAmbatu.copy(alpha = 0.5f)
+                                )
+                            }
+                        }
+                    }
+
+                    // Row 3: Impediments & Check-ins (Red / Yellow Choco)
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        // Impediments (Urgency -> Red)
+                        val openImpediments = stats.impediments.byStatus.open + stats.impediments.byStatus.inProgress
+                        BentoCard(
+                            modifier = Modifier.weight(1f),
+                            containerColor = LightRedAmbatu,
+                            contentColor = RedAmbatu,
+                            title = "Blockers",
+                            icon = {
+                                Icon(
+                                    imageVector = Icons.Default.Warning,
+                                    contentDescription = null,
+                                    tint = RedAmbatu
+                                )
+                            }
+                        ) {
+                            Column {
+                                Text(
+                                    text = "$openImpediments",
+                                    style = MaterialTheme.typography.displayMedium,
+                                    fontWeight = FontWeight.Black,
+                                    color = RedAmbatu
+                                )
+                                Text(
+                                    text = "Active Impediments",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = RedAmbatu.copy(alpha = 0.7f)
+                                )
+                                Text(
+                                    text = "${stats.impediments.resolved} resolved",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = GreenAmbatu,
+                                    fontWeight = FontWeight.Bold,
+                                    modifier = Modifier.padding(top = 4.dp)
+                                )
+                            }
+                        }
+
+                        // Daily Check-ins (Normal -> Yellow)
+                        BentoCard(
+                            modifier = Modifier.weight(1f),
+                            containerColor = LightYellowAmbatu,
+                            contentColor = ChocoAmbatu,
+                            title = "Daily Checkins",
+                            icon = {
+                                Icon(
+                                    imageVector = Icons.Default.Groups,
+                                    contentDescription = null,
+                                    tint = ChocoAmbatu
+                                )
+                            }
+                        ) {
+                            Column {
+                                Text(
+                                    text = "${stats.dailyCheckins.totalSubmitted}",
+                                    style = MaterialTheme.typography.displayMedium,
+                                    fontWeight = FontWeight.Black,
+                                    color = ChocoAmbatu
+                                )
+                                Text(
+                                    text = "Total Submissions",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = ChocoAmbatu.copy(alpha = 0.7f)
+                                )
+                                val avgConf = stats.dailyCheckins.averageConfidence ?: 0f
+                                val avgConfText = String.format(Locale.getDefault(), "%.1f", avgConf)
+                                Text(
+                                    text = "Confidence: $avgConfText/5.0",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    fontWeight = FontWeight.Bold,
+                                    color = ChocoAmbatu,
+                                    modifier = Modifier.padding(top = 4.dp)
+                                )
+                            }
+                        }
+                    }
+
+                    // Row 4: Peer Reviews & Happiness (Normal -> Yellow)
+                    BentoCard(
+                        modifier = Modifier.fillMaxWidth(),
+                        containerColor = LightYellowAmbatu,
+                        contentColor = ChocoAmbatu,
+                        title = "Team Ratings",
+                        icon = {
+                            Icon(
+                                imageVector = Icons.Default.Star,
+                                contentDescription = null,
+                                tint = ChocoAmbatu
+                            )
+                        }
+                    ) {
+                        Column(
+                            verticalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = "Sprint Retrospective Happiness",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = ChocoAmbatu
+                                )
+                                val avgHappiness = stats.retrospectives.averageHappinessScore ?: 0f
+                                val avgHappinessText = String.format(Locale.getDefault(), "%.2f", avgHappiness)
+                                Text(
+                                    text = "$avgHappinessText / 5.0",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = ChocoAmbatu
+                                )
+                            }
+
+                            HorizontalDivider(color = ChocoAmbatu.copy(alpha = 0.15f))
+
+                            Text(
+                                text = "Peer Review Averages (Across ${stats.peerReviews.totalCycles} cycles)",
+                                style = MaterialTheme.typography.labelMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = ChocoAmbatu.copy(alpha = 0.8f)
+                            )
+
+                            val scores = stats.peerReviews.averageScores
+                            Column(
+                                verticalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                RatingBarRow(label = "Collaboration", score = scores.collaboration)
+                                RatingBarRow(label = "Delivery", score = scores.delivery)
+                                RatingBarRow(label = "Communication", score = scores.communication)
+                            }
+                        }
+                    }
+                }
             }
         }
     }
@@ -665,6 +986,48 @@ fun SettingsTab(
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         item {
+            val owner = members.find { it.user.id == project.ownerUserId }
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(16.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceContainerLow
+                )
+            ) {
+                Row(
+                    modifier = Modifier
+                        .padding(16.dp)
+                        .fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Column {
+                        Text(
+                            text = "Product Owner",
+                            style = MaterialTheme.typography.labelLarge,
+                            color = MaterialTheme.colorScheme.secondary
+                        )
+                        Text(
+                            text = owner?.user?.name ?: "No Owner Assigned",
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                    AsyncImage(
+                        model = owner?.user?.avatarUrl,
+                        contentDescription = "Owner avatar",
+                        modifier = Modifier
+                            .size(48.dp)
+                            .clip(CircleShape),
+                        contentScale = ContentScale.Crop,
+                        placeholder = painterResource(R.drawable.profile_placeholder),
+                        error = painterResource(R.drawable.profile_placeholder)
+                    )
+                }
+            }
+        }
+
+        item {
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(16.dp),
@@ -738,6 +1101,10 @@ fun SettingsTab(
                     }
                 }
             }
+        }
+
+        item {
+            DefinitionOfDoneCard(definitionOfDone = project.definitionOfDone)
         }
 
         item {

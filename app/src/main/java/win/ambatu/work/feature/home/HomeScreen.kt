@@ -155,7 +155,10 @@ fun HomeScreen(
         onUpdateBacklogItem = viewModel::updateBacklogItem,
         onArchiveBacklogItem = viewModel::archiveBacklogItem,
         onUpdateMemberRole = viewModel::updateProjectMemberRole,
-        onRemoveMember = viewModel::removeProjectMember
+        onRemoveMember = viewModel::removeProjectMember,
+        onRetryStatsClick = { projectId ->
+            viewModel.loadProjectStats(projectId)
+        }
     )
 }
 
@@ -177,7 +180,8 @@ private fun Content(
     onUpdateBacklogItem: (id: Long, title: String, description: String?, type: String, estimatePoints: Int?, priority: String?, acceptanceCriteria: List<String>?, assignedToUserId: Long?) -> Unit = { _, _, _, _, _, _, _, _ -> },
     onArchiveBacklogItem: (id: Long) -> Unit = {},
     onUpdateMemberRole: (userId: Long, role: String) -> Unit = { _, _ -> },
-    onRemoveMember: (userId: Long) -> Unit = {}
+    onRemoveMember: (userId: Long) -> Unit = {},
+    onRetryStatsClick: (Long) -> Unit = {}
 ) {
     var showCreateSheet by remember { mutableStateOf(false) }
     var projectSwitcherExpanded by remember { mutableStateOf(false) }
@@ -371,7 +375,13 @@ private fun Content(
                 when (selectedTab) {
                     ProjectTab.DASHBOARD -> DashboardTab(
                         project = uiState.selectedProject,
-                        members = uiState.members
+                        members = uiState.members,
+                        stats = uiState.stats,
+                        isStatsLoading = uiState.isStatsLoading,
+                        statsError = uiState.statsError,
+                        onRetryStatsClick = {
+                            uiState.selectedProject?.id?.let { onRetryStatsClick(it) }
+                        }
                     )
                     ProjectTab.BACKLOG -> BacklogTab(
                         backlogItems = uiState.backlogItems,

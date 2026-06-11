@@ -33,7 +33,10 @@ data class HomeUiState(
     val isLoading: Boolean = false,
     val error: String? = null,
     val isCreatingProject: Boolean = false,
-    val isInvitingUser: Boolean = false
+    val isInvitingUser: Boolean = false,
+    val isStatsLoading: Boolean = false,
+    val statsError: String? = null,
+    val stats: win.ambatu.work.feature.network.ProjectStatsDto? = null
 )
 
 @HiltViewModel
@@ -99,8 +102,21 @@ class HomeViewModel @Inject constructor(
     }
 
     fun selectProject(project: ProjectDto) {
-        _uiState.update { it.copy(selectedProject = project) }
+        _uiState.update { it.copy(selectedProject = project, stats = null, statsError = null) }
         loadProjectDetails(project.id)
+    }
+
+    fun loadProjectStats(projectId: Long) {
+        val token = sessionManager.getToken() ?: return
+        viewModelScope.launch {
+            _uiState.update { it.copy(isStatsLoading = true, statsError = null) }
+            try {
+                val stats = projectRepository.getProjectStats(token, projectId)
+                _uiState.update { it.copy(stats = stats, isStatsLoading = false) }
+            } catch (e: Exception) {
+                _uiState.update { it.copy(isStatsLoading = false, statsError = e.message ?: "Failed to fetch project stats") }
+            }
+        }
     }
 
     private fun loadProjectDetails(projectId: Long) {
@@ -119,6 +135,9 @@ class HomeViewModel @Inject constructor(
                         sprints = sprints
                     )
                 }
+
+                // Also trigger stats load
+                loadProjectStats(projectId)
 
                 // Fetch sprint board details to retrieve assignee profiles
                 val sprintAssigneesMap = mutableMapOf<Long, List<UserDto>>()

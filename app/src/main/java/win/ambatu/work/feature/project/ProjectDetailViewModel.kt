@@ -27,7 +27,10 @@ data class ProjectDetailUiState(
     val sprints: List<SprintDto> = emptyList(),
     val sprintAssignees: Map<Long, List<UserDto>> = emptyMap(),
     val isLoading: Boolean = false,
-    val error: String? = null
+    val isStatsLoading: Boolean = false,
+    val error: String? = null,
+    val statsError: String? = null,
+    val stats: win.ambatu.work.feature.network.ProjectStatsDto? = null
 )
 
 @HiltViewModel
@@ -47,6 +50,20 @@ class ProjectDetailViewModel @Inject constructor(
         loadMembers()
         loadBacklogItems()
         loadSprints()
+        loadProjectStats()
+    }
+
+    fun loadProjectStats() {
+        val token = sessionManager.getToken() ?: return
+        viewModelScope.launch {
+            _uiState.update { it.copy(isStatsLoading = true, statsError = null) }
+            try {
+                val stats = projectRepository.getProjectStats(token, projectId)
+                _uiState.update { it.copy(stats = stats, isStatsLoading = false) }
+            } catch (e: Exception) {
+                _uiState.update { it.copy(isStatsLoading = false, statsError = e.message ?: "Failed to fetch project stats") }
+            }
+        }
     }
 
     fun updateProject(

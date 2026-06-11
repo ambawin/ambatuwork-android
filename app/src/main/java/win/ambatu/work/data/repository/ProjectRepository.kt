@@ -227,5 +227,9 @@ class ProjectRepository @Inject constructor(
     ): PeerReviewSummaryItemDto {
         return apiService.getMyPeerReviewSummary(getAuthHeader(token), projectId, cycleId).data
     }
+
+    suspend fun getProjectStats(token: String, projectId: Long): win.ambatu.work.feature.network.ProjectStatsDto {
+        return apiService.getProjectStats(getAuthHeader(token), projectId).data
+    }
 }
 

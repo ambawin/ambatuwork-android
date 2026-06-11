@@ -13,6 +13,8 @@ import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
 
+import win.ambatu.work.data.storage.SessionManager
+
 @Module
 @InstallIn(SingletonComponent::class)
 object NetworkModule {
@@ -27,14 +29,23 @@ object NetworkModule {
 
     @Provides
     @Singleton
-    fun provideOkHttpClient(logging: HttpLoggingInterceptor): OkHttpClient {
+    fun provideOkHttpClient(
+        logging: HttpLoggingInterceptor,
+        sessionManager: SessionManager
+    ): OkHttpClient {
         return OkHttpClient.Builder()
             .addInterceptor(logging)
             .addInterceptor { chain ->
-                val request = chain.request().newBuilder()
-                    .addHeader("Accept", "application/json")
-                    .build()
-                chain.proceed(request)
+                val request = chain.request()
+                val requestBuilder = request.newBuilder()
+                    .header("Accept", "application/json")
+                
+                if (request.header("Authorization") == null) {
+                    sessionManager.getToken()?.let { token ->
+                        requestBuilder.header("Authorization", "Bearer $token")
+                    }
+                }
+                chain.proceed(requestBuilder.build())
             }
             .build()
     }

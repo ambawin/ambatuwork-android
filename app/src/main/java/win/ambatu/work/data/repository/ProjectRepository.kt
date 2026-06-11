@@ -6,7 +6,8 @@ import javax.inject.Singleton
 
 @Singleton
 class ProjectRepository @Inject constructor(
-    private val apiService: ApiService
+    private val apiService: ApiService,
+    private val definitionOfDoneApi: win.ambatu.work.generated.api.DefinitionOfDoneApi
 ) {
     private fun getAuthHeader(token: String) = "Bearer $token"
 
@@ -230,6 +231,33 @@ class ProjectRepository @Inject constructor(
 
     suspend fun getProjectStats(token: String, projectId: Long): win.ambatu.work.feature.network.ProjectStatsDto {
         return apiService.getProjectStats(getAuthHeader(token), projectId).data
+    }
+
+    suspend fun updateDefinitionOfDone(projectId: Long, checklist: List<String>): DefinitionOfDoneDto? {
+        val request = win.ambatu.work.generated.model.Model5250bdafe024c00ee90bfc650a2d12ccRequest(
+            title = "Definition of Done",
+            checklist = checklist
+        )
+        val response = definitionOfDoneApi.call5250bdafe024c00ee90bfc650a2d12cc(projectId.toInt(), request)
+        if (response.isSuccessful) {
+            val body = response.body()
+            val data = body?.data
+            if (data != null) {
+                return DefinitionOfDoneDto(
+                    id = data.id?.toLong() ?: 0L,
+                    projectId = data.projectId?.toLong() ?: projectId,
+                    title = data.title ?: "Definition of Done",
+                    checklist = data.checklist ?: emptyList(),
+                    isActive = data.isActive ?: true,
+                    createdByUserId = data.createdByUserId?.toLong() ?: 0L,
+                    createdAt = data.createdAt?.toString(),
+                    updatedAt = data.updatedAt?.toString()
+                )
+            }
+        } else {
+            throw Exception("Failed to update Definition of Done: ${response.message()}")
+        }
+        return null
     }
 }
 

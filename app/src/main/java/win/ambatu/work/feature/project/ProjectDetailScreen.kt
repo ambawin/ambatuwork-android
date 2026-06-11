@@ -27,11 +27,14 @@ import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.AccessTime
 import androidx.compose.material.icons.filled.CheckCircleOutline
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Dashboard
 import androidx.compose.material.icons.filled.Groups
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Verified
 import androidx.compose.material.icons.filled.GroupAdd
+import androidx.compose.foundation.layout.heightIn
+import win.ambatu.work.ui.theme.MediumYellowAmbatu
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material.icons.filled.Star
@@ -258,6 +261,9 @@ fun ProjectDetailScreen(
                             },
                             onInviteMember = { email ->
                                 viewModel.inviteUser(email)
+                            },
+                            onUpdateDefinitionOfDone = { checklist ->
+                                viewModel.updateDefinitionOfDone(checklist)
                             }
                         )
                     }
@@ -905,10 +911,12 @@ fun SettingsTab(
     onUpdateProject: (name: String?, description: String?, goal: String?, sprintLength: Int?, wipLimit: Int?) -> Unit,
     onUpdateMemberRole: (userId: Long, role: String) -> Unit,
     onRemoveMember: (userId: Long) -> Unit,
-    onInviteMember: (String) -> Unit
+    onInviteMember: (String) -> Unit,
+    onUpdateDefinitionOfDone: ((List<String>) -> Unit)? = null
 ) {
     var showEditDialog by remember { mutableStateOf(false) }
     var showInviteDialog by remember { mutableStateOf(false) }
+    var showEditDoDDialog by remember { mutableStateOf(false) }
     var emailToInvite by remember { mutableStateOf("") }
 
     val role = project.myRole?.lowercase()?.trim()
@@ -976,6 +984,17 @@ fun SettingsTab(
         )
     }
 
+    if (showEditDoDDialog && onUpdateDefinitionOfDone != null) {
+        EditDefinitionOfDoneDialog(
+            definitionOfDone = project.definitionOfDone,
+            onDismiss = { showEditDoDDialog = false },
+            onConfirm = { checklist ->
+                onUpdateDefinitionOfDone(checklist)
+                showEditDoDDialog = false
+            }
+        )
+    }
+
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
         contentPadding = PaddingValues(start = 16.dp, top = 96.dp, end = 16.dp, bottom = 100.dp),
@@ -985,35 +1004,38 @@ fun SettingsTab(
             val owner = members.find { it.user.id == project.ownerUserId }
             Card(
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp),
+                shape = RoundedCornerShape(40.dp),
                 colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceContainerLow
-                )
+                    containerColor = WhiteAmbatu
+                ),
+                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
             ) {
                 Row(
                     modifier = Modifier
-                        .padding(16.dp)
-                        .fillMaxWidth(),
+                        .fillMaxWidth()
+                        .padding(horizontal = 24.dp, vertical = 20.dp),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Column {
                         Text(
                             text = "Product Owner",
-                            style = MaterialTheme.typography.labelLarge,
-                            color = MaterialTheme.colorScheme.secondary
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.Bold,
+                            color = DarkChocoAmbatu
                         )
+                        Spacer(modifier = Modifier.height(4.dp))
                         Text(
                             text = owner?.user?.name ?: "No Owner Assigned",
-                            style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.Bold
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = DarkChocoAmbatu.copy(alpha = 0.8f)
                         )
                     }
                     AsyncImage(
                         model = owner?.user?.avatarUrl,
                         contentDescription = "Owner avatar",
                         modifier = Modifier
-                            .size(48.dp)
+                            .size(56.dp)
                             .clip(CircleShape),
                         contentScale = ContentScale.Crop,
                         placeholder = painterResource(R.drawable.profile_placeholder),
@@ -1026,81 +1048,172 @@ fun SettingsTab(
         item {
             Card(
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp),
+                shape = RoundedCornerShape(40.dp),
                 colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceContainerLow
-                )
+                    containerColor = WhiteAmbatu
+                ),
+                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
             ) {
                 Column(
-                    modifier = Modifier.padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 24.dp, vertical = 20.dp),
+                    verticalArrangement = Arrangement.spacedBy(24.dp)
                 ) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
+                    // Section 1: Project Configuration
+                    Column(
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = "Project Configuration",
+                                style = MaterialTheme.typography.titleLarge,
+                                fontWeight = FontWeight.Bold,
+                                color = DarkChocoAmbatu
+                            )
+                            if (canEdit) {
+                                TextButton(
+                                    onClick = { showEditDialog = true },
+                                    colors = ButtonDefaults.textButtonColors(contentColor = ChocoAmbatu)
+                                ) {
+                                    Text(
+                                        "Modify",
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                }
+                            }
+                        }
+
                         Text(
-                            text = "Project Configuration",
-                            style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.Bold
+                            text = "Goal",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = DarkChocoAmbatu
                         )
-                        if (canEdit) {
-                            TextButton(onClick = { showEditDialog = true }) {
-                                Text("Modify")
+                        Text(
+                            text = project.productGoal ?: "No goal defined",
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = DarkChocoAmbatu.copy(alpha = 0.8f)
+                        )
+
+                        Spacer(modifier = Modifier.height(4.dp))
+
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(16.dp)
+                        ) {
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = "Sprint Duration",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = DarkChocoAmbatu
+                                )
+                                Text(
+                                    text = "${project.defaultSprintLengthDays ?: 14} Days",
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    color = DarkChocoAmbatu.copy(alpha = 0.8f)
+                                )
+                            }
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = "WIP Limit",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = DarkChocoAmbatu
+                                )
+                                Text(
+                                    text = project.wipLimitPerMember?.let { "$it items" } ?: "None",
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    color = DarkChocoAmbatu.copy(alpha = 0.8f)
+                                )
                             }
                         }
                     }
-                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
 
-                    Text(
-                        text = "Goal:",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.secondary
-                    )
-                    Text(
-                        text = project.productGoal ?: "No goal defined",
-                        style = MaterialTheme.typography.bodyMedium,
-                        fontWeight = FontWeight.Medium
-                    )
-
-                    Spacer(modifier = Modifier.height(4.dp))
-
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(16.dp)
+                    // Section 2: Definition of Done
+                    Column(
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(
-                                text = "Sprint Duration",
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.secondary
-                            )
-                            Text(
-                                text = "${project.defaultSprintLengthDays ?: 14} Days",
-                                style = MaterialTheme.typography.bodyMedium,
-                                fontWeight = FontWeight.Bold
-                            )
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Verified,
+                                    contentDescription = null,
+                                    tint = ChocoAmbatu,
+                                    modifier = Modifier.size(24.dp)
+                                )
+                                Text(
+                                    text = "Definition of Done",
+                                    style = MaterialTheme.typography.titleLarge,
+                                    fontWeight = FontWeight.Bold,
+                                    color = DarkChocoAmbatu
+                                )
+                            }
+                            if (canEdit) {
+                                TextButton(
+                                    onClick = { showEditDoDDialog = true },
+                                    colors = ButtonDefaults.textButtonColors(contentColor = ChocoAmbatu)
+                                ) {
+                                    Text(
+                                        "Modify",
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                }
+                            }
                         }
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(
-                                text = "WIP Limit",
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.secondary
-                            )
-                            Text(
-                                text = project.wipLimitPerMember?.let { "$it items" } ?: "None",
-                                style = MaterialTheme.typography.bodyMedium,
-                                fontWeight = FontWeight.Bold
-                            )
+
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .background(LightYellowAmbatu, RoundedCornerShape(20.dp))
+                                .padding(16.dp),
+                            verticalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            val definitionOfDone = project.definitionOfDone
+                            if (definitionOfDone != null && definitionOfDone.checklist.isNotEmpty()) {
+                                definitionOfDone.checklist.forEach { item ->
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                                        modifier = Modifier.fillMaxWidth()
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.CheckCircleOutline,
+                                            contentDescription = null,
+                                            modifier = Modifier.size(20.dp),
+                                            tint = ChocoAmbatu
+                                        )
+                                        Text(
+                                            text = item,
+                                            style = MaterialTheme.typography.bodyLarge,
+                                            color = DarkChocoAmbatu
+                                        )
+                                    }
+                                }
+                            } else {
+                                Text(
+                                    text = "No definition of done defined yet.",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = DarkChocoAmbatu.copy(alpha = 0.6f),
+                                    modifier = Modifier.padding(vertical = 8.dp)
+                                )
+                            }
                         }
                     }
                 }
             }
-        }
-
-        item {
-            DefinitionOfDoneCard(definitionOfDone = project.definitionOfDone)
         }
 
         item {
@@ -1747,65 +1860,215 @@ fun DetailChip(label: String, value: String, modifier: Modifier = Modifier) {
 @Composable
 fun DefinitionOfDoneCard(
     definitionOfDone: DefinitionOfDoneDto?,
+    canEdit: Boolean,
+    onEditClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Card(
         modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
+        shape = RoundedCornerShape(40.dp),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceContainerLow
-        )
+            containerColor = Color.Transparent
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Column(
-            modifier = Modifier.padding(16.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 24.dp, vertical = 20.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Icon(
-                    imageVector = Icons.Default.Verified,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(24.dp)
-                )
-                Text(
-                    text = "Definition of Done",
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold
-                )
-            }
-
-            if (definitionOfDone != null && definitionOfDone.checklist.isNotEmpty()) {
-                definitionOfDone.checklist.forEach { item ->
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Verified,
+                        contentDescription = null,
+                        tint = ChocoAmbatu,
+                        modifier = Modifier.size(24.dp)
+                    )
+                    Text(
+                        text = "Definition of Done",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = DarkChocoAmbatu
+                    )
+                }
+                if (canEdit) {
+                    TextButton(
+                        onClick = onEditClick,
+                        colors = ButtonDefaults.textButtonColors(contentColor = ChocoAmbatu)
                     ) {
-                        Icon(
-                            imageVector = Icons.Default.CheckCircleOutline,
-                            contentDescription = null,
-                            modifier = Modifier.size(20.dp),
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
                         Text(
-                            text = item,
-                            style = MaterialTheme.typography.bodyLarge,
-                            color = MaterialTheme.colorScheme.onSurface
+                            "Modify",
+                            fontWeight = FontWeight.Bold
                         )
                     }
                 }
-            } else {
-                Text(
-                    text = "no definition of done yet",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(start = 32.dp)
-                )
+            }
+
+            HorizontalDivider(color = ChocoAmbatu.copy(alpha = 0.2f))
+
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(MediumYellowAmbatu.copy(alpha = 0.5f), RoundedCornerShape(20.dp))
+                    .padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                if (definitionOfDone != null && definitionOfDone.checklist.isNotEmpty()) {
+                    definitionOfDone.checklist.forEach { item ->
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(12.dp),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.CheckCircleOutline,
+                                contentDescription = null,
+                                modifier = Modifier.size(20.dp),
+                                tint = ChocoAmbatu
+                            )
+                            Text(
+                                text = item,
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = DarkChocoAmbatu
+                            )
+                        }
+                    }
+                } else {
+                    Text(
+                        text = "No definition of done defined yet.",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = DarkChocoAmbatu.copy(alpha = 0.6f),
+                        modifier = Modifier.padding(vertical = 8.dp)
+                    )
+                }
             }
         }
     }
+}
+
+@Composable
+fun EditDefinitionOfDoneDialog(
+    definitionOfDone: DefinitionOfDoneDto?,
+    onDismiss: () -> Unit,
+    onConfirm: (checklist: List<String>) -> Unit
+) {
+    var checklistItems by remember { 
+        mutableStateOf(definitionOfDone?.checklist ?: emptyList<String>()) 
+    }
+    var newItemText by remember { mutableStateOf("") }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Text(
+                text = "Edit Definition of Done",
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold,
+                color = DarkChocoAmbatu
+            )
+        },
+        text = {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(max = 300.dp)
+                    .verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    OutlinedTextField(
+                        value = newItemText,
+                        onValueChange = { newItemText = it },
+                        label = { Text("New Criteria") },
+                        modifier = Modifier.weight(1f),
+                        singleLine = true
+                    )
+                    IconButton(
+                        onClick = {
+                            if (newItemText.isNotBlank()) {
+                                checklistItems = checklistItems + newItemText.trim()
+                                newItemText = ""
+                            }
+                        },
+                        enabled = newItemText.isNotBlank()
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Add,
+                            contentDescription = "Add Criteria",
+                            tint = ChocoAmbatu
+                        )
+                    }
+                }
+
+                HorizontalDivider(color = ChocoAmbatu.copy(alpha = 0.2f))
+
+                if (checklistItems.isEmpty()) {
+                    Text(
+                        text = "No criteria defined yet.",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = DarkChocoAmbatu.copy(alpha = 0.6f)
+                    )
+                } else {
+                    checklistItems.forEachIndexed { index, item ->
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text(
+                                text = "${index + 1}. $item",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = DarkChocoAmbatu,
+                                modifier = Modifier.weight(1f)
+                            )
+                            IconButton(
+                                onClick = {
+                                    checklistItems = checklistItems.filterIndexed { i, _ -> i != index }
+                                }
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Delete,
+                                    contentDescription = "Delete",
+                                    tint = RedAmbatu
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = {
+                    onConfirm(checklistItems)
+                },
+                colors = ButtonDefaults.buttonColors(containerColor = YellowAmbatu, contentColor = DarkChocoAmbatu)
+            ) {
+                Text("Save")
+            }
+        },
+        dismissButton = {
+            TextButton(
+                onClick = onDismiss,
+                colors = ButtonDefaults.textButtonColors(contentColor = ChocoAmbatu)
+            ) {
+                Text("Cancel")
+            }
+        }
+    )
 }
 
 @Composable

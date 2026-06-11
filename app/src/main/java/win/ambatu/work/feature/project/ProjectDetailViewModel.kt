@@ -250,4 +250,25 @@ class ProjectDetailViewModel @Inject constructor(
             }
         }
     }
+
+    fun updateDefinitionOfDone(checklist: List<String>) {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true, error = null) }
+            try {
+                val updatedDoD = projectRepository.updateDefinitionOfDone(projectId, checklist)
+                if (updatedDoD != null) {
+                    _uiState.update { state ->
+                        state.copy(
+                            project = state.project?.copy(definitionOfDone = updatedDoD),
+                            isLoading = false
+                        )
+                    }
+                } else {
+                    _uiState.update { it.copy(isLoading = false) }
+                }
+            } catch (e: Exception) {
+                _uiState.update { it.copy(isLoading = false, error = e.message) }
+            }
+        }
+    }
 }

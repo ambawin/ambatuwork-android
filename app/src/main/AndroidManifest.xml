@@ -89,6 +89,11 @@
             android:exported="false"
             android:label="Daily Check-in"
             android:theme="@style/Theme.AmbatuWork" />
+        <activity
+            android:name=".feature.project.CloseSprintActivity"
+            android:exported="false"
+            android:label="Close Sprint"
+            android:theme="@style/Theme.AmbatuWork" />
 
         <meta-data
             android:name="preloaded_fonts"

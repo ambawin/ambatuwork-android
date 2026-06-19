@@ -89,23 +89,12 @@ import androidx.compose.ui.unit.sp
 @Composable
 fun SprintBoardScreen(
     viewModel: SprintBoardViewModel,
-    onBackClick: () -> Unit
+    onBackClick: () -> Unit,
+    onCloseSprintClick: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
     var detailItem by remember { mutableStateOf<BacklogItemDto?>(null) }
     var statusUpdateItem by remember { mutableStateOf<BacklogItemDto?>(null) }
-    var showCloseSprintDialog by remember { mutableStateOf(false) }
-
-    if (showCloseSprintDialog && uiState.board != null) {
-        CloseSprintDialog(
-            board = uiState.board!!,
-            onDismiss = { showCloseSprintDialog = false },
-            onConfirm = { summary, demoUrl, items ->
-                viewModel.submitSprintReviewAndClose(summary, demoUrl, items)
-                showCloseSprintDialog = false
-            }
-        )
-    }
 
     if (uiState.isSprintClosedSuccessfully) {
         SprintClosedSuccessDialog(
@@ -186,7 +175,7 @@ fun SprintBoardScreen(
 
                     if (board != null && board.sprint.status.lowercase() == "active" && isAdmin) {
                         TextButton(
-                            onClick = { showCloseSprintDialog = true },
+                            onClick = onCloseSprintClick,
                             colors = ButtonDefaults.textButtonColors(
                                 contentColor = MaterialTheme.colorScheme.error
                             )
@@ -807,132 +796,7 @@ fun BoardItemCard(
 
 
 
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun CloseSprintDialog(
-    board: SprintBoardDto,
-    onDismiss: () -> Unit,
-    onConfirm: (summary: String, demoUrl: String?, items: List<SprintReviewItemRequest>) -> Unit
-) {
-    var summary by remember { mutableStateOf("") }
-    var demoUrl by remember { mutableStateOf("") }
 
-    val allItems = remember(board) {
-        board.columns.selected + board.columns.inProgress + board.columns.inReview + board.columns.done
-    }
-
-    val itemDecisions = remember(allItems) {
-        mutableStateMapOf<Long, String>().apply {
-            allItems.forEach { item ->
-                val isDone = board.columns.done.any { it.id == item.id }
-                put(item.id, if (isDone) "accepted" else "carry_over")
-            }
-        }
-    }
-
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text("Close Sprint & Submit Review") },
-        text = {
-            LazyColumn(
-                verticalArrangement = Arrangement.spacedBy(16.dp),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                item {
-                    OutlinedTextField(
-                        value = summary,
-                        onValueChange = { summary = it },
-                        label = { Text("Sprint Review Summary") },
-                        modifier = Modifier.fillMaxWidth(),
-                        minLines = 3
-                    )
-                }
-                item {
-                    OutlinedTextField(
-                        value = demoUrl,
-                        onValueChange = { demoUrl = it },
-                        label = { Text("Demo URL (Optional)") },
-                        modifier = Modifier.fillMaxWidth(),
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri)
-                    )
-                }
-                item {
-                    Text(
-                        text = "Backlog Items Review",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier.padding(top = 8.dp)
-                    )
-                }
-                items(
-                    count = allItems.size,
-                    key = { index -> allItems[index].id }
-                ) { index ->
-                    val item = allItems[index]
-                    val currentDecision = itemDecisions[item.id] ?: "carry_over"
-                    Card(
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = CardDefaults.cardColors(
-                            containerColor = WhiteAmbatu
-                        ),
-                        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
-                    ) {
-                        Column(modifier = Modifier.padding(12.dp)) {
-                            Text(
-                                text = item.title,
-                                style = MaterialTheme.typography.titleSmall,
-                                fontWeight = FontWeight.Bold
-                            )
-                            Text(
-                                text = "Status: ${item.status.uppercase()}",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.secondary
-                            )
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.spacedBy(16.dp)
-                            ) {
-                                listOf("accepted" to "Accept", "carry_over" to "Carry Over", "rejected" to "Reject").forEach { (value, label) ->
-                                    Row(
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        modifier = Modifier.clickable { itemDecisions[item.id] = value }
-                                    ) {
-                                        RadioButton(
-                                            selected = (currentDecision == value),
-                                            onClick = { itemDecisions[item.id] = value }
-                                        )
-                                        Text(text = label, style = MaterialTheme.typography.bodySmall)
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        confirmButton = {
-            Button(
-                onClick = {
-                    if (summary.isNotBlank()) {
-                        val requests = itemDecisions.map { (id, decision) ->
-                            SprintReviewItemRequest(backlogItemId = id, decision = decision)
-                        }
-                        onConfirm(summary, demoUrl.takeIf { it.isNotBlank() }, requests)
-                    }
-                },
-                enabled = summary.isNotBlank()
-            ) {
-                Text("Submit and Close")
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text("Cancel")
-            }
-        }
-    )
-}
 
 @Composable
 fun SprintClosedSuccessDialog(
@@ -976,48 +840,6 @@ fun SprintClosedSuccessDialog(
                     textAlign = TextAlign.Center
                 )
                 Spacer(modifier = Modifier.height(16.dp))
-                HorizontalDivider(color = ChocoAmbatu.copy(alpha = 0.15f), thickness = 1.dp)
-                Spacer(modifier = Modifier.height(16.dp))
-
-                // Under the Hood Section
-                Text(
-                    text = "What happened under the hood:",
-                    style = MaterialTheme.typography.titleSmall,
-                    color = DarkChocoAmbatu,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.align(Alignment.Start)
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-                Column(
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    BulletPoint("Sprint Review Submitted", "Your sprint review has been saved in the database.", ChocoAmbatu)
-                    BulletPoint("Backlog Items Updated", "Done items are completed. Unfinished items are moved back to ready in the backlog.", ChocoAmbatu)
-                    BulletPoint("Sprint Finalized", "The sprint status is officially changed to closed.", ChocoAmbatu)
-                }
-
-                Spacer(modifier = Modifier.height(20.dp))
-
-                // Next Steps Section
-                Text(
-                    text = "Suggested Next Steps (Scrum Flow):",
-                    style = MaterialTheme.typography.titleSmall,
-                    color = DarkChocoAmbatu,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.align(Alignment.Start)
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-                Column(
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    BulletPoint("Sprint Retrospective", "Set team happiness score and create retro items (went well, to improve).", ChocoAmbatu)
-                    BulletPoint("Peer Review Cycle", "Initiate and participate in peer evaluations.", ChocoAmbatu)
-                    BulletPoint("Plan Next Sprint", "Create and start the next sprint to continue development.", ChocoAmbatu)
-                }
-
-                Spacer(modifier = Modifier.height(24.dp))
 
                 Button(
                     onClick = onDismiss,

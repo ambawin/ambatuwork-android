@@ -193,36 +193,8 @@ class SprintBoardViewModel @Inject constructor(
         }
     }
 
-    fun submitSprintReviewAndClose(
-        summary: String,
-        demoUrl: String?,
-        items: List<SprintReviewItemRequest>
-    ) {
-        val token = sessionManager.getToken() ?: return
-        viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true, error = null) }
-            try {
-                if (items.isNotEmpty()) {
-                    // Submit review first
-                    projectRepository.submitSprintReview(
-                        token = token,
-                        projectId = projectId,
-                        sprintId = sprintId,
-                        request = SubmitSprintReviewRequest(
-                            summary = summary,
-                            demoUrl = demoUrl,
-                            items = items
-                        )
-                    )
-                }
-                // Sequentially close the sprint
-                projectRepository.closeSprint(token, projectId, sprintId)
-                _uiState.update { it.copy(isSprintClosedSuccessfully = true) }
-                loadBoard()
-            } catch (e: Exception) {
-                _uiState.update { it.copy(isLoading = false, error = e.message) }
-            }
-        }
+    fun setSprintClosedSuccess() {
+        _uiState.update { it.copy(isSprintClosedSuccessfully = true) }
     }
 
     fun resetSprintClosedSuccess() {

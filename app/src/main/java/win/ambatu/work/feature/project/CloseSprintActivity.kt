@@ -7,28 +7,21 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
-import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import win.ambatu.work.ui.theme.AmbatuWorkTheme
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
-class SprintBoardActivity : ComponentActivity() {
+class CloseSprintActivity : ComponentActivity() {
 
-    private val viewModel: SprintBoardViewModel by viewModels()
-
-    private val closeSprintLauncher = registerForActivityResult(
-        ActivityResultContracts.StartActivityForResult()
-    ) { result ->
-        if (result.resultCode == RESULT_OK) {
-            viewModel.setSprintClosedSuccess()
-            viewModel.loadBoard()
-        }
-    }
+    private val viewModel: CloseSprintViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        
+
         val projectId = intent.getLongExtra(EXTRA_PROJECT_ID, -1L)
         val sprintId = intent.getLongExtra(EXTRA_SPRINT_ID, -1L)
         if (projectId == -1L || sprintId == -1L) {
@@ -37,15 +30,19 @@ class SprintBoardActivity : ComponentActivity() {
         }
 
         setContent {
+            val uiState by viewModel.uiState.collectAsState()
+
+            LaunchedEffect(uiState.isFinished) {
+                if (uiState.isFinished) {
+                    setResult(RESULT_OK)
+                    finish()
+                }
+            }
+
             AmbatuWorkTheme {
-                SprintBoardScreen(
+                CloseSprintScreen(
                     viewModel = viewModel,
-                    onBackClick = { finish() },
-                    onCloseSprintClick = {
-                        closeSprintLauncher.launch(
-                            CloseSprintActivity.createIntent(this, projectId, sprintId)
-                        )
-                    }
+                    onBackClick = { finish() }
                 )
             }
         }
@@ -56,7 +53,7 @@ class SprintBoardActivity : ComponentActivity() {
         private const val EXTRA_SPRINT_ID = "extra_sprint_id"
 
         fun createIntent(context: Context, projectId: Long, sprintId: Long): Intent {
-            return Intent(context, SprintBoardActivity::class.java).apply {
+            return Intent(context, CloseSprintActivity::class.java).apply {
                 putExtra(EXTRA_PROJECT_ID, projectId)
                 putExtra(EXTRA_SPRINT_ID, sprintId)
             }

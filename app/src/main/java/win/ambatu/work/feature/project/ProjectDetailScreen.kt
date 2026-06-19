@@ -1490,6 +1490,37 @@ fun BacklogItemCard(
                             )
                         }
                     }
+
+                    // Status Pill
+                    val statusColor = when (item.status.lowercase()) {
+                        "done" -> GreenAmbatu
+                        "in_progress" -> BlueAmbatu
+                        "in_review" -> SecondaryYellowAmbatu
+                        "selected" -> ChocoAmbatu
+                        else -> YellowAmbatu
+                    }
+                    val statusTextColor = when (item.status.lowercase()) {
+                        "done", "in_progress", "selected" -> WhiteAmbatu
+                        else -> ChocoAmbatu
+                    }
+
+                    Surface(
+                        color = statusColor,
+                        shape = RoundedCornerShape(50),
+                        modifier = Modifier.height(32.dp)
+                    ) {
+                        Box(
+                            contentAlignment = Alignment.Center,
+                            modifier = Modifier.padding(horizontal = 12.dp)
+                        ) {
+                            Text(
+                                text = item.status.replace("_", " ").uppercase(),
+                                style = MaterialTheme.typography.labelMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = statusTextColor
+                            )
+                        }
+                    }
                 }
 
                 // Type Pill

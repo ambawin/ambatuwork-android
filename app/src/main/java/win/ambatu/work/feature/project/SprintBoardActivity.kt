@@ -7,6 +7,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
+import androidx.activity.result.contract.ActivityResultContracts
 import win.ambatu.work.ui.theme.AmbatuWorkTheme
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -14,6 +15,15 @@ import dagger.hilt.android.AndroidEntryPoint
 class SprintBoardActivity : ComponentActivity() {
 
     private val viewModel: SprintBoardViewModel by viewModels()
+
+    private val closeSprintLauncher = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == RESULT_OK) {
+            viewModel.setSprintClosedSuccess()
+            viewModel.loadBoard()
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -30,7 +40,12 @@ class SprintBoardActivity : ComponentActivity() {
             AmbatuWorkTheme {
                 SprintBoardScreen(
                     viewModel = viewModel,
-                    onBackClick = { finish() }
+                    onBackClick = { finish() },
+                    onCloseSprintClick = {
+                        closeSprintLauncher.launch(
+                            CloseSprintActivity.createIntent(this, projectId, sprintId)
+                        )
+                    }
                 )
             }
         }

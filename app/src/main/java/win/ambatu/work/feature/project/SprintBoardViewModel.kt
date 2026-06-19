@@ -13,15 +13,32 @@ import win.ambatu.work.data.repository.ProjectRepository
 import win.ambatu.work.data.storage.SessionManager
 import win.ambatu.work.feature.network.SprintBoardDto
 import win.ambatu.work.feature.network.UpdateBacklogItemRequest
+import win.ambatu.work.feature.network.ProjectDto
+import win.ambatu.work.feature.network.ProjectMemberDto
+import win.ambatu.work.feature.network.SubmitSprintReviewRequest
+import win.ambatu.work.feature.network.SprintReviewItemRequest
+import win.ambatu.work.feature.network.DailyCheckinDto
+import win.ambatu.work.feature.network.SubmitDailyCheckinRequest
+import win.ambatu.work.feature.network.RetrospectiveDto
+import win.ambatu.work.feature.network.PeerReviewCycleDto
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 
 data class SprintBoardUiState(
     val board: SprintBoardDto? = null,
+    val project: ProjectDto? = null,
+    val members: List<ProjectMemberDto> = emptyList(),
+    val checkins: List<DailyCheckinDto> = emptyList(),
     val isLoading: Boolean = false,
     val error: String? = null,
     val currentUserId: Long? = null,
-    val currentUserRole: String? = null
+    val currentUserRole: String? = null,
+    val isSprintClosedSuccessfully: Boolean = false,
+    // Post-sprint dashboard state
+    val retrospective: RetrospectiveDto? = null,
+    val peerReviewCycle: PeerReviewCycleDto? = null,
+    val retroExists: Boolean = false,
+    val cycleExists: Boolean = false
 )
 
 @HiltViewModel
@@ -50,15 +67,47 @@ class SprintBoardViewModel @Inject constructor(
                 // Fetch basic info first
                 val board = projectRepository.getSprintBoard(token, projectId, sprintId)
                 
-                // Fetch user and project info to determine permissions
+                // Fetch user, project and members info
                 val user = authRepository.getMe("Bearer $token")
                 val project = projectRepository.getProject(token, projectId)
+                val members = projectRepository.getProjectMembers(token, projectId)
+                
+                val checkins = try {
+                    projectRepository.getDailyCheckins(token, projectId, sprintId)
+                } catch (e: Exception) {
+                    emptyList()
+                }
+
+                // If sprint is closed, load post-sprint data
+                var retro: RetrospectiveDto? = null
+                var retroExists = false
+                var cycle: PeerReviewCycleDto? = null
+                var cycleExists = false
+
+                if (board.sprint.status.lowercase() == "closed") {
+                    try {
+                        retro = projectRepository.getRetrospective(token, projectId, sprintId)
+                        retroExists = true
+                    } catch (_: Exception) {}
+
+                    try {
+                        cycle = projectRepository.getPeerReviewCycle(token, projectId, sprintId)
+                        cycleExists = true
+                    } catch (_: Exception) {}
+                }
                 
                 _uiState.update { it.copy(
                     board = board, 
+                    project = project,
+                    members = members,
+                    checkins = checkins,
                     currentUserId = user.id,
                     currentUserRole = project.myRole,
-                    isLoading = false
+                    isLoading = false,
+                    retrospective = retro,
+                    peerReviewCycle = cycle,
+                    retroExists = retroExists,
+                    cycleExists = cycleExists
                 ) }
             } catch (e: Exception) {
                 _uiState.update { it.copy(isLoading = false, error = e.message) }
@@ -79,6 +128,143 @@ class SprintBoardViewModel @Inject constructor(
                 loadBoard()
             } catch (e: Exception) {
                 _uiState.update { it.copy(error = e.message) }
+            }
+        }
+    }
+
+    fun archiveBacklogItem(backlogId: Long) {
+        val token = sessionManager.getToken() ?: return
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true, error = null) }
+            try {
+                projectRepository.archiveBacklogItem(token, projectId, backlogId)
+                loadBoard()
+            } catch (e: Exception) {
+                _uiState.update { it.copy(isLoading = false, error = e.message) }
+            }
+        }
+    }
+
+    fun updateBacklogItem(
+        backlogId: Long,
+        title: String,
+        description: String?,
+        type: String,
+        estimatePoints: Int?,
+        priority: String?,
+        acceptanceCriteria: List<String>?,
+        assignedToUserId: Long?
+    ) {
+        val token = sessionManager.getToken() ?: return
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true, error = null) }
+            try {
+                projectRepository.updateBacklogItem(
+                    token = token,
+                    projectId = projectId,
+                    backlogId = backlogId,
+                    request = UpdateBacklogItemRequest(
+                        title = title,
+                        description = description,
+                        type = type,
+                        estimatePoints = estimatePoints,
+                        priority = priority,
+                        acceptanceCriteria = acceptanceCriteria,
+                        assignedToUserId = assignedToUserId
+                    )
+                )
+                loadBoard()
+            } catch (e: Exception) {
+                _uiState.update { it.copy(isLoading = false, error = e.message) }
+            }
+        }
+    }
+
+    fun startSprint() {
+        val token = sessionManager.getToken() ?: return
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true, error = null) }
+            try {
+                projectRepository.startSprint(token, projectId, sprintId)
+                loadBoard()
+            } catch (e: Exception) {
+                _uiState.update { it.copy(isLoading = false, error = e.message) }
+            }
+        }
+    }
+
+    fun setSprintClosedSuccess() {
+        _uiState.update { it.copy(isSprintClosedSuccessfully = true) }
+    }
+
+    fun resetSprintClosedSuccess() {
+        _uiState.update { it.copy(isSprintClosedSuccessfully = false) }
+    }
+
+    fun submitDailyCheckin(
+        yesterday: String?,
+        today: String?,
+        blockers: String?,
+        confidenceScore: Int,
+        checkinDate: String
+    ) {
+        val token = sessionManager.getToken() ?: return
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true, error = null) }
+            try {
+                projectRepository.submitDailyCheckin(
+                    token = token,
+                    projectId = projectId,
+                    sprintId = sprintId,
+                    request = SubmitDailyCheckinRequest(
+                        yesterday = yesterday,
+                        today = today,
+                        blockers = blockers,
+                        confidenceScore = confidenceScore,
+                        checkinDate = checkinDate
+                    )
+                )
+                loadBoard()
+            } catch (e: Exception) {
+                _uiState.update { it.copy(isLoading = false, error = e.message) }
+            }
+        }
+    }
+
+    fun openPeerReviewCycle() {
+        val token = sessionManager.getToken() ?: return
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true, error = null) }
+            try {
+                val cycle = projectRepository.openPeerReviewCycle(token, projectId, sprintId)
+                _uiState.update {
+                    it.copy(
+                        peerReviewCycle = cycle,
+                        cycleExists = true,
+                        isLoading = false
+                    )
+                }
+            } catch (e: Exception) {
+                _uiState.update { it.copy(isLoading = false, error = e.message) }
+            }
+        }
+    }
+
+    fun closePeerReviewCycle() {
+        val cycle = _uiState.value.peerReviewCycle ?: return
+        val token = sessionManager.getToken() ?: return
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true, error = null) }
+            try {
+                val updatedCycle = projectRepository.closePeerReviewCycle(token, projectId, cycle.id)
+                _uiState.update {
+                    it.copy(
+                        peerReviewCycle = updatedCycle,
+                        isLoading = false
+                    )
+                }
+            } catch (e: Exception) {
+                _uiState.update { it.copy(isLoading = false, error = e.message) }
             }
         }
     }

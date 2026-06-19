@@ -13,12 +13,20 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import kotlin.math.roundToInt
 import kotlinx.coroutines.launch
 import win.ambatu.work.data.repository.ProjectRepository
 import win.ambatu.work.data.storage.SessionManager
 import win.ambatu.work.feature.network.CreateBacklogItemRequest
 import win.ambatu.work.feature.network.ProjectMemberDto
+import win.ambatu.work.ui.components.AmbatuDropdownField
+import win.ambatu.work.ui.components.AmbatuSimpleTextField
+import win.ambatu.work.ui.components.AmbatuTextField
+import win.ambatu.work.ui.theme.ChocoAmbatu
+import win.ambatu.work.ui.theme.YellowAmbatu
+import win.ambatu.work.ui.theme.WhiteAmbatu
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -32,8 +40,8 @@ fun AddBacklogItemScreen(
     var title by remember { mutableStateOf("") }
     var description by remember { mutableStateOf("") }
     var type by remember { mutableStateOf("story") }
-    var businessValue by remember { mutableStateOf("") }
-    var estimatePoints by remember { mutableStateOf("") }
+    var priority by remember { mutableStateOf("medium") }
+    var estimatePoints by remember { mutableStateOf(0) }
     var assignedToUserId by remember { mutableStateOf<Long?>(null) }
     var acceptanceCriteria by remember { mutableStateOf(listOf<String>()) }
     
@@ -46,7 +54,9 @@ fun AddBacklogItemScreen(
     val snackbarHostState = remember { SnackbarHostState() }
 
     val itemTypes = listOf("story", "task", "bug", "improvements")
+    val priorityOptions = listOf("highest", "high", "medium", "low", "lowest")
     var expandedType by remember { mutableStateOf(false) }
+    var expandedPriority by remember { mutableStateOf(false) }
     var expandedMembers by remember { mutableStateOf(false) }
 
     LaunchedEffect(projectId) {
@@ -64,21 +74,28 @@ fun AddBacklogItemScreen(
     }
 
     Scaffold(
+        containerColor = YellowAmbatu,
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         topBar = {
             TopAppBar(
-                title = { Text("Add Backlog Item") },
+                title = { Text("Add Backlog Item", fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                     }
-                }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = YellowAmbatu,
+                    titleContentColor = ChocoAmbatu,
+                    navigationIconContentColor = ChocoAmbatu,
+                    actionIconContentColor = ChocoAmbatu
+                )
             )
         }
     ) { innerPadding ->
         if (isLoading) {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator()
+                CircularProgressIndicator(color = ChocoAmbatu)
             }
         } else {
             Column(
@@ -89,74 +106,84 @@ fun AddBacklogItemScreen(
                     .verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                OutlinedTextField(
+                AmbatuTextField(
                     value = title,
                     onValueChange = { title = it },
-                    label = { Text("Title") },
+                    label = "Title",
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true
                 )
 
-                OutlinedTextField(
+                AmbatuTextField(
                     value = description,
                     onValueChange = { description = it },
-                    label = { Text("Description") },
+                    label = "Description",
                     modifier = Modifier.fillMaxWidth(),
                     minLines = 3
                 )
 
                 // Type Dropdown
-                ExposedDropdownMenuBox(
+                AmbatuDropdownField(
+                    value = type.uppercase(),
+                    label = "Type",
                     expanded = expandedType,
-                    onExpandedChange = { expandedType = !expandedType }
+                    onExpandedChange = { expandedType = it }
                 ) {
-                    OutlinedTextField(
-                        value = type.uppercase(),
-                        onValueChange = {},
-                        readOnly = true,
-                        label = { Text("Type") },
-                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedType) },
-                        modifier = Modifier
-                            .menuAnchor()
-                            .fillMaxWidth()
-                    )
-                    ExposedDropdownMenu(
-                        expanded = expandedType,
-                        onDismissRequest = { expandedType = false }
+                    itemTypes.forEach { itemType ->
+                        DropdownMenuItem(
+                            text = { Text(itemType.uppercase()) },
+                            onClick = {
+                                type = itemType
+                                expandedType = false
+                            }
+                        )
+                    }
+                }
+
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Column(modifier = Modifier.fillMaxWidth()) {
+                        Text(
+                            text = "Estimate Points: $estimatePoints",
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.Medium,
+                            color = ChocoAmbatu
+                        )
+                        Slider(
+                            value = estimatePoints.toFloat(),
+                            onValueChange = { estimatePoints = it.roundToInt() },
+                            valueRange = 0f..100f,
+                            colors = SliderDefaults.colors(
+                                thumbColor = ChocoAmbatu,
+                                activeTrackColor = ChocoAmbatu,
+                                inactiveTrackColor = ChocoAmbatu.copy(alpha = 0.24f)
+                            ),
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
+
+                    // Priority Dropdown
+                    AmbatuDropdownField(
+                        value = priority.uppercase(),
+                        label = "Priority",
+                        expanded = expandedPriority,
+                        onExpandedChange = { expandedPriority = it }
                     ) {
-                        itemTypes.forEach { itemType ->
+                        priorityOptions.forEach { opt ->
                             DropdownMenuItem(
-                                text = { Text(itemType.uppercase()) },
+                                text = { Text(opt.uppercase()) },
                                 onClick = {
-                                    type = itemType
-                                    expandedType = false
+                                    priority = opt
+                                    expandedPriority = false
                                 }
                             )
                         }
                     }
                 }
 
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    OutlinedTextField(
-                        value = businessValue,
-                        onValueChange = { if (it.all { char -> char.isDigit() }) businessValue = it },
-                        label = { Text("Business Value") },
-                        modifier = Modifier.weight(1f),
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
-                    )
-                    OutlinedTextField(
-                        value = estimatePoints,
-                        onValueChange = { if (it.all { char -> char.isDigit() }) estimatePoints = it },
-                        label = { Text("Estimate Points") },
-                        modifier = Modifier.weight(1f),
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
-                    )
-                }
-
-                Text("Acceptance Criteria", style = MaterialTheme.typography.titleMedium)
+                Text("Acceptance Criteria", style = MaterialTheme.typography.titleMedium, color = ChocoAmbatu)
                 
                 acceptanceCriteria.forEachIndexed { index, criteria ->
                     Row(
@@ -164,14 +191,14 @@ fun AddBacklogItemScreen(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        OutlinedTextField(
+                        AmbatuSimpleTextField(
                             value = criteria,
                             onValueChange = { newValue ->
                                 val newList = acceptanceCriteria.toMutableList()
                                 newList[index] = newValue
                                 acceptanceCriteria = newList
                             },
-                            placeholder = { Text("e.g. User can toggle dark mode") },
+                            placeholder = "e.g. User can toggle dark mode",
                             modifier = Modifier.weight(1f),
                             singleLine = true
                         )
@@ -180,56 +207,48 @@ fun AddBacklogItemScreen(
                             newList.removeAt(index)
                             acceptanceCriteria = newList
                         }) {
-                            Icon(Icons.Default.Delete, contentDescription = "Remove")
+                            Icon(
+                                imageVector = Icons.Default.Delete,
+                                contentDescription = "Remove",
+                                tint = ChocoAmbatu
+                            )
                         }
                     }
                 }
                 
                 TextButton(
                     onClick = { acceptanceCriteria = acceptanceCriteria + "" },
+                    colors = ButtonDefaults.textButtonColors(contentColor = ChocoAmbatu),
                     modifier = Modifier.align(Alignment.Start)
                 ) {
-                    Icon(Icons.Default.Add, contentDescription = null)
+                    Icon(Icons.Default.Add, contentDescription = null, tint = ChocoAmbatu)
                     Spacer(Modifier.width(8.dp))
                     Text("Add Criteria")
                 }
 
                 // Member Dropdown for Assignment
-                ExposedDropdownMenuBox(
+                val selectedMember = members.find { it.user.id == assignedToUserId }
+                AmbatuDropdownField(
+                    value = selectedMember?.user?.name ?: "Unassigned",
+                    label = "Assign To",
                     expanded = expandedMembers,
-                    onExpandedChange = { expandedMembers = !expandedMembers }
+                    onExpandedChange = { expandedMembers = it }
                 ) {
-                    val selectedMember = members.find { it.user.id == assignedToUserId }
-                    OutlinedTextField(
-                        value = selectedMember?.user?.name ?: "Unassigned",
-                        onValueChange = {},
-                        readOnly = true,
-                        label = { Text("Assign To") },
-                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedMembers) },
-                        modifier = Modifier
-                            .menuAnchor()
-                            .fillMaxWidth()
+                    DropdownMenuItem(
+                        text = { Text("Unassigned") },
+                        onClick = {
+                            assignedToUserId = null
+                            expandedMembers = false
+                        }
                     )
-                    ExposedDropdownMenu(
-                        expanded = expandedMembers,
-                        onDismissRequest = { expandedMembers = false }
-                    ) {
+                    members.forEach { member ->
                         DropdownMenuItem(
-                            text = { Text("Unassigned") },
+                            text = { Text(member.user.name ?: "Unknown") },
                             onClick = {
-                                assignedToUserId = null
+                                assignedToUserId = member.user.id
                                 expandedMembers = false
                             }
                         )
-                        members.forEach { member ->
-                            DropdownMenuItem(
-                                text = { Text(member.user.name ?: "Unknown") },
-                                onClick = {
-                                    assignedToUserId = member.user.id
-                                    expandedMembers = false
-                                }
-                            )
-                        }
                     }
                 }
 
@@ -253,8 +272,8 @@ fun AddBacklogItemScreen(
                                         title = title,
                                         description = description.ifBlank { null },
                                         type = type,
-                                        businessValue = businessValue.toIntOrNull(),
-                                        estimatePoints = estimatePoints.toIntOrNull(),
+                                        priority = priority,
+                                        estimatePoints = estimatePoints,
                                         acceptanceCriteria = acceptanceCriteria.filter { it.isNotBlank() }.ifEmpty { null },
                                         assignedToUserId = assignedToUserId
                                     )
@@ -268,13 +287,19 @@ fun AddBacklogItemScreen(
                             }
                         }
                     },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = ChocoAmbatu,
+                        contentColor = WhiteAmbatu,
+                        disabledContainerColor = ChocoAmbatu.copy(alpha = 0.5f),
+                        disabledContentColor = WhiteAmbatu.copy(alpha = 0.5f)
+                    ),
                     modifier = Modifier.fillMaxWidth(),
                     enabled = !isSubmitting && title.isNotBlank()
                 ) {
                     if (isSubmitting) {
                         CircularProgressIndicator(
                             modifier = Modifier.size(24.dp),
-                            color = MaterialTheme.colorScheme.onPrimary,
+                            color = WhiteAmbatu,
                             strokeWidth = 2.dp
                         )
                     } else {

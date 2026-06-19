@@ -22,6 +22,11 @@ import win.ambatu.work.data.repository.ProjectRepository
 import win.ambatu.work.data.storage.SessionManager
 import win.ambatu.work.feature.network.BacklogItemDto
 import win.ambatu.work.feature.network.CreateSprintRequest
+import win.ambatu.work.feature.network.ProjectDto
+import win.ambatu.work.ui.components.AmbatuTextField
+import win.ambatu.work.ui.theme.ChocoAmbatu
+import win.ambatu.work.ui.theme.YellowAmbatu
+import win.ambatu.work.ui.theme.WhiteAmbatu
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
@@ -43,6 +48,7 @@ fun AddSprintScreen(
     var selectedBacklogItemIds by remember { mutableStateOf(setOf<Long>()) }
 
     var backlogItems by remember { mutableStateOf<List<BacklogItemDto>>(emptyList()) }
+    var defaultSprintLengthDays by remember { mutableStateOf(14) }
     var isLoading by remember { mutableStateOf(false) }
     var isSubmitting by remember { mutableStateOf(false) }
     
@@ -62,9 +68,13 @@ fun AddSprintScreen(
                 // Filter items that are not already in a sprint or archived if possible
                 // For now, showing all non-done items might be a good start
                 backlogItems = items.filter { it.status.lowercase() != "done" && it.status.lowercase() != "archived" }
+
+                // Fetch project details to get default sprint length
+                val project = projectRepository.getProject(token, projectId)
+                defaultSprintLengthDays = project.defaultSprintLengthDays ?: 14
             }
         } catch (e: Exception) {
-            snackbarHostState.showSnackbar("Failed to load backlog items: ${e.message}")
+            snackbarHostState.showSnackbar("Failed to load screen data: ${e.message}")
         } finally {
             isLoading = false
         }
@@ -115,21 +125,28 @@ fun AddSprintScreen(
     }
 
     Scaffold(
+        containerColor = YellowAmbatu,
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         topBar = {
             TopAppBar(
-                title = { Text("Create New Sprint") },
+                title = { Text("Create New Sprint", fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                     }
-                }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = YellowAmbatu,
+                    titleContentColor = ChocoAmbatu,
+                    navigationIconContentColor = ChocoAmbatu,
+                    actionIconContentColor = ChocoAmbatu
+                )
             )
         }
     ) { innerPadding ->
         if (isLoading) {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator()
+                CircularProgressIndicator(color = ChocoAmbatu)
             }
         } else {
             Column(
@@ -140,49 +157,57 @@ fun AddSprintScreen(
                     .verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                OutlinedTextField(
+                AmbatuTextField(
                     value = name,
                     onValueChange = { if (it.length <= 255) name = it },
-                    label = { Text("Sprint Name") },
+                    label = "Sprint Name",
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
-                    supportingText = { Text("${name.length}/255") }
+                    supportingText = { Text("${name.length}/255", color = ChocoAmbatu.copy(alpha = 0.8f)) }
                 )
 
-                OutlinedTextField(
+                AmbatuTextField(
                     value = sprintGoal,
                     onValueChange = { if (it.length <= 5000) sprintGoal = it },
-                    label = { Text("Sprint Goal") },
+                    label = "Sprint Goal",
                     modifier = Modifier.fillMaxWidth(),
                     minLines = 3,
-                    supportingText = { Text("${sprintGoal.length}/5000") }
+                    supportingText = { Text("${sprintGoal.length}/5000", color = ChocoAmbatu.copy(alpha = 0.8f)) }
                 )
 
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
-                    OutlinedTextField(
+                    AmbatuTextField(
                         value = startDate?.format(DateTimeFormatter.ISO_LOCAL_DATE) ?: "",
                         onValueChange = {},
                         readOnly = true,
-                        label = { Text("Start Date") },
+                        label = "Start Date",
                         modifier = Modifier.weight(1f),
                         trailingIcon = {
                             IconButton(onClick = { showStartDatePicker = true }) {
-                                Icon(Icons.Default.CalendarToday, contentDescription = "Select Start Date")
+                                Icon(
+                                    imageVector = Icons.Default.CalendarToday,
+                                    contentDescription = "Select Start Date",
+                                    tint = ChocoAmbatu
+                                )
                             }
                         }
                     )
-                    OutlinedTextField(
+                    AmbatuTextField(
                         value = endDate?.format(DateTimeFormatter.ISO_LOCAL_DATE) ?: "",
                         onValueChange = {},
                         readOnly = true,
-                        label = { Text("End Date") },
+                        label = "End Date",
                         modifier = Modifier.weight(1f),
                         trailingIcon = {
                             IconButton(onClick = { showEndDatePicker = true }) {
-                                Icon(Icons.Default.CalendarToday, contentDescription = "Select End Date")
+                                Icon(
+                                    imageVector = Icons.Default.CalendarToday,
+                                    contentDescription = "Select End Date",
+                                    tint = ChocoAmbatu
+                                )
                             }
                         }
                     )
@@ -191,14 +216,15 @@ fun AddSprintScreen(
                 Text(
                     text = "Select Backlog Items",
                     style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold,
+                    color = ChocoAmbatu
                 )
 
                 if (backlogItems.isEmpty()) {
                     Text(
                         text = "No available backlog items to add to sprint.",
                         style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = ChocoAmbatu.copy(alpha = 0.8f)
                     )
                 } else {
                     Card(
@@ -206,8 +232,9 @@ fun AddSprintScreen(
                             .fillMaxWidth()
                             .heightIn(max = 300.dp),
                         colors = CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.surfaceContainerLow
-                        )
+                            containerColor = WhiteAmbatu
+                        ),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
                     ) {
                         LazyColumn(
                             modifier = Modifier.fillMaxSize()
@@ -215,8 +242,8 @@ fun AddSprintScreen(
                             items(backlogItems) { item ->
                                 val isSelected = selectedBacklogItemIds.contains(item.id)
                                 ListItem(
-                                    headlineContent = { Text(item.title) },
-                                    supportingContent = { Text("${item.type.uppercase()} • ${item.estimatePoints ?: 0} pts") },
+                                    headlineContent = { Text(item.title, color = ChocoAmbatu, fontWeight = FontWeight.SemiBold) },
+                                    supportingContent = { Text("${item.type.uppercase()} • ${item.estimatePoints ?: 0} pts", color = ChocoAmbatu.copy(alpha = 0.7f)) },
                                     trailingContent = {
                                         Checkbox(
                                             checked = isSelected,
@@ -226,9 +253,19 @@ fun AddSprintScreen(
                                                 } else {
                                                     selectedBacklogItemIds - item.id
                                                 }
-                                            }
+                                            },
+                                            colors = CheckboxDefaults.colors(
+                                                checkedColor = ChocoAmbatu,
+                                                uncheckedColor = ChocoAmbatu.copy(alpha = 0.6f),
+                                                checkmarkColor = YellowAmbatu
+                                            )
                                         )
                                     },
+                                    colors = ListItemDefaults.colors(
+                                        containerColor = Color.Transparent,
+                                        headlineColor = ChocoAmbatu,
+                                        supportingColor = ChocoAmbatu.copy(alpha = 0.7f)
+                                    ),
                                     modifier = Modifier.clickable {
                                         selectedBacklogItemIds = if (isSelected) {
                                             selectedBacklogItemIds - item.id
@@ -252,6 +289,8 @@ fun AddSprintScreen(
                             startDate == null -> "Start date is required"
                             endDate == null -> "End date is required"
                             endDate!!.isBefore(startDate) -> "End date must be on or after start date"
+                            (endDate!!.toEpochDay() - startDate!!.toEpochDay()) > defaultSprintLengthDays ->
+                                "The sprint duration cannot exceed the project limit of $defaultSprintLengthDays days."
                             selectedBacklogItemIds.isEmpty() -> "Select at least one backlog item"
                             else -> null
                         }
@@ -276,6 +315,19 @@ fun AddSprintScreen(
                                     projectRepository.createSprint(token, projectId, request)
                                     onSuccess()
                                 }
+                            } catch (e: retrofit2.HttpException) {
+                                val errorBody = e.response()?.errorBody()?.string()
+                                val errorMsg = if (!errorBody.isNullOrBlank()) {
+                                    try {
+                                        val jsonObject = org.json.JSONObject(errorBody)
+                                        jsonObject.optString("message", e.message())
+                                    } catch (jsonEx: Exception) {
+                                        "Error: ${e.message()}"
+                                    }
+                                } else {
+                                    "Error: ${e.message()}"
+                                }
+                                snackbarHostState.showSnackbar(errorMsg)
                             } catch (e: Exception) {
                                 snackbarHostState.showSnackbar("Error: ${e.message}")
                             } finally {
@@ -283,13 +335,19 @@ fun AddSprintScreen(
                             }
                         }
                     },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = ChocoAmbatu,
+                        contentColor = WhiteAmbatu,
+                        disabledContainerColor = ChocoAmbatu.copy(alpha = 0.5f),
+                        disabledContentColor = WhiteAmbatu.copy(alpha = 0.5f)
+                    ),
                     modifier = Modifier.fillMaxWidth(),
                     enabled = !isSubmitting
                 ) {
                     if (isSubmitting) {
                         CircularProgressIndicator(
                             modifier = Modifier.size(24.dp),
-                            color = MaterialTheme.colorScheme.onPrimary,
+                            color = WhiteAmbatu,
                             strokeWidth = 2.dp
                         )
                     } else {

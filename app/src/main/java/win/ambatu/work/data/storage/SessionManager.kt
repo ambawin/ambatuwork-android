@@ -22,4 +22,20 @@ class SessionManager @Inject constructor(
     fun clearToken() {
         prefs.edit().remove("sanctum_token").apply()
     }
+
+    fun saveFcmToken(token: String) {
+        prefs.edit().putString("fcm_token", token).apply()
+    }
+
+    fun getFcmToken(): String? {
+        return prefs.getString("fcm_token", null)
+    }
+
+    fun setCompletedOnboarding(completed: Boolean) {
+        prefs.edit().putBoolean("has_completed_onboarding", completed).apply()
+    }
+
+    fun hasCompletedOnboarding(): Boolean {
+        return prefs.getBoolean("has_completed_onboarding", false)
+    }
 }

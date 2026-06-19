@@ -3,6 +3,7 @@ package win.ambatu.work.feature.home
 import android.app.Activity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -16,6 +17,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -24,6 +26,8 @@ import androidx.compose.material.icons.filled.GroupAdd
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Mail
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.Book
+import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.PostAdd
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Button
@@ -35,20 +39,21 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.FloatingActionButton
+import win.ambatu.work.ui.components.CircularFloatingActionButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.rememberModalBottomSheetState
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -58,6 +63,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -83,9 +89,15 @@ import win.ambatu.work.feature.project.ProjectTab
 import win.ambatu.work.feature.project.SettingsTab
 import win.ambatu.work.feature.project.SprintBoardActivity
 import win.ambatu.work.feature.project.SprintTab
-import win.ambatu.work.feature.scrum.ScrumGuideActivity
+import win.ambatu.work.ui.components.FloatingBottomNavigationBar
 import win.ambatu.work.ui.theme.AmbatuWorkTheme
 import win.ambatu.work.ui.theme.YellowAmbatu
+import win.ambatu.work.ui.theme.ChocoAmbatu
+import win.ambatu.work.ui.theme.WhiteAmbatu
+import dev.chrisbanes.haze.HazeState
+import dev.chrisbanes.haze.hazeSource
+import dev.chrisbanes.haze.hazeEffect
+import dev.chrisbanes.haze.HazeTint
 
 @Composable
 fun HomeScreen(
@@ -145,8 +157,16 @@ fun HomeScreen(
         onInvitationsClick = {
             invitationLauncher.launch(InvitationActivity.createIntent(context))
         },
-        onScrumGuideClick = {
-            context.startActivity(ScrumGuideActivity.createIntent(context))
+        onUpdateProject = viewModel::updateProject,
+        onUpdateBacklogItem = viewModel::updateBacklogItem,
+        onArchiveBacklogItem = viewModel::archiveBacklogItem,
+        onUpdateMemberRole = viewModel::updateProjectMemberRole,
+        onRemoveMember = viewModel::removeProjectMember,
+        onRetryStatsClick = { projectId ->
+            viewModel.loadProjectStats(projectId)
+        },
+        onRefresh = {
+            viewModel.loadProjects()
         }
     )
 }
@@ -165,41 +185,60 @@ private fun Content(
     onAddSprintClick: (Long) -> Unit = {},
     onSprintClick: (Long, Long) -> Unit = { _, _ -> },
     onInvitationsClick: () -> Unit = {},
-    onScrumGuideClick: () -> Unit = {}
+    onUpdateProject: (name: String?, description: String?, goal: String?, sprintLength: Int?) -> Unit = { _, _, _, _ -> },
+    onUpdateBacklogItem: (id: Long, title: String, description: String?, type: String, estimatePoints: Int?, priority: String?, acceptanceCriteria: List<String>?, assignedToUserId: Long?) -> Unit = { _, _, _, _, _, _, _, _ -> },
+    onArchiveBacklogItem: (id: Long) -> Unit = {},
+    onUpdateMemberRole: (userId: Long, role: String) -> Unit = { _, _ -> },
+    onRemoveMember: (userId: Long) -> Unit = {},
+    onRetryStatsClick: (Long) -> Unit = {},
+    onRefresh: () -> Unit = {}
 ) {
-    var showActionSheet by remember { mutableStateOf(false) }
+    val hazeState = remember { HazeState() }
     var showCreateSheet by remember { mutableStateOf(false) }
-    var showInviteSheet by remember { mutableStateOf(false) }
-    var showMenu by remember { mutableStateOf(false) }
     var projectSwitcherExpanded by remember { mutableStateOf(false) }
     var selectedTab by remember { mutableStateOf(ProjectTab.DASHBOARD) }
     var selectedBacklogItem by remember { mutableStateOf<BacklogItemDto?>(null) }
     val sheetState = rememberModalBottomSheetState()
 
-    if (selectedBacklogItem != null) {
+    if (selectedBacklogItem != null && uiState.selectedProject != null) {
         BacklogDetailDialog(
             item = selectedBacklogItem!!,
-            onDismiss = { selectedBacklogItem = null }
+            project = uiState.selectedProject!!,
+            members = uiState.members,
+            onDismiss = { selectedBacklogItem = null },
+            onUpdate = { id, title, desc, type, est, priority, ac, assigned ->
+                onUpdateBacklogItem(id, title, desc, type, est, priority, ac, assigned)
+            },
+            onArchive = { id ->
+                onArchiveBacklogItem(id)
+            }
         )
     }
 
     Scaffold(
         containerColor = YellowAmbatu,
         topBar = {
-            TopAppBar(
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.background,
-                    titleContentColor = MaterialTheme.colorScheme.onBackground,
+            CenterAlignedTopAppBar(
+                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                    containerColor = Color.Transparent,
+                    titleContentColor = ChocoAmbatu,
                 ),
                 navigationIcon = {
-                    IconButton(onClick = onProfileClick) {
+                    IconButton(
+                        onClick = onProfileClick,
+                        modifier = Modifier
+                            .padding(start = 16.dp)
+                            .size(40.dp)
+                            .shadow(elevation = 2.dp, shape = CircleShape)
+                            .background(Color.White, shape = CircleShape)
+                    ) {
                         AsyncImage(
                             model = user.picture,
                             placeholder = painterResource(id = R.drawable.profile_placeholder),
                             error = painterResource(id = R.drawable.profile_placeholder),
                             contentDescription = "Profile",
                             modifier = Modifier
-                                .size(32.dp)
+                                .size(40.dp)
                                 .clip(CircleShape),
                             contentScale = ContentScale.Crop
                         )
@@ -210,106 +249,110 @@ private fun Content(
                         expanded = projectSwitcherExpanded,
                         onExpandedChange = { projectSwitcherExpanded = it }
                     ) {
-                        Row(
+                        Box(
+                            contentAlignment = Alignment.Center,
                             modifier = Modifier
                                 .menuAnchor()
                                 .widthIn(min = 200.dp)
+                                .shadow(elevation = 2.dp, shape = RoundedCornerShape(50))
+                                .clip(RoundedCornerShape(50))
+                                .hazeEffect(state = hazeState) {
+                                    blurRadius = 15.dp
+                                    tints = listOf(HazeTint(color = WhiteAmbatu.copy(alpha = 0.50f)))
+                                }
                                 .clickable { projectSwitcherExpanded = true }
-                                .padding(horizontal = 8.dp, vertical = 4.dp),
-                            verticalAlignment = Alignment.CenterVertically
+                                .padding(horizontal = 24.dp, vertical = 8.dp)
                         ) {
                             Text(
                                 text = uiState.selectedProject?.name ?: "Select Project",
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold,
+                                color = ChocoAmbatu,
                                 maxLines = 1,
-                                overflow = TextOverflow.Ellipsis,
-                                modifier = Modifier.weight(1f, fill = false)
-                            )
-                            Icon(
-                                imageVector = Icons.Default.ArrowDropDown,
-                                contentDescription = null
+                                overflow = TextOverflow.Ellipsis
                             )
                         }
 
-                        ExposedDropdownMenu(
-                            expanded = projectSwitcherExpanded,
-                            onDismissRequest = { projectSwitcherExpanded = false },
-                            modifier = Modifier.exposedDropdownSize()
+                        val menuColorScheme = MaterialTheme.colorScheme.copy(
+                            surface = WhiteAmbatu,
+                            surfaceContainer = WhiteAmbatu,
+                            surfaceContainerLow = WhiteAmbatu,
+                            surfaceContainerHigh = WhiteAmbatu,
+                            surfaceVariant = WhiteAmbatu
+                        )
+                        val menuShapes = MaterialTheme.shapes.copy(
+                            extraSmall = RoundedCornerShape(24.dp),
+                            small = RoundedCornerShape(24.dp),
+                            medium = RoundedCornerShape(24.dp),
+                            large = RoundedCornerShape(24.dp)
+                        )
+
+                        MaterialTheme(
+                            colorScheme = menuColorScheme,
+                            shapes = menuShapes
                         ) {
-                            uiState.projects.forEach { project ->
+                            ExposedDropdownMenu(
+                                expanded = projectSwitcherExpanded,
+                                onDismissRequest = { projectSwitcherExpanded = false },
+                                modifier = Modifier
+                                    .exposedDropdownSize()
+                                    .clip(RoundedCornerShape(24.dp))
+                            ) {
+                                uiState.projects.forEach { project ->
+                                    DropdownMenuItem(
+                                        text = { Text(project.name, color = ChocoAmbatu, fontWeight = FontWeight.Medium) },
+                                        onClick = {
+                                            onSelectProject(project)
+                                            projectSwitcherExpanded = false
+                                        }
+                                    )
+                                }
+                                if (uiState.projects.isNotEmpty()) {
+                                    HorizontalDivider(color = ChocoAmbatu.copy(alpha = 0.15f))
+                                }
                                 DropdownMenuItem(
-                                    text = { Text(project.name) },
+                                    text = { Text("Add New Project", color = ChocoAmbatu, fontWeight = FontWeight.SemiBold) },
+                                    leadingIcon = { Icon(Icons.Default.Add, null, tint = ChocoAmbatu) },
                                     onClick = {
-                                        onSelectProject(project)
                                         projectSwitcherExpanded = false
+                                        showCreateSheet = true
                                     }
                                 )
                             }
-                            if (uiState.projects.isNotEmpty()) {
-                                HorizontalDivider()
-                            }
-                            DropdownMenuItem(
-                                text = { Text("Add New Project") },
-                                leadingIcon = { Icon(Icons.Default.Add, null) },
-                                onClick = {
-                                    projectSwitcherExpanded = false
-                                    showCreateSheet = true
-                                }
-                            )
                         }
                     }
                 },
                 actions = {
-                    IconButton(onClick = onInvitationsClick) {
-                        Icon(Icons.Default.Mail, contentDescription = "Invitations")
-                    }
-                    IconButton(onClick = { showMenu = true }) {
-                        Icon(Icons.Default.MoreVert, contentDescription = "More")
-                    }
-                    DropdownMenu(
-                        expanded = showMenu,
-                        onDismissRequest = { showMenu = false }
+                    IconButton(
+                        onClick = onInvitationsClick,
+                        colors = IconButtonDefaults.iconButtonColors(
+                            containerColor = Color.Transparent,
+                            contentColor = ChocoAmbatu
+                        ),
+                        modifier = Modifier
+                            .padding(end = 16.dp)
+                            .size(40.dp)
+                            .shadow(elevation = 2.dp, shape = CircleShape)
+                            .clip(CircleShape)
+                            .hazeEffect(state = hazeState) {
+                                blurRadius = 15.dp
+                                tints = listOf(HazeTint(color = WhiteAmbatu.copy(alpha = 0.50f)))
+                            }
                     ) {
-                        DropdownMenuItem(
-                            text = { Text("Invite Member") },
-                            leadingIcon = { Icon(Icons.Default.GroupAdd, null) },
-                            onClick = {
-                                showMenu = false
-                                showInviteSheet = true
-                            }
-                        )
-                        DropdownMenuItem(
-                            text = { Text("Project Settings") },
-                            leadingIcon = { Icon(Icons.Default.Settings, null) },
-                            onClick = {
-                                showMenu = false
-                                // Handle project settings
-                            }
-                        )
-                        DropdownMenuItem(
-                            text = { Text("SCRUM Guide") },
-                            leadingIcon = { Icon(Icons.Default.Info, null) },
-                            onClick = {
-                                showMenu = false
-                                onScrumGuideClick()
-                            }
+                        Icon(
+                            imageVector = Icons.Default.Notifications,
+                            contentDescription = "Invitations"
                         )
                     }
                 }
             )
         },
         bottomBar = {
-            NavigationBar {
-                ProjectTab.entries.forEach { tab ->
-                    NavigationBarItem(
-                        selected = selectedTab == tab,
-                        onClick = { selectedTab = tab },
-                        label = { Text(tab.title) },
-                        icon = { Icon(tab.icon, contentDescription = tab.title) }
-                    )
-                }
-            }
+            FloatingBottomNavigationBar(
+                selectedTab = selectedTab,
+                onTabSelected = { selectedTab = it },
+                hazeState = hazeState
+            )
         },
         floatingActionButton = {
             if (uiState.selectedProject != null) {
@@ -322,29 +365,23 @@ private fun Content(
                         )
 
                 if (selectedTab == ProjectTab.BACKLOG && canEdit) {
-                    FloatingActionButton(
-                        onClick = { onAddBacklogClick(uiState.selectedProject.id) },
-                        containerColor = MaterialTheme.colorScheme.primaryContainer,
-                        contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                    CircularFloatingActionButton(
+                        onClick = { onAddBacklogClick(uiState.selectedProject.id) }
                     ) {
                         Icon(Icons.Default.Add, contentDescription = "Add Backlog Item")
                     }
                 }
 
                 if (selectedTab == ProjectTab.SPRINT && canEdit) {
-                    FloatingActionButton(
-                        onClick = { onAddSprintClick(uiState.selectedProject.id) },
-                        containerColor = MaterialTheme.colorScheme.primaryContainer,
-                        contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                    CircularFloatingActionButton(
+                        onClick = { onAddSprintClick(uiState.selectedProject.id) }
                     ) {
                         Icon(Icons.Default.Add, contentDescription = "Add Sprint")
                     }
                 }
             } else {
-                FloatingActionButton(
-                    onClick = { showCreateSheet = true },
-                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                CircularFloatingActionButton(
+                    onClick = { showCreateSheet = true }
                 ) {
                     Icon(Icons.Default.Add, contentDescription = "Add Project")
                 }
@@ -353,7 +390,6 @@ private fun Content(
     ) { innerPadding ->
         Box(
             modifier = Modifier
-                .padding(innerPadding)
                 .fillMaxSize()
         ) {
             if (uiState.isLoading && uiState.selectedProject == null) {
@@ -381,26 +417,58 @@ private fun Content(
                     }
                 }
             } else {
-                when (selectedTab) {
-                    ProjectTab.DASHBOARD -> DashboardTab(
-                        project = uiState.selectedProject,
-                        members = uiState.members
-                    )
-                    ProjectTab.BACKLOG -> BacklogTab(
-                        backlogItems = uiState.backlogItems,
-                        onItemClick = { item -> selectedBacklogItem = item }
-                    )
-                    ProjectTab.SPRINT -> SprintTab(
-                        sprints = uiState.sprints,
-                        onSprintClick = { sprintId ->
-                            uiState.selectedProject?.id?.let { projectId ->
-                                onSprintClick(projectId, sprintId)
+                PullToRefreshBox(
+                    isRefreshing = uiState.isLoading || uiState.isStatsLoading,
+                    onRefresh = onRefresh,
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .hazeSource(state = hazeState)
+                ) {
+                    when (selectedTab) {
+                        ProjectTab.DASHBOARD -> DashboardTab(
+                            project = uiState.selectedProject,
+                            members = uiState.members,
+                            stats = uiState.stats,
+                            isStatsLoading = uiState.isStatsLoading,
+                            statsError = uiState.statsError,
+                            onRetryStatsClick = {
+                                uiState.selectedProject?.id?.let { onRetryStatsClick(it) }
+                            }
+                        )
+                        ProjectTab.BACKLOG -> BacklogTab(
+                            backlogItems = uiState.backlogItems,
+                            onItemClick = { item -> selectedBacklogItem = item }
+                        )
+                        ProjectTab.SPRINT -> SprintTab(
+                            sprints = uiState.sprints,
+                            sprintAssignees = uiState.sprintAssignees,
+                            onSprintClick = { sprintId ->
+                                uiState.selectedProject?.id?.let { projectId ->
+                                    onSprintClick(projectId, sprintId)
+                                }
+                            }
+                        )
+                        ProjectTab.SETTINGS -> {
+                            uiState.selectedProject?.let { project ->
+                                SettingsTab(
+                                    project = project,
+                                    members = uiState.members,
+                                    onUpdateProject = { name, desc, goal, length ->
+                                        onUpdateProject(name, desc, goal, length)
+                                    },
+                                    onUpdateMemberRole = { userId, role ->
+                                        onUpdateMemberRole(userId, role)
+                                    },
+                                    onRemoveMember = { userId ->
+                                        onRemoveMember(userId)
+                                    },
+                                    onInviteMember = { email ->
+                                        onInviteUser(project.id, email)
+                                    }
+                                )
                             }
                         }
-                    )
-                    ProjectTab.SETTINGS -> SettingsTab(
-                        members = uiState.members
-                    )
+                    }
                 }
             }
 
@@ -412,36 +480,6 @@ private fun Content(
                         .align(Alignment.BottomCenter)
                         .padding(16.dp)
                 )
-            }
-        }
-
-        if (showActionSheet) {
-            ModalBottomSheet(
-                onDismissRequest = { showActionSheet = false },
-                sheetState = sheetState
-            ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = 32.dp)
-                ) {
-                    ListItem(
-                        headlineContent = { Text("Create New Project") },
-                        leadingContent = { Icon(Icons.Default.PostAdd, null) },
-                        modifier = Modifier.clickable {
-                            showActionSheet = false
-                            showCreateSheet = true
-                        }
-                    )
-                    ListItem(
-                        headlineContent = { Text("Invite User to Project") },
-                        leadingContent = { Icon(Icons.Default.GroupAdd, null) },
-                        modifier = Modifier.clickable {
-                            showActionSheet = false
-                            showInviteSheet = true
-                        }
-                    )
-                }
             }
         }
 
@@ -458,24 +496,8 @@ private fun Content(
             )
             }
         }
-
-        if (showInviteSheet) {
-            ModalBottomSheet(
-                onDismissRequest = { showInviteSheet = false },
-                sheetState = sheetState
-            ) {
-                InviteUserForm(
-                projects = uiState.projects,
-                onInvite = { projectId, email ->
-                    onInviteUser(projectId, email)
-                    showInviteSheet = false
-                }
-            )
-            }
-        }
     }
 }
-
 
 @Composable
 fun CreateProjectForm(
@@ -503,7 +525,7 @@ fun CreateProjectForm(
         OutlinedTextField(
             value = description,
             onValueChange = { description = it },
-            label = { Text("Description") },
+            label = { Text("Project Description") },
             modifier = Modifier.fillMaxWidth(),
             minLines = 2
         )
@@ -534,82 +556,6 @@ fun CreateProjectForm(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun InviteUserForm(
-    projects: List<ProjectDto>,
-    onInvite: (Long, String) -> Unit
-) {
-    var expanded by remember { mutableStateOf(false) }
-    var selectedProject by remember { mutableStateOf<ProjectDto?>(null) }
-    var email by remember { mutableStateOf("") }
-
-    Column(
-        modifier = Modifier
-            .padding(16.dp)
-            .padding(bottom = 32.dp)
-            .fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
-    ) {
-        Text(
-            "Invite New User",
-            style = MaterialTheme.typography.headlineSmall,
-            fontWeight = FontWeight.Bold
-        )
-
-        ExposedDropdownMenuBox(
-            expanded = expanded,
-            onExpandedChange = { expanded = !expanded },
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            OutlinedTextField(
-                value = selectedProject?.name ?: "Select Project",
-                onValueChange = {},
-                readOnly = true,
-                label = { Text("Project") },
-                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-                colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors(),
-                modifier = Modifier
-                    .menuAnchor()
-                    .fillMaxWidth()
-            )
-
-            ExposedDropdownMenu(
-                expanded = expanded,
-                onDismissRequest = { expanded = false }
-            ) {
-                projects.forEach { project ->
-                    DropdownMenuItem(
-                        text = { Text(project.name) },
-                        onClick = {
-                            selectedProject = project
-                            expanded = false
-                        }
-                    )
-                }
-            }
-        }
-
-        OutlinedTextField(
-            value = email,
-            onValueChange = { email = it },
-            label = { Text("User Email") },
-            modifier = Modifier.fillMaxWidth(),
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email)
-        )
-
-        Button(
-            onClick = {
-                selectedProject?.id?.let { onInvite(it, email) }
-            },
-            modifier = Modifier.fillMaxWidth(),
-            enabled = selectedProject != null && email.isNotBlank()
-        ) {
-            Text("Invite")
-        }
-    }
-}
-
 @Composable
 @Preview(showBackground = true)
 private fun HomePreview() {
@@ -617,3 +563,4 @@ private fun HomePreview() {
         Content()
     }
 }
+

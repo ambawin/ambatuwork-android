@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
     <application
         android:name=".AmbatuWorkApplication"
@@ -27,6 +28,11 @@
             android:name=".feature.auth.LoginActivity"
             android:exported="false"
             android:label="Login"
+            android:theme="@style/Theme.AmbatuWork" />
+        <activity
+            android:name=".feature.onboarding.OnboardingActivity"
+            android:exported="false"
+            android:label="Onboarding"
             android:theme="@style/Theme.AmbatuWork" />
         <activity
             android:name=".feature.project.ProjectDetailActivity"
@@ -63,10 +69,47 @@
             android:exported="false"
             android:label="Profile"
             android:theme="@style/Theme.AmbatuWork" />
+        <activity
+            android:name=".feature.project.RetrospectiveActivity"
+            android:exported="false"
+            android:label="Retrospective"
+            android:theme="@style/Theme.AmbatuWork" />
+        <activity
+            android:name=".feature.project.PeerReviewActivity"
+            android:exported="false"
+            android:label="Peer Review"
+            android:theme="@style/Theme.AmbatuWork" />
+        <activity
+            android:name=".feature.project.DailyStandupActivity"
+            android:exported="false"
+            android:label="Daily Standups"
+            android:theme="@style/Theme.AmbatuWork" />
+        <activity
+            android:name=".feature.project.AddDailyCheckinActivity"
+            android:exported="false"
+            android:label="Daily Check-in"
+            android:theme="@style/Theme.AmbatuWork" />
+        <activity
+            android:name=".feature.project.CloseSprintActivity"
+            android:exported="false"
+            android:label="Close Sprint"
+            android:theme="@style/Theme.AmbatuWork" />
 
         <meta-data
             android:name="preloaded_fonts"
             android:resource="@array/preloaded_fonts" />
+
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_channel_id"
+            android:value="project_invitations" />
+
+        <service
+            android:name=".service.AmbatuMessagingService"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.google.firebase.MESSAGING_EVENT" />
+            </intent-filter>
+        </service>
 
     </application>
 

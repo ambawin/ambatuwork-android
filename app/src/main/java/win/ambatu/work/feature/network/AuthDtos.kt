@@ -33,3 +33,9 @@ data class GoogleAuthResponse(
     val tokenType: String,
     val user: UserDto
 )
+
+@JsonClass(generateAdapter = true)
+data class DeviceTokenRequest(
+    @Json(name = "fcm_token") val fcmToken: String,
+    @Json(name = "device_name") val deviceName: String? = null
+)

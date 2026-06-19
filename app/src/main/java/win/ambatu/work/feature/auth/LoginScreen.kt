@@ -36,8 +36,10 @@ import androidx.compose.ui.unit.sp
 import win.ambatu.work.BuildConfig
 import win.ambatu.work.R
 import win.ambatu.work.ui.theme.AmbatuWorkTheme
+import win.ambatu.work.ui.theme.ChocoAmbatu
 import win.ambatu.work.ui.theme.MontserratFamily
 import win.ambatu.work.ui.theme.WhiteAmbatu
+import win.ambatu.work.ui.theme.YellowAmbatu
 
 @Composable
 fun LoginScreen(
@@ -60,7 +62,7 @@ private fun Content(
     onSignInWithGoogleClick: () -> Unit
 ) {
     Scaffold(
-        containerColor = MaterialTheme.colorScheme.background
+        containerColor = ChocoAmbatu
     ) { innerPadding ->
         Box(
             modifier = Modifier
@@ -123,8 +125,8 @@ private fun Content(
                             .height(56.dp),
                         shape = RoundedCornerShape(64.dp),
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = WhiteAmbatu,
-                            contentColor = Color.Black
+                            containerColor = YellowAmbatu,
+                            contentColor = ChocoAmbatu
                         )
                     ) {
                         Text(

@@ -14,8 +14,6 @@ data class ProjectDto(
     val ownerUserId: Long?,
     @Json(name = "default_sprint_length_days")
     val defaultSprintLengthDays: Int?,
-    @Json(name = "wip_limit_per_member")
-    val wipLimitPerMember: Int?,
     val status: String?,
     @Json(name = "my_role")
     val myRole: String?,
@@ -60,10 +58,7 @@ data class BacklogItemDto(
     val description: String?,
     val type: String,
     val status: String,
-    @Json(name = "priority_rank")
-    val priorityRank: Int,
-    @Json(name = "business_value")
-    val businessValue: Int?,
+    val priority: String,
     @Json(name = "estimate_points")
     val estimatePoints: Int?,
     @Json(name = "acceptance_criteria")
@@ -97,10 +92,7 @@ data class CreateBacklogItemRequest(
     val title: String,
     val description: String? = null,
     val type: String? = "story",
-    @Json(name = "priority_rank")
-    val priorityRank: Int? = null,
-    @Json(name = "business_value")
-    val businessValue: Int? = null,
+    val priority: String? = "medium",
     @Json(name = "estimate_points")
     val estimatePoints: Int? = null,
     @Json(name = "acceptance_criteria")
@@ -114,10 +106,7 @@ data class UpdateBacklogItemRequest(
     val title: String? = null,
     val description: String? = null,
     val type: String? = null,
-    @Json(name = "priority_rank")
-    val priorityRank: Int? = null,
-    @Json(name = "business_value")
-    val businessValue: Int? = null,
+    val priority: String? = null,
     @Json(name = "estimate_points")
     val estimatePoints: Int? = null,
     @Json(name = "acceptance_criteria")
@@ -144,9 +133,7 @@ data class CreateProjectRequest(
     @Json(name = "product_goal")
     val productGoal: String,
     @Json(name = "default_sprint_length_days")
-    val defaultSprintLengthDays: Int,
-    @Json(name = "wip_limit_per_member")
-    val wipLimitPerMember: Int? = null
+    val defaultSprintLengthDays: Int
 )
 
 @JsonClass(generateAdapter = true)
@@ -157,8 +144,6 @@ data class UpdateProjectRequest(
     val productGoal: String? = null,
     @Json(name = "default_sprint_length_days")
     val defaultSprintLengthDays: Int? = null,
-    @Json(name = "wip_limit_per_member")
-    val wipLimitPerMember: Int? = null,
     val status: String? = null
 )
 
@@ -198,7 +183,7 @@ data class SprintDto(
     @Json(name = "end_date")
     val endDate: String?,
     @Json(name = "created_by_user_id")
-    val createdByUserId: Long,
+    val createdByUserId: Long?,
     @Json(name = "closed_by_user_id")
     val closedByUserId: Long?,
     @Json(name = "closed_at")
@@ -313,4 +298,268 @@ data class AcceptInvitationResponse(
 @JsonClass(generateAdapter = true)
 data class MessageResponse(
     val message: String
+)
+
+@JsonClass(generateAdapter = true)
+data class CloseSprintResponse(
+    val message: String,
+    val data: SprintDto
+)
+
+@JsonClass(generateAdapter = true)
+data class SprintReviewItemDto(
+    val id: Long,
+    @Json(name = "backlog_item_id")
+    val backlogItemId: Long,
+    val decision: String,
+    val notes: String?,
+    @Json(name = "created_at")
+    val createdAt: String?,
+    @Json(name = "updated_at")
+    val updatedAt: String?
+)
+
+@JsonClass(generateAdapter = true)
+data class SprintReviewDto(
+    val id: Long,
+    @Json(name = "sprint_id")
+    val sprintId: Long,
+    val summary: String,
+    @Json(name = "demo_url")
+    val demoUrl: String?,
+    @Json(name = "created_by_user_id")
+    val createdByUserId: Long?,
+    @Json(name = "created_at")
+    val createdAt: String?,
+    @Json(name = "updated_at")
+    val updatedAt: String?,
+    val items: List<SprintReviewItemDto> = emptyList()
+)
+
+@JsonClass(generateAdapter = true)
+data class SprintReviewResponse(
+    val data: SprintReviewDto
+)
+
+@JsonClass(generateAdapter = true)
+data class SprintReviewItemRequest(
+    @Json(name = "backlog_item_id")
+    val backlogItemId: Long,
+    val decision: String,
+    val notes: String? = null
+)
+
+@JsonClass(generateAdapter = true)
+data class SubmitSprintReviewRequest(
+    val summary: String,
+    @Json(name = "demo_url")
+    val demoUrl: String? = null,
+    val items: List<SprintReviewItemRequest>
+)
+
+@JsonClass(generateAdapter = true)
+data class DailyCheckinDto(
+    val id: Long,
+    @Json(name = "project_id")
+    val projectId: Long,
+    @Json(name = "sprint_id")
+    val sprintId: Long,
+    @Json(name = "user_id")
+    val userId: Long?,
+    val yesterday: String?,
+    val today: String?,
+    val blockers: String?,
+    @Json(name = "confidence_score")
+    val confidenceScore: Int,
+    @Json(name = "checkin_date")
+    val checkinDate: String,
+    val user: UserDto,
+    @Json(name = "created_at")
+    val createdAt: String?,
+    @Json(name = "updated_at")
+    val updatedAt: String?
+)
+
+@JsonClass(generateAdapter = true)
+data class DailyCheckinListResponse(
+    val data: List<DailyCheckinDto>
+)
+
+@JsonClass(generateAdapter = true)
+data class DailyCheckinResponse(
+    val data: DailyCheckinDto
+)
+
+@JsonClass(generateAdapter = true)
+data class SubmitDailyCheckinRequest(
+    val yesterday: String? = null,
+    val today: String? = null,
+    val blockers: String? = null,
+    @Json(name = "confidence_score")
+    val confidenceScore: Int,
+    @Json(name = "checkin_date")
+    val checkinDate: String
+)
+
+// ===================== Retrospective DTOs =====================
+
+@JsonClass(generateAdapter = true)
+data class RetroItemDto(
+    val id: Long,
+    val type: String? = null,
+    val body: String? = null,
+    @Json(name = "author_user_id")
+    val authorUserId: Long? = null,
+    val author: UserDto? = null,
+    @Json(name = "created_at")
+    val createdAt: String? = null,
+    @Json(name = "updated_at")
+    val updatedAt: String? = null
+)
+
+@JsonClass(generateAdapter = true)
+data class RetrospectiveDto(
+    val id: Long,
+    @Json(name = "sprint_id")
+    val sprintId: Long,
+    @Json(name = "team_happiness_score")
+    val teamHappinessScore: Int?,
+    @Json(name = "created_at")
+    val createdAt: String?,
+    @Json(name = "updated_at")
+    val updatedAt: String?,
+    val items: List<RetroItemDto> = emptyList()
+)
+
+@JsonClass(generateAdapter = true)
+data class RetrospectiveResponse(
+    val data: RetrospectiveDto
+)
+
+@JsonClass(generateAdapter = true)
+data class RetroItemResponse(
+    val data: RetroItemDto
+)
+
+@JsonClass(generateAdapter = true)
+data class SubmitHappinessRequest(
+    @Json(name = "team_happiness_score")
+    val teamHappinessScore: Int
+)
+
+@JsonClass(generateAdapter = true)
+data class CreateRetroItemRequest(
+    val type: String,
+    val body: String,
+    @Json(name = "assigned_to_user_id")
+    val assignedToUserId: Long? = null
+)
+
+// ===================== Peer Review DTOs =====================
+
+@JsonClass(generateAdapter = true)
+data class PeerReviewCycleDto(
+    val id: Long,
+    @Json(name = "project_id")
+    val projectId: Long? = null,
+    @Json(name = "sprint_id")
+    val sprintId: Long? = null,
+    val status: String? = null,
+    @Json(name = "created_by_user_id")
+    val createdByUserId: Long? = null,
+    @Json(name = "created_at")
+    val createdAt: String? = null,
+    @Json(name = "updated_at")
+    val updatedAt: String? = null
+)
+
+@JsonClass(generateAdapter = true)
+data class PeerReviewCycleResponse(
+    val data: PeerReviewCycleDto
+)
+
+@JsonClass(generateAdapter = true)
+data class PeerReviewDto(
+    val id: Long,
+    @Json(name = "peer_review_cycle_id")
+    val peerReviewCycleId: Long? = null,
+    @Json(name = "reviewer_user_id")
+    val reviewerUserId: Long? = null,
+    @Json(name = "reviewee_user_id")
+    val revieweeUserId: Long? = null,
+    @Json(name = "collaboration_score")
+    val collaborationScore: Int? = null,
+    @Json(name = "delivery_score")
+    val deliveryScore: Int? = null,
+    @Json(name = "communication_score")
+    val communicationScore: Int? = null,
+    @Json(name = "continue_feedback")
+    val continueFeedback: String? = null,
+    @Json(name = "improve_feedback")
+    val improveFeedback: String? = null,
+    @Json(name = "created_at")
+    val createdAt: String? = null,
+    @Json(name = "updated_at")
+    val updatedAt: String? = null
+)
+
+@JsonClass(generateAdapter = true)
+data class PeerReviewResponse(
+    val data: PeerReviewDto
+)
+
+@JsonClass(generateAdapter = true)
+data class SubmitPeerReviewRequest(
+    @Json(name = "reviewee_user_id")
+    val revieweeUserId: Long,
+    @Json(name = "collaboration_score")
+    val collaborationScore: Int,
+    @Json(name = "delivery_score")
+    val deliveryScore: Int,
+    @Json(name = "communication_score")
+    val communicationScore: Int,
+    @Json(name = "continue_feedback")
+    val continueFeedback: String? = null,
+    @Json(name = "improve_feedback")
+    val improveFeedback: String? = null
+)
+
+@JsonClass(generateAdapter = true)
+data class PeerReviewFeedbackDto(
+    @Json(name = "continue")
+    val continueFeedback: String?,
+    @Json(name = "improve")
+    val improveFeedback: String?
+)
+
+@JsonClass(generateAdapter = true)
+data class PeerReviewSummaryUserDto(
+    val id: Long,
+    val name: String,
+    @Json(name = "avatar_url")
+    val avatarUrl: String? = null
+)
+
+@JsonClass(generateAdapter = true)
+data class PeerReviewSummaryItemDto(
+    val user: PeerReviewSummaryUserDto,
+    @Json(name = "review_count")
+    val reviewCount: Int,
+    @Json(name = "avg_collaboration_score")
+    val avgCollaborationScore: Double?,
+    @Json(name = "avg_delivery_score")
+    val avgDeliveryScore: Double?,
+    @Json(name = "avg_communication_score")
+    val avgCommunicationScore: Double?,
+    val feedbacks: List<PeerReviewFeedbackDto> = emptyList()
+)
+
+@JsonClass(generateAdapter = true)
+data class PeerReviewSummaryResponse(
+    val data: List<PeerReviewSummaryItemDto>
+)
+
+@JsonClass(generateAdapter = true)
+data class PeerReviewMySummaryResponse(
+    val data: PeerReviewSummaryItemDto
 )

@@ -7,6 +7,8 @@ plugins {
     alias(libs.plugins.ksp)
     alias(libs.plugins.jetbrains.kotlin.serialization)
     id("com.google.dagger.hilt.android")
+    alias(libs.plugins.openapi.generator)
+    alias(libs.plugins.google.services)
 }
 
 android {
@@ -65,6 +67,11 @@ android {
         buildConfig = true
     }
 
+    sourceSets {
+        getByName("main") {
+            kotlin.srcDir(layout.buildDirectory.dir("generated/openapi/src/main/kotlin"))
+        }
+    }
 }
 
 dependencies {
@@ -84,6 +91,7 @@ dependencies {
     implementation(libs.androidx.constraintlayout)
     implementation(libs.androidx.lifecycle.livedata.ktx)
     implementation(libs.androidx.lifecycle.viewmodel.ktx)
+    implementation(libs.haze)
 
     // Navigation 3
     implementation(libs.androidx.navigation3.runtime)
@@ -106,6 +114,7 @@ dependencies {
 
     implementation("com.squareup.retrofit2:retrofit:2.11.0")
     implementation("com.squareup.retrofit2:converter-moshi:2.11.0")
+    implementation("com.squareup.retrofit2:converter-scalars:2.11.0")
     implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
 
     implementation("com.squareup.moshi:moshi:1.15.2")
@@ -123,4 +132,30 @@ dependencies {
     implementation("com.google.dagger:hilt-android:2.59.2")
     ksp("com.google.dagger:hilt-android-compiler:2.59.2")
     implementation("androidx.hilt:hilt-navigation-compose:1.2.0")
+
+    // Firebase (versions managed by BOM — no -ktx suffix since Firebase BOM 33+)
+    implementation(platform(libs.firebase.bom))
+    implementation("com.google.firebase:firebase-messaging")
+    implementation("com.google.firebase:firebase-analytics")
 }
+
+openApiGenerate {
+    generatorName.set("kotlin")
+    inputSpec.set("$projectDir/openapi/openapi.json")
+    outputDir.set("$projectDir/build/generated/openapi")
+    apiPackage.set("win.ambatu.work.generated.api")
+    modelPackage.set("win.ambatu.work.generated.model")
+    configOptions.set(mapOf(
+        "library" to "jvm-retrofit2",
+        "serializationLibrary" to "moshi",
+        "useCoroutines" to "true",
+        "moshiCodeGen" to "true",
+        "enumPropertyNaming" to "UPPERCASE"
+    ))
+}
+
+tasks.configureEach {
+    if (name.contains("Kotlin") || name.contains("ksp") || name.contains("Ksp")) {
+        dependsOn("openApiGenerate")
+    }
+}

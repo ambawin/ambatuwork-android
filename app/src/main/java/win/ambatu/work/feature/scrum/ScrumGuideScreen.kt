@@ -12,6 +12,9 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import win.ambatu.work.ui.theme.YellowAmbatu
+import win.ambatu.work.ui.theme.ChocoAmbatu
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -25,12 +28,18 @@ fun ScrumGuideScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("SCRUM Guide") },
+                title = { Text("SCRUM Guide", fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                     }
-                }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = YellowAmbatu,
+                    titleContentColor = ChocoAmbatu,
+                    navigationIconContentColor = ChocoAmbatu,
+                    actionIconContentColor = ChocoAmbatu
+                )
             )
         }
     ) { innerPadding ->

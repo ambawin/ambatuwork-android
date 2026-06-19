@@ -32,6 +32,14 @@ class ProjectDetailActivity : ComponentActivity() {
         }
     }
 
+    private val sprintBoardLauncher = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) {
+        viewModel.loadProject()
+        viewModel.loadBacklogItems()
+        viewModel.loadSprints()
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -41,6 +49,14 @@ class ProjectDetailActivity : ComponentActivity() {
             finish()
             return
         }
+
+        val initialTabName = intent.getStringExtra(EXTRA_INITIAL_TAB)
+        val initialTab = try {
+            initialTabName?.let { ProjectTab.valueOf(it) } ?: ProjectTab.DASHBOARD
+        } catch (_: Exception) {
+            ProjectTab.DASHBOARD
+        }
+        val initialBacklogItemId = intent.getLongExtra(EXTRA_INITIAL_BACKLOG_ITEM_ID, -1L)
 
         setContent {
             AmbatuWorkTheme {
@@ -54,8 +70,10 @@ class ProjectDetailActivity : ComponentActivity() {
                         addSprintLauncher.launch(AddSprintActivity.createIntent(this, id))
                     },
                     onSprintClick = { projectId, sprintId ->
-                        startActivity(SprintBoardActivity.createIntent(this, projectId, sprintId))
-                    }
+                        sprintBoardLauncher.launch(SprintBoardActivity.createIntent(this, projectId, sprintId))
+                    },
+                    initialTab = initialTab,
+                    initialBacklogItemId = initialBacklogItemId
                 )
             }
         }
@@ -63,6 +81,8 @@ class ProjectDetailActivity : ComponentActivity() {
 
     companion object {
         private const val EXTRA_PROJECT_ID = "extra_project_id"
+        const val EXTRA_INITIAL_TAB = "extra_initial_tab"
+        const val EXTRA_INITIAL_BACKLOG_ITEM_ID = "extra_initial_backlog_item_id"
 
         fun createIntent(context: Context, projectId: Long): Intent {
             return Intent(context, ProjectDetailActivity::class.java).apply {

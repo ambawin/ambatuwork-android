@@ -8,10 +8,10 @@
             <InsightsFilterSettings>
               <option name="connection">
                 <ConnectionSetting>
-                  <option name="appId" value="PLACEHOLDER" />
-                  <option name="mobileSdkAppId" value="" />
-                  <option name="projectId" value="" />
-                  <option name="projectNumber" value="" />
+                  <option name="appId" value="win.ambatu.work" />
+                  <option name="mobileSdkAppId" value="1:134954867638:android:8f9b979113abb01c2b3f17" />
+                  <option name="projectId" value="ambatuwork-android" />
+                  <option name="projectNumber" value="134954867638" />
                 </ConnectionSetting>
               </option>
               <option name="signal" value="SIGNAL_UNSPECIFIED" />

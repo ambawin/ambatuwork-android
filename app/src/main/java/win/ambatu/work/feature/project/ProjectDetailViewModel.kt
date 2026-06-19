@@ -14,6 +14,9 @@ import win.ambatu.work.feature.network.BacklogItemDto
 import win.ambatu.work.feature.network.ProjectDto
 import win.ambatu.work.feature.network.ProjectMemberDto
 import win.ambatu.work.feature.network.SprintDto
+import win.ambatu.work.feature.network.UpdateProjectRequest
+import win.ambatu.work.feature.network.UpdateBacklogItemRequest
+import win.ambatu.work.feature.network.UserDto
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 
@@ -22,8 +25,12 @@ data class ProjectDetailUiState(
     val members: List<ProjectMemberDto> = emptyList(),
     val backlogItems: List<BacklogItemDto> = emptyList(),
     val sprints: List<SprintDto> = emptyList(),
+    val sprintAssignees: Map<Long, List<UserDto>> = emptyMap(),
     val isLoading: Boolean = false,
-    val error: String? = null
+    val isStatsLoading: Boolean = false,
+    val error: String? = null,
+    val statsError: String? = null,
+    val stats: win.ambatu.work.feature.network.ProjectStatsDto? = null
 )
 
 @HiltViewModel
@@ -43,6 +50,140 @@ class ProjectDetailViewModel @Inject constructor(
         loadMembers()
         loadBacklogItems()
         loadSprints()
+        loadProjectStats()
+    }
+
+    fun loadProjectStats() {
+        val token = sessionManager.getToken() ?: return
+        viewModelScope.launch {
+            _uiState.update { it.copy(isStatsLoading = true, statsError = null) }
+            try {
+                val stats = projectRepository.getProjectStats(token, projectId)
+                _uiState.update { it.copy(stats = stats, isStatsLoading = false) }
+            } catch (e: Exception) {
+                _uiState.update { it.copy(isStatsLoading = false, statsError = e.message ?: "Failed to fetch project stats") }
+            }
+        }
+    }
+
+    fun updateProject(
+        name: String?,
+        description: String?,
+        productGoal: String?,
+        sprintLength: Int?
+    ) {
+        val token = sessionManager.getToken() ?: return
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true, error = null) }
+            try {
+                val updated = projectRepository.updateProject(
+                    token = token,
+                    projectId = projectId,
+                    request = UpdateProjectRequest(
+                        name = name,
+                        description = description,
+                        productGoal = productGoal,
+                        defaultSprintLengthDays = sprintLength
+                    )
+                )
+                _uiState.update { it.copy(project = updated, isLoading = false) }
+            } catch (e: Exception) {
+                _uiState.update { it.copy(isLoading = false, error = e.message) }
+            }
+        }
+    }
+
+    fun inviteUser(email: String) {
+        val token = sessionManager.getToken() ?: return
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true, error = null) }
+            try {
+                projectRepository.createInvitation(token, projectId, email, "member")
+                loadMembers()
+                _uiState.update { it.copy(isLoading = false) }
+            } catch (e: Exception) {
+                _uiState.update { it.copy(isLoading = false, error = e.message) }
+            }
+        }
+    }
+
+
+    fun archiveBacklogItem(backlogId: Long) {
+        val token = sessionManager.getToken() ?: return
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true, error = null) }
+            try {
+                projectRepository.archiveBacklogItem(token, projectId, backlogId)
+                loadBacklogItems()
+                _uiState.update { it.copy(isLoading = false) }
+            } catch (e: Exception) {
+                _uiState.update { it.copy(isLoading = false, error = e.message) }
+            }
+        }
+    }
+
+    fun updateBacklogItem(
+        backlogId: Long,
+        title: String,
+        description: String?,
+        type: String,
+        estimatePoints: Int?,
+        priority: String?,
+        acceptanceCriteria: List<String>?,
+        assignedToUserId: Long?
+    ) {
+        val token = sessionManager.getToken() ?: return
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true, error = null) }
+            try {
+                projectRepository.updateBacklogItem(
+                    token = token,
+                    projectId = projectId,
+                    backlogId = backlogId,
+                    request = UpdateBacklogItemRequest(
+                        title = title,
+                        description = description,
+                        type = type,
+                        estimatePoints = estimatePoints,
+                        priority = priority,
+                        acceptanceCriteria = acceptanceCriteria,
+                        assignedToUserId = assignedToUserId
+                    )
+                )
+                loadBacklogItems()
+                _uiState.update { it.copy(isLoading = false) }
+            } catch (e: Exception) {
+                _uiState.update { it.copy(isLoading = false, error = e.message) }
+            }
+        }
+    }
+
+    fun updateProjectMemberRole(userId: Long, role: String) {
+        val token = sessionManager.getToken() ?: return
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true, error = null) }
+            try {
+                projectRepository.updateProjectMemberRole(token, projectId, userId, role)
+                loadMembers()
+                _uiState.update { it.copy(isLoading = false) }
+            } catch (e: Exception) {
+                _uiState.update { it.copy(isLoading = false, error = e.message) }
+            }
+        }
+    }
+
+    fun removeProjectMember(userId: Long) {
+        val token = sessionManager.getToken() ?: return
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true, error = null) }
+            try {
+                projectRepository.removeProjectMember(token, projectId, userId)
+                loadMembers()
+                _uiState.update { it.copy(isLoading = false) }
+            } catch (e: Exception) {
+                _uiState.update { it.copy(isLoading = false, error = e.message) }
+            }
+        }
     }
 
     fun loadProject() {
@@ -88,8 +229,43 @@ class ProjectDetailViewModel @Inject constructor(
             try {
                 val sprints = projectRepository.getProjectSprints(token, projectId)
                 _uiState.update { it.copy(sprints = sprints) }
+                
+                // Fetch sprint board details to retrieve assignee profiles
+                val sprintAssigneesMap = mutableMapOf<Long, List<UserDto>>()
+                sprints.forEach { sprint ->
+                    try {
+                        val board = projectRepository.getSprintBoard(token, projectId, sprint.id)
+                        val allItems = board.columns.selected + board.columns.inProgress + board.columns.inReview + board.columns.done
+                        val assignees = allItems.mapNotNull { it.assignedToUser }.distinctBy { it.id }
+                        sprintAssigneesMap[sprint.id] = assignees
+                    } catch (e: Exception) {
+                        // Ignore individual fetch failure
+                    }
+                }
+                _uiState.update { it.copy(sprintAssignees = sprintAssigneesMap) }
             } catch (e: Exception) {
                 // Handle sprint loading error if needed
+            }
+        }
+    }
+
+    fun updateDefinitionOfDone(checklist: List<String>) {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true, error = null) }
+            try {
+                val updatedDoD = projectRepository.updateDefinitionOfDone(projectId, checklist)
+                if (updatedDoD != null) {
+                    _uiState.update { state ->
+                        state.copy(
+                            project = state.project?.copy(definitionOfDone = updatedDoD),
+                            isLoading = false
+                        )
+                    }
+                } else {
+                    _uiState.update { it.copy(isLoading = false) }
+                }
+            } catch (e: Exception) {
+                _uiState.update { it.copy(isLoading = false, error = e.message) }
             }
         }
     }

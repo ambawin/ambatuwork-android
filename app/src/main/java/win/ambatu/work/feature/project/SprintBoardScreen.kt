@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -34,6 +35,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.DropdownMenuItem
@@ -42,6 +44,21 @@ import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.MenuAnchorType
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.RadioButton
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.foundation.clickable
+import androidx.compose.runtime.mutableStateMapOf
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.text.input.KeyboardType
+import win.ambatu.work.feature.network.SprintReviewItemRequest
+import win.ambatu.work.feature.network.DailyCheckinDto
+import win.ambatu.work.R
+import coil3.compose.AsyncImage
+import androidx.compose.ui.res.painterResource
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.material.icons.filled.Groups
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -55,22 +72,51 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import win.ambatu.work.feature.network.BacklogItemDto
+import win.ambatu.work.ui.theme.BlueAmbatu
+import win.ambatu.work.ui.theme.ChocoAmbatu
+import win.ambatu.work.ui.theme.RedAmbatu
+import win.ambatu.work.ui.theme.YellowAmbatu
+import win.ambatu.work.ui.theme.DarkChocoAmbatu
+import win.ambatu.work.ui.theme.WhiteAmbatu
+import win.ambatu.work.ui.theme.SecondaryYellowAmbatu
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material3.HorizontalDivider
 import win.ambatu.work.feature.network.SprintBoardDto
+import androidx.compose.ui.unit.sp
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SprintBoardScreen(
     viewModel: SprintBoardViewModel,
-    onBackClick: () -> Unit
+    onBackClick: () -> Unit,
+    onCloseSprintClick: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
     var detailItem by remember { mutableStateOf<BacklogItemDto?>(null) }
     var statusUpdateItem by remember { mutableStateOf<BacklogItemDto?>(null) }
 
-    if (detailItem != null) {
+    if (uiState.isSprintClosedSuccessfully) {
+        SprintClosedSuccessDialog(
+            onDismiss = {
+                viewModel.resetSprintClosedSuccess()
+                // Stay on screen - the board will now show PostSprintDashboard
+            }
+        )
+    }
+
+    if (detailItem != null && uiState.project != null) {
         BacklogDetailDialog(
             item = detailItem!!,
-            onDismiss = { detailItem = null }
+            project = uiState.project!!,
+            members = uiState.members,
+            onDismiss = { detailItem = null },
+            onUpdate = { id, title, desc, type, est, priority, ac, assigned ->
+                viewModel.updateBacklogItem(id, title, desc, type, est, priority, ac, assigned)
+            },
+            onArchive = { id ->
+                viewModel.archiveBacklogItem(id)
+            }
         )
     }
 
@@ -85,6 +131,8 @@ fun SprintBoardScreen(
         )
     }
 
+
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -92,7 +140,8 @@ fun SprintBoardScreen(
                     Column {
                         Text(
                             text = uiState.board?.sprint?.name ?: "Sprint Board",
-                            style = MaterialTheme.typography.titleMedium
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold
                         )
                         uiState.board?.sprint?.sprintGoal?.let {
                             Text(
@@ -100,7 +149,7 @@ fun SprintBoardScreen(
                                 style = MaterialTheme.typography.labelSmall,
                                 maxLines = 1,
                                 overflow = TextOverflow.Ellipsis,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                color = ChocoAmbatu.copy(alpha = 0.8f)
                             )
                         }
                     }
@@ -110,7 +159,42 @@ fun SprintBoardScreen(
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                     }
                 },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = YellowAmbatu,
+                    titleContentColor = ChocoAmbatu,
+                    navigationIconContentColor = ChocoAmbatu,
+                    actionIconContentColor = ChocoAmbatu
+                ),
                 actions = {
+                    val board = uiState.board
+                    val role = uiState.currentUserRole?.lowercase()?.trim() ?: ""
+                    val isAdmin = role.contains("admin") || 
+                                 role.contains("owner") || 
+                                 role.contains("master") || 
+                                 role.contains("leader")
+
+                    if (board != null && board.sprint.status.lowercase() == "active" && isAdmin) {
+                        TextButton(
+                            onClick = onCloseSprintClick,
+                            colors = ButtonDefaults.textButtonColors(
+                                contentColor = MaterialTheme.colorScheme.error
+                            )
+                        ) {
+                            Text("Close Sprint", fontWeight = FontWeight.Bold)
+                        }
+                    }
+
+                    if (board != null && board.sprint.status.lowercase() == "active") {
+                        val context = androidx.compose.ui.platform.LocalContext.current
+                        IconButton(onClick = {
+                            context.startActivity(
+                                DailyStandupActivity.createIntent(context, board.sprint.projectId, board.sprint.id)
+                            )
+                        }) {
+                            Icon(Icons.Default.Groups, contentDescription = "Daily Standup")
+                        }
+                    }
+
                     IconButton(onClick = { viewModel.loadBoard() }) {
                         Icon(Icons.Default.Refresh, contentDescription = "Refresh")
                     }
@@ -139,21 +223,311 @@ fun SprintBoardScreen(
             } else {
                 val board = uiState.board
                 if (board != null) {
-                    BoardContent(
-                        board = board,
-                        onItemClick = { item ->
-                            val role = uiState.currentUserRole?.lowercase()?.trim() ?: ""
-                            val isAdmin = role.contains("admin") || 
-                                         role.contains("owner") || 
-                                         role.contains("master") || 
-                                         role.contains("leader")
-                            val canEdit = isAdmin || item.assignedToUserId == uiState.currentUserId
-                            if (canEdit) {
-                                statusUpdateItem = item
+                    val sprintStatus = board.sprint.status.lowercase()
+                    val role = uiState.currentUserRole?.lowercase()?.trim() ?: ""
+                    val isAdmin = role.contains("admin") || 
+                                 role.contains("owner") || 
+                                 role.contains("master") || 
+                                 role.contains("leader")
+
+                    Column(modifier = Modifier.fillMaxSize()) {
+                        if (sprintStatus == "planned") {
+                            Card(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                                colors = CardDefaults.cardColors(
+                                    containerColor = WhiteAmbatu
+                                ),
+                                shape = RoundedCornerShape(12.dp),
+                                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(16.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.SpaceBetween
+                                ) {
+                                    Column(modifier = Modifier.weight(1f)) {
+                                        Text(
+                                            text = "Sprint is Planned",
+                                            style = MaterialTheme.typography.titleMedium,
+                                            fontWeight = FontWeight.Bold,
+                                            color = MaterialTheme.colorScheme.onPrimaryContainer
+                                        )
+                                        Text(
+                                            text = "This sprint has not started yet. Ready to kick off?",
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f)
+                                        )
+                                    }
+                                    if (isAdmin) {
+                                        Button(
+                                            onClick = { viewModel.startSprint() },
+                                            colors = ButtonDefaults.buttonColors(
+                                                containerColor = MaterialTheme.colorScheme.primary
+                                            )
+                                        ) {
+                                            Text("Start Sprint")
+                                        }
+                                    }
+                                }
                             }
-                        },
-                        onInfoClick = { detailItem = it }
+                        }
+
+                        if (sprintStatus == "closed") {
+                            val context = androidx.compose.ui.platform.LocalContext.current
+                            val sprintName = board.sprint.name
+                            val pId = board.sprint.let { uiState.project?.id ?: -1L }
+                            val sId = board.sprint.id
+
+                            PostSprintDashboard(
+                                uiState = uiState,
+                                isAdmin = isAdmin,
+                                onOpenRetrospective = {
+                                    context.startActivity(
+                                        RetrospectiveActivity.createIntent(
+                                            context, pId, sId, sprintName
+                                        )
+                                    )
+                                },
+                                onOpenPeerReview = {
+                                    context.startActivity(
+                                        PeerReviewActivity.createIntent(
+                                            context, pId, sId, sprintName
+                                        )
+                                    )
+                                },
+                                onOpenCycle = { viewModel.openPeerReviewCycle() }
+                            )
+                        } else {
+                            BoardContent(
+                                board = board,
+                                onItemClick = { item ->
+                                    val canEdit = isAdmin || item.assignedToUserId == uiState.currentUserId
+                                    if (canEdit) {
+                                        statusUpdateItem = item
+                                    }
+                                },
+                                onInfoClick = { detailItem = it }
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun PostSprintDashboard(
+    uiState: SprintBoardUiState,
+    isAdmin: Boolean,
+    onOpenRetrospective: () -> Unit,
+    onOpenPeerReview: () -> Unit,
+    onOpenCycle: () -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(YellowAmbatu)
+            .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        // Header
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            colors = CardDefaults.cardColors(containerColor = Color.Transparent),
+            shape = RoundedCornerShape(16.dp),
+            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+        ) {
+            Column(
+                modifier = Modifier.padding(20.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    text = "🏁",
+                    fontSize = 36.sp
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = "Sprint Completed!",
+                    style = MaterialTheme.typography.displayLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = ChocoAmbatu
+                )
+                Text(
+                    text = "Time to reflect and review with your team.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = ChocoAmbatu.copy(alpha = 0.8f),
+                    textAlign = TextAlign.Center
+                )
+            }
+        }
+
+        // Retrospective Card
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            colors = CardDefaults.cardColors(containerColor = WhiteAmbatu),
+            shape = RoundedCornerShape(16.dp),
+            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+            onClick = onOpenRetrospective
+        ) {
+            Row(
+                modifier = Modifier.padding(20.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Surface(
+                    modifier = Modifier.size(52.dp),
+                    shape = RoundedCornerShape(14.dp),
+                    color = YellowAmbatu.copy(alpha = 0.2f)
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Text("💭", fontSize = 26.sp)
+                    }
+                }
+                Spacer(modifier = Modifier.width(16.dp))
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = "Sprint Retrospective",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = DarkChocoAmbatu
                     )
+                    val retroStatus = if (uiState.retroExists) {
+                        val score = uiState.retrospective?.teamHappinessScore
+                        val itemCount = uiState.retrospective?.items?.size ?: 0
+                        if (score != null) "Score: ${listOf("😢","😕","😐","🙂","😄")[score-1]} · $itemCount items"
+                        else "$itemCount items added"
+                    } else {
+                        "Start your team retrospective"
+                    }
+                    Text(
+                        text = retroStatus,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = ChocoAmbatu.copy(alpha = 0.7f)
+                    )
+                }
+                Surface(
+                    shape = RoundedCornerShape(8.dp),
+                    color = if (uiState.retroExists) YellowAmbatu else YellowAmbatu.copy(alpha = 0.2f)
+                ) {
+                    Text(
+                        text = if (uiState.retroExists) "View" else "Start",
+                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                        style = MaterialTheme.typography.labelMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = ChocoAmbatu
+                    )
+                }
+            }
+        }
+
+        // Peer Review Card
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            colors = CardDefaults.cardColors(containerColor = WhiteAmbatu),
+            shape = RoundedCornerShape(16.dp),
+            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+            onClick = {
+                if (uiState.cycleExists) {
+                    onOpenPeerReview()
+                } else if (isAdmin) {
+                    onOpenCycle()
+                }
+            }
+        ) {
+            Row(
+                modifier = Modifier.padding(20.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Surface(
+                    modifier = Modifier.size(52.dp),
+                    shape = RoundedCornerShape(14.dp),
+                    color = YellowAmbatu.copy(alpha = 0.2f)
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Text("⭐", fontSize = 26.sp)
+                    }
+                }
+                Spacer(modifier = Modifier.width(16.dp))
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = "Peer Review",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = DarkChocoAmbatu
+                    )
+                    val cycleStatus = uiState.peerReviewCycle?.status?.lowercase()
+                    val peerReviewStatus = when (cycleStatus) {
+                        "open" -> "Cycle open — Submit your reviews"
+                        "closed" -> "Cycle closed — View results"
+                        else -> if (isAdmin) "Open a review cycle for this sprint" else "Waiting for admin to open cycle"
+                    }
+                    Text(
+                        text = peerReviewStatus,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = ChocoAmbatu.copy(alpha = 0.7f)
+                    )
+                }
+
+                val cycleStatus = uiState.peerReviewCycle?.status?.lowercase()
+                when {
+                    cycleStatus == "open" -> {
+                        Surface(
+                            shape = RoundedCornerShape(8.dp),
+                            color = YellowAmbatu.copy(alpha = 0.3f)
+                        ) {
+                            Text(
+                                text = "Review",
+                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                                style = MaterialTheme.typography.labelMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = ChocoAmbatu
+                            )
+                        }
+                    }
+                    cycleStatus == "closed" -> {
+                        Surface(
+                            shape = RoundedCornerShape(8.dp),
+                            color = ChocoAmbatu.copy(alpha = 0.1f)
+                        ) {
+                            Text(
+                                text = "Results",
+                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                                style = MaterialTheme.typography.labelMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = ChocoAmbatu
+                            )
+                        }
+                    }
+                    isAdmin -> {
+                        Surface(
+                            shape = RoundedCornerShape(8.dp),
+                            color = YellowAmbatu
+                        ) {
+                            Text(
+                                text = "Open",
+                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                                style = MaterialTheme.typography.labelMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = ChocoAmbatu
+                            )
+                        }
+                    }
+                    else -> {
+                        Surface(
+                            shape = RoundedCornerShape(8.dp),
+                            color = YellowAmbatu.copy(alpha = 0.1f)
+                        ) {
+                            Text(
+                                text = "Pending",
+                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                                style = MaterialTheme.typography.labelMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = ChocoAmbatu.copy(alpha = 0.5f)
+                            )
+                        }
+                    }
                 }
             }
         }
@@ -180,28 +554,28 @@ fun BoardContent(
             items = board.columns.selected,
             onItemClick = onItemClick,
             onInfoClick = onInfoClick,
-            headerColor = MaterialTheme.colorScheme.secondaryContainer
+            headerColor = YellowAmbatu.copy(alpha = 0.15f)
         )
         BoardColumn(
             title = "In Progress",
             items = board.columns.inProgress,
             onItemClick = onItemClick,
             onInfoClick = onInfoClick,
-            headerColor = MaterialTheme.colorScheme.tertiaryContainer
+            headerColor = YellowAmbatu.copy(alpha = 0.35f)
         )
         BoardColumn(
             title = "In Review",
             items = board.columns.inReview,
             onItemClick = onItemClick,
             onInfoClick = onInfoClick,
-            headerColor = MaterialTheme.colorScheme.primaryContainer
+            headerColor = YellowAmbatu.copy(alpha = 0.55f)
         )
         BoardColumn(
             title = "Done",
             items = board.columns.done,
             onItemClick = onItemClick,
             onInfoClick = onInfoClick,
-            headerColor = Color(0xFFC8E6C9) // Light Green
+            headerColor = YellowAmbatu
         )
     }
 }
@@ -219,7 +593,7 @@ fun BoardColumn(
             .width(280.dp)
             .fillMaxHeight()
             .background(
-                color = MaterialTheme.colorScheme.surfaceContainerLow,
+                color = WhiteAmbatu.copy(alpha = 0.6f),
                 shape = RoundedCornerShape(12.dp)
             )
             .padding(8.dp)
@@ -237,11 +611,12 @@ fun BoardColumn(
                 Text(
                     text = title,
                     style = MaterialTheme.typography.titleSmall,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold,
+                    color = ChocoAmbatu
                 )
                 Badge(
-                    containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.5f),
-                    contentColor = MaterialTheme.colorScheme.onSurface
+                    containerColor = ChocoAmbatu.copy(alpha = 0.1f),
+                    contentColor = ChocoAmbatu
                 ) {
                     Text(text = items.size.toString())
                 }
@@ -344,9 +719,9 @@ fun BoardItemCard(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(8.dp),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
+            containerColor = WhiteAmbatu
         ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Column(
             modifier = Modifier.padding(12.dp),
@@ -387,10 +762,10 @@ fun BoardItemCard(
                         .height(16.dp)
                         .background(
                             color = when (item.type.lowercase()) {
-                                "story" -> Color.Blue
-                                "task" -> Color.Gray
-                                "bug" -> Color.Red
-                                else -> Color.Magenta
+                                "story" -> BlueAmbatu
+                                "task" -> ChocoAmbatu.copy(alpha = 0.6f)
+                                "bug" -> RedAmbatu
+                                else -> YellowAmbatu
                             },
                             shape = RoundedCornerShape(2.dp)
                         )
@@ -415,6 +790,102 @@ fun BoardItemCard(
                     }
                 }
             }
+        }
+    }
+}
+
+
+
+
+
+@Composable
+fun SprintClosedSuccessDialog(
+    onDismiss: () -> Unit
+) {
+    androidx.compose.ui.window.Dialog(onDismissRequest = onDismiss) {
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            shape = RoundedCornerShape(24.dp),
+            colors = CardDefaults.cardColors(containerColor = WhiteAmbatu),
+            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+        ) {
+            Column(
+                modifier = Modifier
+                    .padding(24.dp)
+                    .fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                // Celebration Icon
+                Box(
+                    modifier = Modifier
+                        .size(72.dp)
+                        .background(YellowAmbatu.copy(alpha = 0.2f), CircleShape),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.CheckCircle,
+                        contentDescription = "Success",
+                        tint = ChocoAmbatu,
+                        modifier = Modifier.size(48.dp)
+                    )
+                }
+                Spacer(modifier = Modifier.height(16.dp))
+                Text(
+                    text = "Sprint Closed Successfully! 🎉",
+                    style = MaterialTheme.typography.titleLarge,
+                    color = DarkChocoAmbatu,
+                    fontWeight = FontWeight.Bold,
+                    textAlign = TextAlign.Center
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Button(
+                    onClick = onDismiss,
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = ButtonDefaults.buttonColors(containerColor = YellowAmbatu),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Text(
+                        text = "Back to Project Details",
+                        color = DarkChocoAmbatu,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun BulletPoint(
+    title: String,
+    desc: String,
+    iconColor: Color
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        Box(
+            modifier = Modifier
+                .padding(top = 4.dp)
+                .size(8.dp)
+                .background(iconColor, CircleShape)
+        )
+        Column {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.Bold,
+                color = DarkChocoAmbatu
+            )
+            Text(
+                text = desc,
+                style = MaterialTheme.typography.bodySmall,
+                color = ChocoAmbatu
+            )
         }
     }
 }
